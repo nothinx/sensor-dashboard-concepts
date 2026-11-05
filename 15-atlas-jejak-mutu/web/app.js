@@ -12,6 +12,17 @@ const jam = (s) => hhmm(new Date(s));
 const tanggal = (s) => new Date(s).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 
 let mode = "api", CONTOH = null, aktif = null;
+if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
+
+// kode batang dekoratif dari karakter nomor seri (bukan simbologi yang bisa dipindai; nomor seri tetap dicetak sebagai teks)
+function kodeBatang(s) {
+  let x = 0, r = "";
+  for (const ch of `*${s}*`) {
+    const c = ch.charCodeAt(0);
+    for (let k = 0; k < 3; k++) { const w = 1 + ((c >> (k * 2)) % 3); r += `<rect x="${x}" width="${w}" height="40"/>`; x += w + 1 + ((c >> k) & 1); }
+  }
+  return `<svg class="batang" viewBox="0 0 ${x} 40" preserveAspectRatio="none" aria-hidden="true">${r}</svg>`;
+}
 
 async function api(path) {
   if (mode === "contoh") return dariContoh(path);
@@ -72,12 +83,12 @@ function temuan(u) {
 
 function tampilUnit(u) {
   const langkah = u.langkah.map((l, i) => {
-    if (l.status === "belum") return `<li class="langkah belum"><span class="titik">${i + 1}</span><h3>${NAMA_ST[l.stasiun]}</h3><p class="waktu">Belum sampai</p></li>`;
+    if (l.status === "belum") return `<li class="langkah belum"><span class="titik">${i + 1}</span><h3>${NAMA_ST[l.stasiun]}</h3><p class="waktu">Belum sampai</p><span class="slot">tempat stiker QC</span></li>`;
     const akhir = l.percobaan[l.percobaan.length - 1];
     const nilai = Object.entries(l.nilai || {}).map(([k, v]) => `<dt>${NAMA_NILAI[k]?.[0] ?? esc(k)}</dt><dd>${fmt(v, 2, false)} ${NAMA_NILAI[k]?.[1] ?? ""}</dd>`).join("");
     const stiker = l.status === "lulus"
-      ? `<span class="stiker lulus"><b>QC lulus</b>${l.stasiun} · ${esc(l.operator)}</span>`
-      : `<span class="stiker gagal"><b>Ditahan</b>${l.stasiun} · ${esc(akhir.kode_cacat)}</span>`;
+      ? `<span class="stiker lulus" style="--r:${(i % 2 ? 2 : -2)}deg"><b>QC lulus</b>${l.stasiun} · ${esc(l.operator)}</span>`
+      : `<span class="stiker gagal" style="--r:${(i % 2 ? 2 : -2)}deg"><b>Ditahan</b>${l.stasiun} · ${esc(akhir.kode_cacat)}</span>`;
     const riwayat = l.percobaan.length > 1 ? `<div class="percobaan">${l.percobaan.map((p) =>
       `<p>${jam(p.waktu)} ${p.hasil === "gagal" ? `gagal, ${esc(p.kode_cacat)}` : "lulus"}</p>`).join("")}</div>` : "";
     return `<li class="langkah ${l.status}"><span class="titik">${i + 1}</span><h3>${NAMA_ST[l.stasiun]}</h3>
@@ -87,10 +98,18 @@ function tampilUnit(u) {
   }).join("");
   const catatan = u.catatan_qc.length ? `<section class="catatan"><h2>Catatan QC</h2><ol>${u.catatan_qc.map((c) =>
     `<li><span class="mono">${tanggal(c.waktu)}, ${jam(c.waktu)}</span><span>${NAMA_ST[c.stasiun]}</span><span>${esc(c.teks)}</span></li>`).join("")}</ol></section>` : "";
-  $("unit").innerHTML = `<div class="unit-h"><h2 class="serial">${esc(u.serial)}</h2>${st(...STATUS[u.status])}</div>
-    <p class="meta">${esc(u.model)} · ${esc(u.lini)} · mulai dirakit ${tanggal(u.dibuat_pada)}, pukul ${jam(u.dibuat_pada)}</p>
-    <p class="temuan">${temuan(u)}</p>
-    <ol class="jalur" aria-label="Perjalanan unit melewati 4 stasiun">${langkah}</ol>${catatan}`;
+  const sampai = u.langkah.filter((l) => l.status !== "belum").length;
+  // label nomor seri bergaya stiker di bodi unit: kode batang, perforasi, potongan status di kanan
+  $("unit").innerHTML = `<div class="unit-h">
+      <div class="label-seri ${u.status === "ditahan" ? "tahan" : ""}">
+        <div class="label-isi"><span class="label-model">${esc(u.model)} · ${esc(u.lini)}</span>
+          <h1 class="serial">${esc(u.serial)}</h1>${kodeBatang(u.serial)}
+          <span class="label-kaki">S/N · mulai dirakit ${tanggal(u.dibuat_pada)}, pukul ${jam(u.dibuat_pada)}</span></div>
+        <div class="label-sobek">${st(...STATUS[u.status])}<span class="mono">${sampai} dari ${u.langkah.length} stasiun</span></div>
+      </div>
+      <p class="temuan">${temuan(u)}</p>
+    </div>
+    <ol class="jalur" style="--sampai:${sampai}" aria-label="Perjalanan unit melewati ${u.langkah.length} stasiun">${langkah}</ol>${catatan}`;
 }
 
 // ---------- samping ----------
@@ -102,11 +121,11 @@ async function segarkan() {
       ["Uji hari ini", r.uji_hari_ini, ""], ["Gagal hari ini", r.gagal_hari_ini, ""]]
       .map(([l, v, cls]) => `<div class="kpi"><div class="l">${l}</div><div class="v ${cls}">${fmt(v, 0)}</div></div>`).join("");
     const maks = Math.max(1, ...c.cacat.map((x) => x.jumlah));
-    $("cacat").innerHTML = c.cacat.length ? c.cacat.map((x) => `<li><span class="kode">${esc(x.kode)}</span>
+    $("cacat").innerHTML = c.cacat.length ? c.cacat.slice(0, 5).map((x) => `<li><span class="kode">${esc(x.kode)}</span>
       <span class="bar" role="img" aria-label="${x.jumlah} kejadian"><i style="width:${(x.jumlah / maks) * 100}%"></i></span>
       <span class="n">${x.jumlah}</span><span class="contoh">${esc(x.contoh)}</span></li>`).join("")
       : `<li class="kosong">Tidak ada uji gagal dalam 7 hari terakhir.</li>`;
-    $("umpan").innerHTML = k.kejadian.length ? k.kejadian.slice(0, 10).map((e) => `<li><time datetime="${esc(e.waktu)}">${jam(e.waktu)}</time>
+    $("umpan").innerHTML = k.kejadian.length ? k.kejadian.slice(0, 6).map((e) => `<li><time datetime="${esc(e.waktu)}">${jam(e.waktu)}</time>
       <span><button type="button" data-serial="${esc(e.serial)}">${esc(e.serial)}</button>
       <span class="ket">${e.status === "ditahan" ? `ditahan di ${NAMA_ST[e.stasiun].toLowerCase()}, ${esc(e.kode_cacat)}`
         : e.status === "dikemas" ? "dikemas" : `lulus ${NAMA_ST[e.stasiun].toLowerCase()}`}</span></span></li>`).join("")
@@ -217,7 +236,8 @@ async function mulai() {
     CONTOH = contoh();
     $("banner").hidden = false;
     $("banner").textContent = `Mode data contoh: API tidak terhubung (${e.message}). Jalankan "docker compose -p konsep-15 up -d" di folder 15-atlas-jejak-mutu lalu buka http://localhost:18150.`;
-    $("sumber").textContent = "Data contoh bawaan";
+    $("sumber").textContent = "API tidak terhubung, memakai data contoh bawaan";
+    $("sumber").hidden = PRATINJAU; // pratinjau: cukup penanda di header
   }
   const r = await segarkan();
   const awal = r?.sorotan[0]?.serial;

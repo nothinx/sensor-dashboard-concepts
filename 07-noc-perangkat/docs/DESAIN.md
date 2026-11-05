@@ -27,7 +27,10 @@ menyebut gateway yang menjadi akar masalah, dan tombol primer langsung menampilk
 | Status baik / peringatan / kritis | `#4cc38a` / `#e2a336` / `#e5484d` |
 | Huruf UI | Inter Tight 400/500/600 |
 | Huruf data (ID, angka, waktu) | JetBrains Mono 400/500, tabular |
-| Radius | kontrol 8, kartu 12 |
+| Rel rak / lubang / sekrup | `#1c1c1f` / `#0a0a0b` / `#34343a` |
+| Panel log terminal / garis / baris | `#0c0d0e` / `#222225` / `#1c1c1f` |
+| Skala tipe (1920) | isi 15, label 13, h2 18, temuan 18, h1 34, angka 32, angka jawaban 48; `--chart-fs` 13 |
+| Radius | kontrol dan pelat 4 |
 | Gerak | satu kurva `cubic-bezier(0.22, 1, 0.36, 1)`; detak 600 ms sekali per data masuk |
 
 Kontras yang diukur (`contrast-check.py`): teks redup pada kartu 5,18:1, aksen pada latar 8,81:1,
@@ -46,8 +49,18 @@ semua chip status di atas 8:1.
   titik berubah menjadi lingkaran kosong. `prefers-reduced-motion` mematikan denyut.
 - **State**: memuat (teks di setiap panel), kosong (mis. "Semua sensor mengirim data"), galat (pita dengan sebab
   dan perintah pemeriksaan), dan mode data contoh saat dibuka sebagai file.
+- **Putaran 2, dunia rak di lebih banyak permukaan**: rel rak 19 inci berlubang (satu lubang per 1U) di kedua
+  tepi area kerja; setiap panel menjadi pelat depan bersekrup bersudut 4 px; gateway punya lampu link (bulat
+  terisi = menyala, cincin merah = mati); alert aktif tampil sebagai tail log terminal dengan jam di depan;
+  grafik riwayat berlatar kisi titik layar.
+- **Putaran 2, topologi memakai lebar penuh**: ukuran port dihitung dari lebar sehingga gateway terbesar paling
+  banyak tiga baris; kolom kanan menampilkan umur data per gateway yang berjalan tiap detik, sehingga tanda
+  tangan juga hadir di momen. Di bawah 900 px kolektor dan kolom umur data disembunyikan.
+- **Putaran 2, satu penanda pratinjau**: elemen `data-pratinjau` di samping judul berbunyi "Pratinjau, data
+  contoh". Di pratinjau, detak sinkron disimulasikan tiap 15 detik dan tidak ada teks "Tidak tersambung".
 
 ## Hasil pemeriksaan
 
-- sloplint: 0 FAIL (2 REFLEX jarak kecil pada komponen bersama, 1 WARN palsu untuk panel gelap).
-- Render 1920×1080 di Edge headless: topologi, tabel, dan grafik tanpa tumpang tindih.
+- sloplint putaran 2: 0 FAIL, 1 REFLEX (`.tip` milik `shared/charts.css`), 0 WARN. Teks redup pada panel log
+  5,74:1.
+- Render 1920×1080 dan 390×844 `?pratinjau` di Chrome headless: tanpa galat konsol, tanpa geser samping.

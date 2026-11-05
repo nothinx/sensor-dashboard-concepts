@@ -31,17 +31,21 @@ turun menjadi 1 sampai 2 kolom.
 
 | Token | Nilai | Pemakaian |
 |---|---|---|
-| `--bg` / `--surface` / `--raised` | `#f5f7fa` / `#ffffff` / `#eceff4` | ramp "ink" netral sejuk |
+| `--bg` / `--surface` / `--raised` | `#f5f7fa` / `#fcfdfe` / `#eceff4` | ramp "ink" netral sejuk |
 | `--ink` / `--ink-2` / `--ink-3` | `#111827` / `#4b5565` / `#5f6879` | teks |
 | `--accent` | `#0a5a8f` | kartu terpilih, titik termometer, fokus |
-| `--safe` | `#d8ecf8` | zona aman termometer |
+| `--safe` | `#d8ecf8` | zona aman termometer, bergaris skala 12 px |
+| `--tirai` / `--tirai-2` | biru aksen 16 % / 32 % | tirai plastik pintu di kartu yang pintunya terbuka |
+| `--hover` | `#f3f6fa` | hover kartu |
 | `--s1` | `#1f6fd1` | garis grafik, isi batang RH |
 | status | hijau, kuning, merah tetap; chip tint + teks gelap se-hue | selalu ikon + teks |
 
 Kontras terukur: `--ink-3` di atas `--bg` 5,23:1; aksen di atas putih 7,31:1; `--ink-2` di atas `--raised` 6,54:1.
 
 Huruf: **Figtree** 400/500/600 (ramah, bentuk huruf terbuka, terbaca dari jauh) dan
-**Red Hat Mono** untuk angka. Nilai utama 36 px, lemari kering 28 px. Radius kartu 16, spasi kelipatan 4.
+**Red Hat Mono** untuk kode ruang dan label skala. Nilai utama 80 px (64 px di HP) dan hitung mundur 36 px memakai
+Figtree tabular, karena koma mono terlalu renggang di ukuran besar; lemari kering 40 px. Sudut siku, tepi 2 px
+`--ink`, spasi kelipatan 4. Skala: isi 15 px, h1 40 px, temuan 20 px, `--chart-fs` 14 px.
 
 ## Keputusan
 
@@ -50,3 +54,12 @@ Huruf: **Figtree** 400/500/600 (ramah, bentuk huruf terbuka, terbaca dari jauh) 
 - Status selalu ikon + teks; batang RH punya garis batas 5 % dan angka di atasnya.
 - State: menghubungkan, langsung (MQTT), polling (pita sebab), mode data contoh (pita), riwayat memuat/kosong/galat.
 - Gerak hanya transisi warna tepi kartu; dimatikan oleh `prefers-reduced-motion`.
+
+## Keputusan putaran 2
+
+- Penanda tunggal `data-pratinjau` di bilah atas. Saat `PRATINJAU`, status koneksi "Pratinjau tanpa API" netral; teks "data contoh" di footer dihapus.
+- Kartu menjadi label pintu atau rak: tepi 2 px hitam, sudut siku, kode ruang (CS-A, DC-01) terbalik putih di atas hitam di kiri atas.
+- Angka suhu 80 px agar terbaca dari 2 m (patokan ≥ 64 px). Termometer 24 px dengan bola 40 px, zona aman bergaris skala, penanda nilai berupa jarum 6 px.
+- Pintu terbuka: strip tirai plastik di atas kartu, hitung mundur 36 px di blok berwarna status yang menempel di dasar kartu.
+- Status kartu: tepi warna status (peringatan cokelat tua, kritis merah, offline putus-putus), tetap dengan chip ikon + teks.
+- Konten selebar layar (tanpa batas 1.600 px).

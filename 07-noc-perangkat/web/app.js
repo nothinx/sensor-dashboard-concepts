@@ -171,9 +171,9 @@ function render(m) {
     const lo = Math.floor((Math.min(...y) - 20) / 40) * 40;
     const turun = y.map((v, i) => ({ i, d: i ? y[i - 1] - v : 0 })).filter((o) => o.d >= 10).sort((a, b) => b.d - a.d).slice(0, 2);
     lineChart($("c-online"), {
-      x, series: [{ name: "Online", color: "var(--s1)", data: y }], unit: "sensor", dec: 0, h: 300,
+      x, series: [{ name: "Online", color: "var(--s1)", data: y }], unit: "sensor", dec: 0, h: 360,
       min: lo, max: lo + Math.ceil((Math.max(...y) + 40 - lo) / 160) * 160, // 4 langkah kelipatan 40
-      marks: turun.map((o) => ({ i: o.i, label: `turun ${o.d}` })),
+      marks: $("c-online").clientWidth > 600 ? turun.map((o) => ({ i: o.i, label: `turun ${o.d}` })) : [],
     });
   } else {
     $("c-online").innerHTML = `<p class="empty">Riwayat belum tersedia. Prometheus baru menyala; grafik terisi setelah beberapa menit.</p>`;
@@ -183,9 +183,10 @@ function render(m) {
   const al = [...m.alerts].sort((a, b) => (a.state === "firing" ? 0 : 1) - (b.state === "firing" ? 0 : 1) || (a.labels.severity === "kritis" ? 0 : 1) - (b.labels.severity === "kritis" ? 0 : 1));
   $("nav-alert").textContent = al.length || "";
   $("l-alert").innerHTML = al.length ? `<ul class="alerts">${al.slice(0, 6).map((a) => `<li>
+      <span class="ts">${hhmm(new Date(a.activeAt))}</span>
       <div>${st(a.labels.severity === "kritis" ? "crit" : "warn", a.labels.severity === "kritis" ? "Kritis" : "Peringatan")}</div>
-      <div>${esc(a.annotations.ringkasan || a.labels.alertname)}</div>
-      <div class="meta mono">${a.state === "firing" ? "aktif" : "menunggu"} sejak pukul ${hhmm(new Date(a.activeAt))} · ${esc(a.labels.alertname)}</div></li>`).join("")}</ul>
+      <div class="msg">${esc(a.annotations.ringkasan || a.labels.alertname)}</div>
+      <div class="meta">${a.state === "firing" ? "aktif" : "menunggu"} · ${esc(a.labels.alertname)}</div></li>`).join("")}</ul>
       ${al.length > 6 ? `<p class="muted small" style="margin-top:12px">Ada ${al.length - 6} alert lain; lihat di UI Prometheus.</p>` : ""}`
     : `<p class="empty">Tidak ada alert aktif.</p>`;
 
@@ -210,33 +211,44 @@ function baris(s, gwM, t, hidden) {
 }
 
 function topologi(m, gwM) {
-  const el = $("topo"), W = el.clientWidth || 1200;
-  const SQ = 9, GAP = 3, step = SQ + GAP, colW = 132, gwX = 188, gwW = 210, sx0 = gwX + gwW + 32;
-  const perRow = Math.max(10, Math.floor((W - sx0) / step));
+  const el = $("topo"), W = el.clientWidth || 1200, sempit = W < 900;
+  const colW = sempit ? 0 : 140, gwX = sempit ? 0 : 196, gwW = sempit ? Math.min(W, 220) : 220;
+  const ageW = sempit ? 0 : 236, sx0 = sempit ? 0 : gwX + gwW + 36, sxEnd = W - ageW - (sempit ? 0 : 28);
+  // ukuran port mengikuti lebar: gateway terbesar paling banyak tiga baris
+  const maxN = Math.max(...m.gateways.map((g) => m.sensors.filter((s) => s.gw === g.id).length));
+  const step = Math.max(9, Math.min(20, Math.floor((sxEnd - sx0) / Math.ceil(maxN / 3)))), SQ = step - 4;
+  const perRow = Math.max(8, Math.floor((sxEnd - sx0 + 4) / step));
   let y = 0;
   const rows = m.gateways.map((g) => {
-    const ss = m.sensors.filter((s) => s.gw === g.id), nRow = Math.ceil(ss.length / perRow), h = Math.max(52, nRow * step + 16);
+    const ss = m.sensors.filter((s) => s.gw === g.id), nRow = Math.ceil(ss.length / perRow);
+    const h = sempit ? 60 + nRow * step + 8 : Math.max(60, nRow * step + 20);
     const row = { g, ss, y, h, nRow };
     y += h + 12;
     return row;
   });
   const H = y - 12, cy = H / 2;
-  let svg = `<rect class="node" x="0" y="${cy - 34}" width="${colW}" height="68" rx="8"/>
-    <text class="gw-id" x="12" y="${cy - 10}">Kolektor</text><text x="12" y="${cy + 8}">Prometheus</text><text x="12" y="${cy + 24}">scrape 15 dtk</text>`;
+  let svg = sempit ? "" : `<rect class="node" x="0" y="${cy - 40}" width="${colW}" height="80" rx="4"/>
+    <text class="gw-id" x="14" y="${cy - 12}">Kolektor</text><text x="14" y="${cy + 8}">Prometheus</text><text x="14" y="${cy + 26}">scrape 15 dtk</text>
+    <line class="gutter" x1="${sxEnd + 14}" x2="${sxEnd + 14}" y1="0" y2="${H}"/>`;
   for (const r of rows) {
-    const gy = r.y + r.h / 2, down = !r.g.up, on = r.ss.filter((s) => s.age < STALE).length;
-    svg += `<path class="link${down ? " down" : ""}" d="M${colW},${cy} C${colW + 40},${cy} ${gwX - 40},${gy} ${gwX},${gy}"/>
-      <rect class="node${down ? " down" : ""}" x="${gwX}" y="${r.y}" width="${gwW}" height="${r.h}" rx="8"/>
-      <text class="gw-id" x="${gwX + 12}" y="${gy - 4}">${r.g.id}</text><text x="${gwX + 12}" y="${gy + 12}">${esc(r.g.proto)}</text>
-      <text x="${gwX + gwW - 12}" y="${gy - 4}" text-anchor="end"${down ? ' style="fill:var(--crit-ink)"' : ""}>${on}/${r.ss.length}</text>
-      ${down ? `<text x="${gwX + gwW - 12}" y="${gy + 12}" text-anchor="end" style="fill:var(--crit-ink)">putus</text>` : ""}
-      <path class="link${down ? " down" : ""}" d="M${gwX + gwW},${gy} H${sx0 - 8}"/>`;
-    const top = gy - (r.nRow * step - GAP) / 2;
-    r.ss.forEach((s, i) => {
+    const gy = sempit ? r.y + 30 : r.y + r.h / 2, down = !r.g.up, ss = r.ss, on = ss.filter((s) => s.age < STALE).length;
+    const segar = down ? Math.max(...ss.map((s) => s.age)) : Math.min(...ss.map((s) => s.age));
+    const nodeH = sempit ? 52 : r.h;
+    svg += `${sempit ? "" : `<path class="link${down ? " down" : ""}" d="M${colW},${cy} C${colW + 40},${cy} ${gwX - 40},${gy} ${gwX},${gy}"/>`}
+      <rect class="node${down ? " down" : ""}" x="${gwX}" y="${r.y}" width="${gwW}" height="${nodeH}" rx="4"/>
+      <circle class="${down ? "led-down" : "led-ok"}" cx="${gwX + 18}" cy="${(sempit ? r.y + 26 : gy) - 9}" r="4"><title>Lampu link ${r.g.id}: ${down ? "mati" : "menyala"}</title></circle>
+      <text class="gw-id" x="${gwX + 30}" y="${(sempit ? r.y + 26 : gy) - 4}">${r.g.id}</text><text x="${gwX + 14}" y="${(sempit ? r.y + 26 : gy) + 16}">${esc(r.g.proto)}</text>
+      <text x="${gwX + gwW - 14}" y="${(sempit ? r.y + 26 : gy) - 4}" text-anchor="end"${down ? ' style="fill:var(--crit-ink)"' : ""}>${on}/${ss.length}</text>
+      ${down ? `<text x="${gwX + gwW - 14}" y="${(sempit ? r.y + 26 : gy) + 16}" text-anchor="end" style="fill:var(--crit-ink)">putus</text>` : ""}
+      ${sempit ? "" : `<path class="link${down ? " down" : ""}" d="M${gwX + gwW},${gy} H${sx0 - 8}"/>
+      <text class="age ${down ? "age-down" : "age-ok"}" x="${sxEnd + 30}" y="${gy - 2}" data-sejak="${m.t - segar}">${durasi(segar)} lalu</text>
+      <text x="${sxEnd + 30}" y="${gy + 17}">${down ? "data terakhir sebelum putus" : "data terakhir masuk"}</text>`}`;
+    const top = sempit ? r.y + 60 : gy - (r.nRow * step - 4) / 2;
+    ss.forEach((s, i) => {
       const x = sx0 + (i % perRow) * step, yy = top + Math.floor(i / perRow) * step;
       const cls = s.age >= STALE ? "s-off" : s.baterai != null && s.baterai < 20 ? "s-low" : "s-on", o = cls === "s-low" ? 0.75 : 0;
       const ket = s.age >= STALE ? `tidak mengirim data sejak ${durasi(s.age)} lalu` : `data ${durasi(s.age)} lalu`;
-      svg += `<rect class="${cls}" x="${x + o}" y="${yy + o}" width="${SQ - 2 * o}" height="${SQ - 2 * o}" rx="1.5"><title>${s.id} · ${esc(s.jenis)} · ${esc(s.lokasi)} · ${ket}${s.baterai != null ? ` · baterai ${fmt(s.baterai, 0)} %` : ""}</title></rect>`;
+      svg += `<rect class="${cls}" x="${x + o}" y="${yy + o}" width="${SQ - 2 * o}" height="${SQ - 2 * o}" rx="2"><title>${s.id} · ${esc(s.jenis)} · ${esc(s.lokasi)} · ${ket}${s.baterai != null ? ` · baterai ${fmt(s.baterai, 0)} %` : ""}</title></rect>`;
     });
   }
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Topologi ${m.gateways.length} gateway dan ${m.sensors.length} sensor">${svg}</svg>`;
@@ -255,8 +267,16 @@ function detak(ok) {
 }
 
 async function muat() {
-  if (TANPA_API) {
+  const tanda = document.querySelector("[data-pratinjau]");
+  if (PRATINJAU) {
     model = contoh();
+    tanda.hidden = false;
+    tanda.textContent = "Pratinjau, data contoh";
+    $("sinkron").textContent = `Diperbarui pukul ${hhmm(new Date())}.${pad(new Date().getSeconds())}`;
+    detak(true);
+  } else if (TANPA_API) {
+    model = contoh();
+    tanda.hidden = false;
     banner(`Mode data contoh: halaman dibuka sebagai file sehingga API tidak terhubung. Jalankan <code>docker compose -p konsep-07 up -d</code> lalu buka <code>http://localhost:18070</code>.`);
     $("sumber").textContent = "Data contoh bawaan";
     $("sinkron").textContent = "Tidak tersambung ke Prometheus";
@@ -265,10 +285,12 @@ async function muat() {
     try {
       model = await muatProm();
       banner("");
+      tanda.hidden = true;
       $("sinkron").textContent = `Sinkron pukul ${hhmm(new Date())}.${pad(new Date().getSeconds())}`;
       detak(true);
     } catch (e) {
       if (!model) model = contoh();
+      tanda.hidden = false;
       banner(`Mode data contoh: Prometheus tidak menjawab (${esc(e.message)}). Periksa <code>docker compose -p konsep-07 ps</code>; dasbor mencoba lagi tiap 15 detik.`);
       $("sinkron").textContent = "Gagal sinkron, mencoba lagi";
       detak(false);
@@ -294,3 +316,5 @@ setInterval(() => {
 }, 1000);
 muat();
 if (!TANPA_API) setInterval(muat, REFRESH);
+// pratinjau: detak sinkron disimulasikan supaya tanda tangan terlihat bekerja
+else if (PRATINJAU) setInterval(() => { detak(true); $("sinkron").textContent = `Diperbarui pukul ${hhmm(new Date())}.${pad(new Date().getSeconds())}`; }, REFRESH);

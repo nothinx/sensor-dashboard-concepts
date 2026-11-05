@@ -18,22 +18,22 @@
       <span class="logo-slot">[LOGO KLIEN]</span>
       <span class="product">Perawatan Prediktif Getaran</span>
     </div>
-    <p class="side-ringkas" id="ringkas">Memuat daftar mesin</p>
+    <div class="side-h"><h2>Urutan periksa</h2><p class="side-ringkas" id="ringkas">Memuat daftar mesin</p></div>
     <nav>
       <ul class="mesin-list" id="daftar" aria-busy="true"></ul>
     </nav>
     <div class="side-foot">
       <span class="koneksi" id="koneksi" role="status">Menghubungkan ke API</span>
-      <span class="sample" title="Semua angka di layar ini adalah contoh untuk mockup">Data contoh</span>
     </div>
   </aside>
 
   <main id="isi" aria-busy="true">
     <div class="banner" id="banner" hidden></div>
     <header class="kepala">
-      <p class="jejak muted" id="jejak">&nbsp;</p>
+      <div class="jejak-baris"><p class="jejak muted" id="jejak">&nbsp;</p>
+        <span class="sample" data-pratinjau title="Semua angka di layar ini adalah contoh untuk mockup">Data contoh</span></div>
       <div class="judul">
-        <span class="stempel besar" id="stempel" aria-hidden="true">&nbsp;</span>
+        <span class="stempel besar" id="stempel" aria-hidden="true"><i>zona</i><b>&nbsp;</b><i>ISO 10816-1</i></span>
         <div>
           <h1 id="nama">Memuat mesin</h1>
           <p class="temuan" id="temuan">&nbsp;</p>
@@ -51,9 +51,15 @@
     </section>
 
     <section class="panel momen" aria-labelledby="h-spek">
-      <header class="panel-h"><h2 id="h-spek">Spektrum getaran</h2><span class="muted" id="spek-d">mm/s per garis frekuensi</span>
+      <header class="panel-h"><h2 id="h-spek">Spektrum getaran: di frekuensi mana energinya naik?</h2>
         <span class="legend" id="spek-legend"></span></header>
-      <div id="spektrum" data-label="Spektrum getaran dengan penanda frekuensi cacat"></div>
+      <div class="kertas"><div class="tepi-x" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div><div class="tepi-y" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span></div><div id="spektrum" data-label="Spektrum getaran dengan penanda frekuensi cacat"></div></div>
+      <dl class="kop" aria-label="Kop lembar ukur">
+        <div><dt>Mesin</dt><dd id="kop-mesin">-</dd></div>
+        <div><dt>Titik ukur</dt><dd>bearing sisi penggerak [REAL DATA: titik ukur klien]</dd></div>
+        <div><dt>Satuan</dt><dd id="spek-d">mm/s per garis frekuensi</dd></div>
+        <div><dt>Lembar</dt><dd>1 / 1</dd></div>
+      </dl>
     </section>
 
     <div class="duo">
@@ -74,7 +80,7 @@
         <dl class="identitas" id="identitas"></dl>
       </section>
     </div>
-    <footer class="pg">Mockup proyek 04 · semua angka adalah data contoh · data ditarik lewat GraphQL setiap 60 detik</footer>
+    <footer class="pg">Mockup proyek 04 · data ditarik lewat GraphQL setiap 60 detik</footer>
   </main>
 </div>
 <script src="../../shared/charts.js"></script>

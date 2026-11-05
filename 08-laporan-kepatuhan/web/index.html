@@ -13,7 +13,7 @@
 <header class="top">
   <span class="logo-slot">[LOGO KLIEN]</span>
   <span class="prod">Laporan Kepatuhan Mutu</span>
-  <span class="sample">Data contoh</span>
+  <span class="sample" data-pratinjau hidden>Data contoh</span>
   <span class="conn" id="conn">Menghubungkan ke API…</span>
 </header>
 
@@ -58,7 +58,8 @@
     </div>
   </article>
 
-  <aside class="rail">
+  <aside class="rail" aria-label="Map arsip laporan">
+    <p class="folder-tab"><span>Map arsip</span> <span class="mono">QA/LK 2026</span></p>
     <section class="card" aria-labelledby="h-form">
       <h2 id="h-form">Terbitkan laporan</h2>
       <form id="form" class="form" novalidate>
@@ -98,7 +99,7 @@
     </section>
   </aside>
 </div>
-<footer class="pg">Mockup proyek 08 · semua angka adalah data contoh · API: <span class="mono">/api/v1</span>, spesifikasi di <span class="mono">/docs</span></footer>
+<footer class="pg">Mockup proyek 08 · API: <span class="mono">/api/v1</span>, spesifikasi di <span class="mono">/docs</span></footer>
 <script src="../../shared/charts.js"></script>
 <script src="app.js"></script>
 </body>

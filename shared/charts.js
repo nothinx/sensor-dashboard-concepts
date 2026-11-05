@@ -49,18 +49,18 @@ function lineChart(el, { series, x, h = 220, unit = "", min, max, bands = [], fm
     const v = lo + ((hi - lo) * k) / ticks, y = sy(v);
     g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end">${fmt(v, dec, false)}</text>`;
   }
-  const xs = 6;
+  const xs = W < 480 ? 3 : W < 800 ? 4 : 6; // label waktu tidak berdempet di grafik sempit (HP)
   for (let k = 0; k < xs; k++) {
     const i = Math.round((k / (xs - 1)) * (n - 1));
     g += `<text x="${sx(i)}" y="${H - 6}" text-anchor="${k === 0 ? "start" : k === xs - 1 ? "end" : "middle"}">${fmtX(x[i])}</text>`;
   }
   for (const b of bands) {
     g += `<line x1="${L}" x2="${W - R}" y1="${sy(b.y)}" y2="${sy(b.y)}" stroke="${b.color}" stroke-width="1.5" stroke-dasharray="5 4"/>
-          <text x="${W - R}" y="${sy(b.y) - 5}" text-anchor="end" style="fill:var(--ink-2)">${b.label}</text>`;
+          <text x="${W - R}" y="${sy(b.y) - 5}" text-anchor="end" class="halo" style="fill:var(--ink-2)">${b.label}</text>`;
   }
   for (const m of marks) {
     g += `<line x1="${sx(m.i)}" x2="${sx(m.i)}" y1="${T}" y2="${H - B}" stroke="var(--ink-3)" stroke-dasharray="2 3"/>
-          <text x="${sx(m.i) > W * 0.7 ? sx(m.i) - 5 : sx(m.i) + 5}" y="${T + 10}" text-anchor="${sx(m.i) > W * 0.7 ? "end" : "start"}" style="fill:var(--ink-2)">${m.label}</text>`;
+          <text x="${sx(m.i) > W * 0.7 ? sx(m.i) - 5 : sx(m.i) + 5}" y="${T + 10}" text-anchor="${sx(m.i) > W * 0.7 ? "end" : "start"}" class="halo" style="fill:var(--ink-2)">${m.label}</text>`;
   }
   for (const s of series) {
     let d = "", pen = false;
@@ -134,18 +134,12 @@ function strip(name, events, now, seed) {
 document.documentElement.classList.add("js");
 
 // Mode pratinjau untuk demo ke klien: buka index.html?pratinjau. Pita galat koneksi (#banner/#pita)
-// disembunyikan dan diganti label netral, karena di pratinjau API memang sengaja tidak dijalankan.
-if (new URLSearchParams(location.search).has("pratinjau")) {
+// disembunyikan, karena di pratinjau API memang sengaja tidak dijalankan. Penanda "Pratinjau, data contoh"
+// ditampilkan oleh header tiap situs (elemen [data-pratinjau]), bukan label melayang yang menutupi isi.
+const PRATINJAU = new URLSearchParams(location.search).has("pratinjau");
+if (PRATINJAU) {
   document.documentElement.classList.add("pratinjau");
   const gaya = document.createElement("style");
-  gaya.textContent = `.pratinjau #banner, .pratinjau #pita { display: none !important; }
-    .pratinjau-label { position: fixed; right: 16px; bottom: 16px; z-index: 50; padding: 6px 12px; border-radius: 6px;
-      background: #171717; color: #fafafa; font: 500 12px/1.4 system-ui, sans-serif; pointer-events: none; }`;
+  gaya.textContent = `.pratinjau #banner, .pratinjau #pita { display: none !important; }`;
   document.head.append(gaya);
-  addEventListener("DOMContentLoaded", () => {
-    const l = document.createElement("div");
-    l.className = "pratinjau-label";
-    l.textContent = "Pratinjau · data dummy, tidak terhubung ke API";
-    document.body.append(l);
-  });
 }

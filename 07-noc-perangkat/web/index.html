@@ -27,7 +27,6 @@
       <a href="#firmware">Firmware</a>
     </nav>
     <div class="side-foot">
-      <span class="sample">Data contoh</span>
       <p class="mono small"><span class="beat" id="beat" aria-hidden="true"></span><span id="sumber">Prometheus, scrape 15 dtk</span></p>
       <p class="mono small muted" id="sinkron">Belum sinkron</p>
     </div>
@@ -38,7 +37,7 @@
 
     <header class="head" id="ringkasan">
       <div>
-        <h1>Perangkat & gateway</h1>
+        <div class="title-row"><h1>Perangkat &amp; gateway</h1><span class="sample" data-pratinjau hidden>Data contoh</span></div>
         <p class="finding" id="temuan">Memuat data dari Prometheus…</p>
       </div>
       <div class="actions">
@@ -46,14 +45,14 @@
       </div>
     </header>
 
-    <section class="kpis" aria-label="Angka utama">
+    <section class="kpis plate" aria-label="Angka utama">
       <div class="kpi"><div class="l">Sensor tidak mengirim data</div><div class="v big mono" id="k-off">…</div><div class="d mono" id="k-off-d"></div></div>
       <div class="kpi"><div class="l">Gateway terhubung</div><div class="v mono" id="k-gw">…</div><div class="d mono" id="k-gw-d"></div></div>
       <div class="kpi"><div class="l">Baterai di bawah 20 %</div><div class="v mono" id="k-bat">…</div><div class="d">sensor nirkabel LoRa</div></div>
       <div class="kpi"><div class="l">Firmware belum terbaru</div><div class="v mono" id="k-fw">…</div><div class="d mono" id="k-fw-d"></div></div>
     </section>
 
-    <section class="panel" id="topologi">
+    <section class="panel plate" id="topologi">
       <div class="panel-h">
         <h2>Topologi kolektor, gateway, dan sensor</h2>
         <span class="sub">satu kotak satu sensor; arahkan kursor untuk detail</span>
@@ -67,7 +66,7 @@
     </section>
 
     <div class="grid">
-      <section class="panel c8" id="offline">
+      <section class="panel plate c7 stretch" id="offline">
         <div class="panel-h"><h2>Sensor tidak mengirim data</h2><span class="sub">diurutkan dari yang paling lama</span></div>
         <div class="panel-b table-wrap">
           <table>
@@ -77,7 +76,7 @@
         </div>
       </section>
 
-      <section class="panel c4" id="gateway">
+      <section class="panel plate c5 stretch" id="gateway">
         <div class="panel-h"><h2>Gateway</h2></div>
         <div class="panel-b table-wrap">
           <table>
@@ -87,27 +86,27 @@
         </div>
       </section>
 
-      <section class="panel c8" id="riwayat">
+      <section class="panel plate c8 stretch" id="riwayat">
         <div class="panel-h"><h2>Sensor yang mengirim data, 24 jam</h2><span class="sub">jumlah, langkah 5 menit, dari 418 sensor</span></div>
-        <div class="panel-b"><div id="c-online" data-label="Jumlah sensor online 24 jam"></div></div>
+        <div class="panel-b scope"><div id="c-online" data-label="Jumlah sensor online 24 jam"></div></div>
       </section>
 
-      <section class="panel c4" id="alert">
+      <section class="panel plate term c4 stretch" id="alert">
         <div class="panel-h"><h2>Alert aktif</h2><span class="sub">dari aturan Prometheus</span></div>
-        <div class="panel-b" id="l-alert"><p class="empty">Memuat…</p></div>
+        <div class="panel-b"><p class="prompt" aria-hidden="true">$ curl -s /prom/api/v1/alerts | tail</p><div id="l-alert"><p class="empty">Memuat…</p></div></div>
       </section>
 
-      <section class="panel c6" id="baterai">
+      <section class="panel plate c6" id="baterai">
         <div class="panel-h"><h2>Baterai terendah</h2><span class="sub" id="bat-sub">sensor nirkabel</span></div>
         <div class="panel-b" id="l-bat"><p class="empty">Memuat…</p></div>
       </section>
 
-      <section class="panel c6" id="firmware">
+      <section class="panel plate c6" id="firmware">
         <div class="panel-h"><h2>Firmware perlu diperbarui</h2><span class="sub" id="fw-sub"></span></div>
         <div class="panel-b" id="l-fw"><p class="empty">Memuat…</p></div>
       </section>
     </div>
-    <footer class="pg">Mockup proyek 07 · semua angka adalah data contoh · sumber: Prometheus lewat proxy <span class="mono">/prom/api/v1</span></footer>
+    <footer class="pg">Mockup proyek 07 · sumber: Prometheus lewat proxy <span class="mono">/prom/api/v1</span></footer>
   </main>
 </div>
 <script src="../../shared/charts.js"></script>

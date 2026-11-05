@@ -26,6 +26,12 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/). Se
   `konsep-` (sebelumnya nama klien). Volume Docker lama berawalan nama klien tidak dipakai lagi.
 - Dasbor dengan `?pratinjau` tidak lagi mencoba menghubungi API (bendera `TANPA_API` di `shared/charts.js`),
   supaya situs statis tidak memicu permintaan gagal atau izin jaringan lokal di peramban.
+- Putaran desain kedua untuk ke-15 dasbor berdasarkan kritik di `shared/BRIEF-PUTARAN-2.md`: arah lima baris
+  unslop diwujudkan di lebih banyak permukaan, skala tipe untuk 1920×1080, kanvas dipakai penuh, dan rumpun
+  kartu putih seragam dipecah. Keputusan per proyek tercatat di `docs/DESAIN.md` masing-masing.
+- Label pratinjau melayang diganti satu penanda "Pratinjau, data contoh" di header tiap situs. Label ambang
+  grafik diberi halo agar tidak tertimpa garis, dan label sumbu waktu menyesuaikan lebar grafik.
+- Gambar kartu galeri `pratinjau/` diperbarui dari tampilan baru.
 
 ### Dihapus
 - Salinan referensi `shared/_ref-app.*` (identik dengan arsip draf) dan folder tangkapan layar uji `.shot/`.

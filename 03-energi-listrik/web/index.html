@@ -18,9 +18,10 @@
     <span class="product">Pemantauan Energi Listrik</span>
     <span class="muted" id="tanggal">Memuat tanggal</span>
   </div>
+  <span class="idpel">ID pelanggan PLN <b>[REAL DATA: ID pelanggan]</b></span>
   <div class="mast-meta">
     <span class="koneksi" id="koneksi" role="status">Menghubungkan ke API</span>
-    <span class="sample" title="Semua angka di layar ini adalah contoh untuk mockup">Data contoh</span>
+    <span class="sample" data-pratinjau title="Semua angka di layar ini adalah contoh untuk mockup">Data contoh</span>
   </div>
 </header>
 
@@ -38,7 +39,7 @@
         <dt>Penyumbang terbesar saat puncak</dt><dd id="penyumbang">&nbsp;</dd>
       </dl>
     </div>
-    <figure class="hero-grafik">
+    <figure class="hero-grafik blok">
       <figcaption><span>Beban pabrik, 24 jam</span><span class="muted">kW, rata-rata 15 menit, panel utama</span></figcaption>
       <div id="grafik-beban" data-label="Beban pabrik 24 jam terhadap batas kontrak"></div>
     </figure>
@@ -62,7 +63,7 @@
     </section>
   </div>
 
-  <section class="blok" aria-labelledby="h-panel">
+  <section class="blok sobek" aria-labelledby="h-panel">
     <header class="blok-h"><h2 id="h-panel">Kualitas daya per panel</h2><span class="muted" id="panel-ts">pembacaan sesaat</span></header>
     <div class="table-wrap">
       <table>
@@ -76,7 +77,7 @@
     </div>
   </section>
 </main>
-<footer class="pg">Mockup proyek 03 · semua angka adalah data contoh · data ditarik lewat REST dengan ETag setiap 60 detik</footer>
+<footer class="pg">Data ditarik lewat REST dengan ETag setiap 60 detik.</footer>
 
 <script src="../../shared/charts.js"></script>
 <script src="app.js"></script>

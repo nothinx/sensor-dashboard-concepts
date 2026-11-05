@@ -16,7 +16,6 @@
 <!-- layar masuk -->
 <section id="layar-masuk" class="masuk" hidden aria-labelledby="judul-masuk">
   <div class="masuk-kartu">
-    <span class="logo-slot">[LOGO KLIEN]</span>
     <h1 id="judul-masuk">Portal Mitra Servis</h1>
     <p class="muted">Masuk dengan akun yang diberikan pabrik untuk mitra Anda.</p>
     <form id="form-masuk" novalidate>
@@ -34,6 +33,7 @@
         <li><button type="button" class="isi-akun" data-email="mitra.mks@contoh.test">mitra.mks@contoh.test</button></li>
       </ul>
     </details>
+    <span class="logo-slot logo-masuk">[LOGO KLIEN]</span>
   </div>
 </section>
 
@@ -48,7 +48,6 @@
       <a href="#kinerja">Kinerja</a>
     </nav>
     <div class="samping-bawah">
-      <span class="sample">Data contoh</span>
       <span id="sumber" class="sumber" role="status"></span>
     </div>
   </aside>
@@ -60,14 +59,16 @@
         <h1 id="papan">Papan SLA</h1>
         <p class="temuan" id="temuan">Memuat tiket…</p>
       </div>
+      <div class="jam-dinding" aria-label="Jam sekarang"><b id="jam" class="mono">--.--</b><span id="tanggal"></span></div>
       <div class="akun">
+        <span class="sample" data-pratinjau hidden>Pratinjau, data contoh</span>
         <span id="pengguna" class="muted"></span>
         <button class="btn" type="button" id="keluar">Keluar</button>
       </div>
     </header>
 
     <section aria-label="Tiket menunggu tanggapan">
-      <ol class="papan" id="papan-sla"><li class="memuat">Memuat…</li></ol>
+      <div class="papan" id="papan-sla"><p class="memuat">Memuat…</p></div>
     </section>
 
     <div class="dua">
@@ -95,7 +96,7 @@
         </table>
       </div>
     </section>
-    <footer class="pg">Mockup proyek 12 · semua angka dan nama mitra adalah data contoh · data dari Supabase (lokal: Supabase CLI)</footer>
+    <footer class="pg">Mockup proyek 12 · data dari Supabase (lokal: Supabase CLI)</footer>
   </main>
 </div>
 <div id="toast" class="toast" role="status" hidden></div>

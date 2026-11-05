@@ -14,46 +14,46 @@
 <body>
 <header class="bar">
   <span class="logo">[LOGO KLIEN]</span>
-  <span class="product">Monitor Oven Reflow SMT</span>
+  <!-- pelat nama mesin: dikeling di empat sudut seperti pelat pada badan oven -->
+  <div class="nameplate">
+    <span class="product">Monitor Oven Reflow SMT</span>
+    <span class="np-sub" id="np">10 zona konveksi</span>
+  </div>
   <div class="tabs" role="tablist" aria-label="Pilih lini">
     <button role="tab" type="button" id="tab-L1" data-line="L1" aria-selected="false">Line 1</button>
     <button role="tab" type="button" id="tab-L2" data-line="L2" aria-selected="true">Line 2</button>
   </div>
-  <div class="meta"><span id="updated" role="status">Memuat</span><span class="sample" title="Semua angka di layar ini adalah data contoh">Data contoh</span></div>
+  <div class="meta"><span id="updated" role="status">Memuat</span><span class="sample" data-pratinjau title="Semua angka di layar ini adalah data contoh">Data contoh</span></div>
 </header>
 <div class="banner" id="banner" role="alert" hidden></div>
 <main id="main" aria-busy="true">
   <section class="head"><h1 id="finding">Memuat data oven</h1><p id="finding2"></p></section>
   <dl class="kpis" id="kpis"></dl>
 
-  <section class="panel c8" aria-labelledby="h-zone">
+  <section class="panel zone-p" aria-labelledby="h-zone">
     <div class="ph"><h2 id="h-zone">Suhu per zona: aktual dibanding setpoint</h2><span class="sub" id="zone-sub">°C, pembacaan terbaru</span>
       <div class="legend right"><span><i></i>Aktual</span><span><i class="sp"></i>Setpoint</span><span><i class="band"></i>Toleransi</span></div></div>
-    <div id="zones"><p class="skeleton">Memuat kurva zona</p></div>
-  </section>
-
-  <aside class="panel c4 focus" aria-labelledby="h-focus">
-    <div class="ph"><h2 id="h-focus">Zona dengan selisih terbesar</h2></div>
-    <div id="focus"><p class="skeleton">Memuat</p></div>
-  </aside>
-
-  <section class="panel c5" aria-labelledby="h-prof">
-    <div class="ph"><h2 id="h-prof">Profil termal PCB terakhir</h2><span class="sub" id="prof-sub">papan uji berprobe</span></div>
-    <div id="profile"></div>
-    <dl class="dl" id="prof-dl"></dl>
-  </section>
-
-  <section class="panel c7" aria-labelledby="h-table">
-    <div class="ph"><h2 id="h-table">Tabel zona</h2><span class="sub" id="table-sub"></span></div>
+    <div id="zones" class="mm"><p class="skeleton">Memuat kurva zona</p></div>
     <div class="table-wrap">
-      <table>
-        <thead><tr><th>Zona</th><th>Fungsi</th><th class="n">Setpoint °C</th><th class="n">Aktual °C</th><th class="n">Selisih</th><th class="n">Keluaran pemanas</th><th class="n">Putaran kipas (rpm)</th><th>Status</th></tr></thead>
+      <table class="zt">
+        <caption class="vh" id="table-sub">Tabel zona</caption>
+        <thead id="zt-head"></thead>
         <tbody id="zt"></tbody>
       </table>
     </div>
   </section>
+
+  <aside class="panel focus" aria-labelledby="h-focus">
+    <div class="ph"><h2 id="h-focus">Zona dengan selisih terbesar</h2></div>
+    <div id="focus"><p class="skeleton">Memuat</p></div>
+  </aside>
+
+  <section class="panel prof-p" aria-labelledby="h-prof">
+    <div class="ph"><h2 id="h-prof">Profil termal PCB terakhir</h2><span class="sub" id="prof-sub">papan uji berprobe</span></div>
+    <div id="profile" class="mm"></div>
+    <dl class="dl" id="prof-dl"></dl>
+  </section>
 </main>
-<footer>Mockup proyek 02 · semua angka adalah data contoh</footer>
 <script src="../../shared/charts.js"></script>
 <script src="app.js"></script>
 </body>

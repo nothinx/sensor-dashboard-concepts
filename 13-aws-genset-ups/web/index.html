@@ -14,7 +14,7 @@
 <header class="top">
   <span class="logo-slot">[LOGO KLIEN]</span>
   <span class="product">Genset & UPS Cabang</span>
-  <span class="sample">Data contoh</span>
+  <span class="sample" data-pratinjau>Data contoh</span>
   <span class="sumber" id="sumber" role="status">Memuat data…</span>
 </header>
 
@@ -22,26 +22,23 @@
 
 <main>
   <section class="head">
-    <div>
+    <div class="judul">
       <h1>Cabang yang berisiko mati listrik</h1>
       <p class="finding" id="temuan">Memuat keadaan 12 cabang…</p>
+      <button class="btn primary" type="button" id="btnGawat" hidden>Buka cabang paling gawat</button>
     </div>
-    <button class="btn primary" type="button" id="btnGawat" hidden>Buka cabang paling gawat</button>
+    <section class="kpis" id="kpis" aria-label="Ringkasan cabang"></section>
   </section>
 
-  <section class="kpis" id="kpis" aria-label="Ringkasan cabang"></section>
+  <section class="panel peta-wrap" aria-labelledby="h-peta">
+    <div class="panel-h">
+      <h2 id="h-peta">Cabang dari barat ke timur</h2>
+      <span class="sub">posisi menurut bujur kota; tangki = sisa solar genset, batang = baterai UPS; pilih cabang untuk detail</span>
+    </div>
+    <div class="peta" id="peta" aria-busy="true"></div>
+  </section>
 
-  <div class="layout">
-    <section class="panel peta-wrap" aria-labelledby="h-peta">
-      <div class="panel-h">
-        <h2 id="h-peta">Peta cabang</h2>
-        <span class="sub">tangki = sisa solar genset, batang = baterai UPS; pilih cabang untuk detail</span>
-      </div>
-      <div class="peta" id="peta" aria-busy="true"></div>
-    </section>
-
-    <aside class="panel detail" id="detail" aria-live="polite"></aside>
-  </div>
+  <aside class="panel detail" id="detail" aria-live="polite"></aside>
 
   <section class="panel" aria-labelledby="h-padam">
     <div class="panel-h">

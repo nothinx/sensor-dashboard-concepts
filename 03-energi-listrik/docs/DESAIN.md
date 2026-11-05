@@ -17,13 +17,21 @@ Jawaban berupa angka terbesar di layar; temuan ditulis satu kalimat di bawahnya.
 
 ## Tata letak
 
-- Kepala tipis dengan garis bawah tinta 2 px, seperti kop tagihan.
+- Kop tagihan: garis tinta 3 px ditambah garis rambut di bawahnya, plus slot ID pelanggan PLN
+  (`[REAL DATA: ID pelanggan]`).
 - Baris pertama dibagi 5 : 8. Kiri berisi angka jawaban, temuan, dan rincian. Kanan berisi grafik beban
-  24 jam, grafik terbesar di layar.
+  24 jam setinggi 420 px, grafik terbesar di layar, tanpa kartu (putaran 2: kartu putih bersudut 12 px dihapus).
 - Baris KPI tanpa kartu: satu strip dengan pembatas 1 px.
 - Baris ketiga dibagi 7 : 5. Kiri berisi energi per jam (batang), kanan pemakaian per area (daftar
   berperingkat dengan batang tipis). Bentuknya sengaja berbeda supaya tidak ada dua grafik setara.
-- Tabel kualitas daya penuh lebar; sel yang melanggar ambang ditulis merah tua tebal di samping chip status.
+- Tabel kualitas daya penuh lebar, dibuka baris lubang perforasi seperti sobekan tagihan; sel yang melanggar
+  ambang ditulis merah tua tebal di samping chip status.
+- Energi hari ini tampil sebagai roda penghitung meteran kWh (sel digit gelap).
+- Stabilo dipakai di tiga tempat dengan satu warna: angka sisa kapasitas, kalimat tebal temuan, dan area
+  penyumbang terbesar.
+- Skala tipe putaran 2: 14 / 16 / 18 / 22 / 48 / 208 px. Isi 16 px, label 14 sampai 16 px, KPI 48 px.
+- Satu penanda pratinjau: chip `data-pratinjau` "Pratinjau, data contoh"; status koneksi netral
+  "Pembacaan sampai pukul 14.32"; teks data contoh di footer dan sub tabel dihapus.
 - Setiap bagian dibuka garis tinta 2 px, bukan kartu, mengikuti gaya editorial laporan.
 
 ## Token
@@ -39,6 +47,8 @@ Jawaban berupa angka terbesar di layar; temuan ditulis satu kalimat di bawahnya.
 | `--s3` | `#b9ad9c` | batang energi biasa, batang area selain peringkat 1 |
 | `--mark` | `#f3d36b` | sorotan stabilo di bawah angka sisa kapasitas (satu-satunya aksen) |
 | `--crit` | `#c62828` | garis batas kontrak (tanda tangan) |
+| `--wheel-1` / `--wheel-2` / `--wheel-ink` | `#2b2620` / `#100e0b` / `#fdfbf7` | roda penghitung kWh (14,5:1) |
+| `--chart-fs` | 14 px (12 px di HP) | teks sumbu grafik |
 
 Status memakai pasangan chip latar pucat + teks gelap se-hue, selalu dengan ikon bentuk dari
 `shared/charts.js`.
@@ -53,7 +63,7 @@ Status memakai pasangan chip latar pucat + teks gelap se-hue, selalu dengan ikon
 
 ## Keputusan yang melanggar default (waive)
 
-- Angka sisa kapasitas 168 px melebihi batas ukuran KPI design-guide (≤ 48 px). Alasannya, brief proyek
+- Angka sisa kapasitas 208 px melebihi batas ukuran KPI design-guide (≤ 48 px). Alasannya, brief proyek
   meminta satu angka jawaban editorial yang terbaca dari seberang ruangan. Hanya satu angka yang boleh
   sebesar ini.
 

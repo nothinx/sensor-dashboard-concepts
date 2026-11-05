@@ -36,6 +36,9 @@ async function muat() {
     $("sumber").className = "sumber";
     $("sumber").textContent = "Data contoh bawaan";
   }
+  // pratinjau: satu penanda di header, status koneksi disembunyikan
+  document.querySelector("[data-pratinjau]").hidden = !PRATINJAU;
+  $("sumber").hidden = PRATINJAU;
   const aktif = D.kej.find((k) => !k.selesai);
   if (!param) param = aktif ? aktif.parameter : "cod";
   gambar();
@@ -48,6 +51,7 @@ const satuan = (k) => (P(k).satuan ? ` ${P(k).satuan}` : "");
 function gambar() {
   const aktif = D.kej.filter((k) => !k.selesai);
   const s4 = D.titik.find((t) => t.kode === "S4");
+  $("temuan").classList.toggle("aman", !aktif.length);
   if (aktif.length) {
     const k = aktif[0];
     $("temuan").innerHTML = `<b>${k.nama_parameter} di outlet ${angkaP(k.parameter, s4.nilai[k.parameter].nilai)}${satuan(k.parameter)}, melewati baku mutu ${angkaP(k.parameter, k.batas)}${satuan(k.parameter)} sejak pukul ${jam(k.mulai)}.</b> Periksa aerasi dan waktu tinggal di bak biologis; catat tindakan untuk laporan.`;
@@ -58,12 +62,16 @@ function gambar() {
       : "<b>Semua parameter outlet di bawah baku mutu.</b> Tidak ada tindakan yang diperlukan sekarang.";
   }
 
-  $("alur").innerHTML = D.titik.map((t) => {
+  // alur berpipa: kolam per tahap, titik sampling di pipa keluar, label botol sampel di bawahnya
+  $("alur").innerHTML = `<div class="ujung masuk" aria-hidden="true">influen</div>` + D.titik.map((t) => {
     const v = (k) => t.nilai[k] ? `<span>${P(k).nama.replace(" (NH3-N)", "")} <b class="${t.nilai[k].status === "melewati" ? "lewat" : ""}">${angkaP(k, t.nilai[k].nilai)}</b></span>` : "";
-    return `<div class="tahap ${t.wajib_baku_mutu ? "wajib" : ""}"><span class="penanda" aria-hidden="true">${t.kode}</span>
-      <div class="nm">${t.kode} · ${t.nama}</div><div class="th">${t.tahap}</div>
-      <div class="vals">${v("cod")}${v("tss")}${v("nh3n")}</div></div>`;
-  }).join("");
+    const w = Object.values(t.nilai)[0]?.waktu;
+    return `<div class="tahap ${t.wajib_baku_mutu ? "wajib" : ""}">
+      <div class="kolam" aria-hidden="true"><span class="jenis">${t.tahap}</span></div><span class="penanda" aria-hidden="true">${t.kode}</span>
+      <div class="label"><div class="lh"><span>${t.kode}</span><span>${w ? "sampel " + jam(w) : ""}</span></div>
+      <div class="nm">${t.nama}</div><div class="th">${t.wajib_baku_mutu ? "dinilai terhadap baku mutu" : "dipantau, belum dinilai"} · mg/L</div>
+      <div class="vals">${v("cod")}${v("tss")}${v("nh3n")}</div></div></div>`;
+  }).join("") + `<div class="ujung keluar" aria-hidden="true">badan air</div>`;
 
   $("pilihParam").innerHTML = URUT_P.map((k) => `<button type="button" data-p="${k}" aria-pressed="${k === param}">${P(k).nama.replace(" (NH3-N)", "")}</button>`).join("");
 
@@ -116,9 +124,26 @@ async function grafik() {
   const marks = D.kej.filter((k) => k.parameter === param)
     .map((k) => ({ i: d.findIndex((x) => new Date(x.waktu) >= new Date(k.mulai)), label: `melewati ${jam(k.mulai)}` }))
     .filter((m) => m.i >= 0);
-  lineChart($("grafik"), { x: d.map((x) => new Date(x.waktu)), h: 320, unit: p.satuan, dec: p.desimal,
-    min: param === "ph" ? 5 : 0, max: param === "ph" ? 10 : Math.ceil(atas / 5) * 5,
-    series: [{ name: p.nama, color: "var(--s1)", data: vals }], bands, marks });
+  const lo = param === "ph" ? 5 : 0, hi = param === "ph" ? 10 : Math.ceil(atas / 5) * 5, h = innerWidth < 640 ? 240 : 400;
+  const akhir = D.titik.find((t) => t.kode === "S4")?.nilai[param]?.nilai ?? vals[vals.length - 1];
+  const lewat = (p.bm_maks != null && akhir > p.bm_maks) || (p.bm_min != null && akhir < p.bm_min);
+  $("kini").innerHTML = `<b class="${lewat ? "lewat" : ""}">${angkaP(param, akhir)}</b><span>${p.satuan || ""} sekarang${p.bm_maks != null ? `<br>batas ${angkaP(param, p.bm_maks)}` : ""}</span>`;
+  lineChart($("grafik"), { x: d.map((x) => new Date(x.waktu)), h, unit: p.satuan, dec: p.desimal,
+    min: lo, max: hi, series: [{ name: p.nama, color: "var(--s1)", data: vals }], bands, marks });
+  arsir($("grafik").querySelector("svg"), lo, hi, h, p);
+}
+
+// Zona di luar baku mutu diarsir tipis, di belakang garis. Skala mengikuti lineChart (L44 R12 T10 B24).
+function arsir(svg, lo, hi, H, p) {
+  if (!svg) return;
+  const W = svg.viewBox.baseVal.width, L = 44, R = 12, T = 10, B = 24;
+  const sy = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const zona = [];
+  if (p.bm_maks != null) zona.push([T, sy(p.bm_maks)]);
+  if (p.bm_min != null) zona.push([sy(p.bm_min), H - B]);
+  svg.insertAdjacentHTML("afterbegin", `<defs><pattern id="arsir" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="8" stroke="var(--crit)" stroke-width="1.5" opacity="0.16"/></pattern></defs>` +
+    zona.map(([a, b]) => `<rect x="${L}" y="${a}" width="${W - L - R}" height="${Math.max(0, b - a)}" fill="url(#arsir)"/>`).join(""));
 }
 
 $("pilihParam").addEventListener("click", (e) => {

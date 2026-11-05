@@ -16,7 +16,7 @@
   <span class="product">Jejak Mutu</span>
   <span class="muted">per nomor seri</span>
   <div class="top-meta">
-    <span class="sample">Data contoh</span>
+    <span class="sample" data-pratinjau>Data contoh</span>
     <span id="sumber" class="sumber" role="status">Memuat data…</span>
   </div>
 </header>
@@ -25,9 +25,8 @@
 
 <main>
   <section class="cari" aria-labelledby="cari-judul">
-    <h1 id="cari-judul">Lacak satu unit dari lini sampai kemas</h1>
     <form id="form-cari" class="cari-form" role="search">
-      <label for="q" class="visually-hidden">Nomor seri, kode cacat, atau isi catatan QC</label>
+      <h2 id="cari-judul" class="cari-judul"><label for="q">Lacak nomor seri</label></h2>
       <input id="q" name="q" type="search" autocomplete="off" spellcheck="false" minlength="2" maxlength="60"
              placeholder="Nomor seri, kode cacat, atau isi catatan QC, mis. TV43-2611 atau garis panel">
       <button class="btn primary" type="submit">Cari</button>
@@ -37,25 +36,23 @@
     <ol class="hasil" id="hasil" hidden></ol>
   </section>
 
-  <div class="layout">
-    <section class="panel unit" id="unit" aria-live="polite">
-      <p class="memuat">Memuat unit…</p>
-    </section>
+  <section class="unit" id="unit" aria-live="polite">
+    <p class="memuat">Memuat unit…</p>
+  </section>
 
-    <aside class="samping">
-      <section class="panel">
-        <div class="panel-h"><h2>Hari ini</h2><span class="sub" id="kpi-waktu"></span></div>
-        <div class="kpis" id="kpis"></div>
-      </section>
-      <section class="panel">
-        <div class="panel-h"><h2>Kode cacat terbanyak, 7 hari</h2></div>
-        <ol class="cacat" id="cacat"><li class="memuat">Memuat…</li></ol>
-      </section>
-      <section class="panel">
-        <div class="panel-h"><h2>Umpan kejadian</h2><span class="sub">dari change stream koleksi unit</span></div>
-        <ol class="umpan" id="umpan"><li class="memuat">Memuat…</li></ol>
-      </section>
-    </aside>
+  <div class="arsip">
+    <section class="lajur-arsip">
+      <div class="panel-h"><h2>Hari ini</h2><span class="sub" id="kpi-waktu"></span></div>
+      <div class="kpis" id="kpis"></div>
+    </section>
+    <section class="lajur-arsip">
+      <div class="panel-h"><h2>Kode cacat terbanyak, 7 hari</h2></div>
+      <ol class="cacat" id="cacat"><li class="memuat">Memuat…</li></ol>
+    </section>
+    <section class="lajur-arsip">
+      <div class="panel-h"><h2>Umpan kejadian</h2><span class="sub">dari change stream koleksi unit</span></div>
+      <ol class="umpan" id="umpan"><li class="memuat">Memuat…</li></ol>
+    </section>
   </div>
 </main>
 <footer class="pg">Mockup proyek 15 · semua angka adalah data contoh · data dari MongoDB Atlas (lokal: mongodb-atlas-local)</footer>

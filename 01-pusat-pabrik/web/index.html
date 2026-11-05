@@ -15,9 +15,9 @@
 <header class="bar">
   <span class="logo">[LOGO KLIEN]</span>
   <span class="product">Pusat Pemantauan Pabrik</span>
-  <div class="shift"><span class="clock num" id="clock">--.--.--</span><span id="shift">Memuat jadwal shift</span></div>
+  <span class="sample" data-pratinjau title="Semua angka di layar ini adalah data contoh">Data contoh</span>
   <div class="conn" role="status"><span class="dot" id="dot" aria-hidden="true"></span><span id="conn">Menghubungkan</span></div>
-  <span class="sample" title="Semua angka di layar ini adalah data contoh">Data contoh</span>
+  <span class="clock num" id="clock">--.--.--</span>
 </header>
 <div class="banner" id="banner" role="alert" hidden></div>
 <main>
@@ -27,26 +27,32 @@
   </section>
 
   <section class="panel strips-p" aria-labelledby="h-strip">
-    <div class="ph"><h2 id="h-strip">Status area, 24 jam terakhir</h2><span class="sub">setiap kotak mewakili 15 menit; abu-abu berarti normal</span><div class="legend" id="legend"></div></div>
+    <div class="ph"><h2 id="h-strip">Status area, 24 jam terakhir</h2><span class="sub">tiap kotak 15 menit, abu-abu berarti normal, garis tegak pergantian shift</span><div class="legend" id="legend"></div></div>
     <div class="axis" aria-hidden="true"><span></span><div class="t" id="axis"></div><span></span></div>
     <div class="strips" id="strips" aria-busy="true"></div>
   </section>
 
   <aside class="panel alarms-p" aria-labelledby="h-alarm">
-    <div class="ph"><h2 id="h-alarm">Alarm aktif</h2><span class="sub">kritis lebih dulu, lalu yang paling lama</span></div>
+    <div class="ph"><h2 id="h-alarm">Alarm aktif</h2><span class="sub">kritis dulu, lalu yang terlama</span></div>
     <ol class="alarm-list" id="alarms" aria-live="polite"></ol>
+    <!-- tanda tangan: jam shift -->
+    <div class="shiftbox" aria-labelledby="shiftname">
+      <div class="sh-top"><b id="shiftname">Shift</b><span id="shift">Memuat jadwal shift</span></div>
+      <div class="sh-bar" aria-hidden="true"><i id="shiftbar"></i></div>
+      <div class="sh-left"><span>Sisa shift</span><b class="num" id="shiftleft">--</b></div>
+    </div>
   </aside>
 
+  <!-- tag instrumen gaya ISA-5.1 (JI = daya, TI = suhu). [REAL DATA: tag dari P&ID klien] -->
   <section class="panel power-p" aria-labelledby="h-power">
-    <div class="ph"><h2 id="h-power">Beban listrik, 24 jam</h2><span class="sub">kW, rata-rata 15 menit</span></div>
+    <div class="ph"><span class="tag">JI-100</span><h2 id="h-power">Beban listrik, 24 jam</h2><span class="sub">kW, rata-rata 15 menit</span></div>
     <div id="power" data-label="Beban listrik pabrik 24 jam"></div>
   </section>
   <section class="panel temp-p" aria-labelledby="h-temp">
-    <div class="ph"><h2 id="h-temp">Suhu ruang produksi, 24 jam</h2><span class="sub">°C, rata-rata 5 ruang</span></div>
+    <div class="ph"><span class="tag">TI-200</span><h2 id="h-temp">Suhu ruang produksi, 24 jam</h2><span class="sub">°C, rata-rata 5 ruang</span></div>
     <div id="temp" data-label="Suhu ruang produksi 24 jam"></div>
   </section>
 </main>
-<footer>Mockup proyek 01 · semua angka adalah data contoh</footer>
 <script src="../../shared/charts.js"></script>
 <script src="app.js"></script>
 </body>

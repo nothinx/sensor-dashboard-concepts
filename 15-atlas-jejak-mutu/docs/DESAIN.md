@@ -15,28 +15,32 @@ Format lima baris dari [unslop](https://github.com/heydamir/unslop) oleh Damir S
 ## Pertanyaan layar
 
 "Di mana unit bernomor seri ini tertahan, dan kenapa?" Jawabannya kalimat temuan di bawah nomor seri
-(stasiun, pukul, kode cacat, catatan) dan stiker merah pada garis waktu. Elemen paling menonjol di layar
-adalah kolom cari, karena setiap sesi dimulai dari nomor seri.
+(stasiun, pukul, kode cacat, catatan) dan stiker merah pada garis waktu. Putaran 2: yang paling menonjol kini
+label nomor seri dan garis waktu unit, bukan kolom cari; cari menjadi satu baris alat di bawah header.
 
 ## Tata letak
 
-- Kolom cari selebar konten, tinggi 56 px, huruf mono 20 px supaya nomor seri terbaca per karakter. Di
-  bawahnya pintasan unit yang sedang ditahan dan yang terakhir punya cacat.
-- Dua kolom: unit terpilih (fluid) dan kolom samping 380 px (angka hari ini, kode cacat 7 hari, umpan
-  kejadian). Di bawah 1200 px bertumpuk; di bawah 900 px garis waktu menjadi 2 × 2.
+- Header tinta gelap; di bawahnya baris cari (label, kolom mono 18 px, tombol Cari, pintasan unit ditahan).
+- Pita putih penuh lebar (tanpa kolom tengah): label nomor seri bergaya stiker di kiri (model, nomor seri mono
+  44 px, kode batang, potongan sobek berperforasi berisi status), kalimat temuan 22 px di kanan, lalu garis waktu
+  empat stasiun selebar layar dengan rel tebal yang terisi sampai stasiun terakhir yang dicapai, lalu catatan QC.
+- Di bawah pita: lembar arsip tiga lajur dipisah garis (Hari ini, kode cacat 7 hari, umpan kejadian), bukan kartu.
+- Di bawah 1200 px lembar arsip dua lajur; di bawah 900 px semua satu kolom dan label menumpuk potongannya.
 
 ## Token
 
 | Token | Nilai | Pakai |
 |---|---|---|
-| `--bg` / `--surface` / `--raised` | `#f5f7fa` / `#ffffff` / `#eceff4` | ramp ink terang netral |
-| `--ink` / `--ink-2` / `--ink-3` | `#111827` / `#4b5565` / `#5f6878` | tiga peran teks; redup 5,2:1 pada latar |
+| `--bg` / `--surface` / `--raised` / `--sheet` | `#e9ebef` / `#ffffff` / `#eceff4` / `#f7f8fa` | latar abu bodi unit, pita putih, lembar arsip |
+| `--ink` / `--ink-2` / `--ink-3` | `#111827` / `#4b5565` / `#5a6372` | tiga peran teks; redup 5,08:1 pada latar, 5,71:1 pada lembar |
+| `--on-ink-2` / `--on-ink-line` | `#c9ced8` / putih 45 % | teks redup dan garis di header tinta (11,24:1) |
+| `--chart-fs` / `--tepi` | 13 px / 40 px | teks grafik / tepi kiri-kanan halaman |
 | `--accent` | `#2347c5` kobalt | tombol Cari, fokus, batang kode cacat, tautan umpan |
 | status | hijau `#14532d` pada `#e7f5ec`, merah `#8f1717` pada `#fbe9e9` | stiker dan chip; kontras ≥ 7,5:1 |
 | huruf | Public Sans 400/500/600, Red Hat Mono 400/500 | antarmuka; nomor seri, kode, angka |
-| radius | 6 / 8 / 10 / 14 / 16 px | chip / tombol / input / panel / blok cari |
+| radius | 0 kecuali 6 / 8 px | permukaan dan kontrol siku; radius hanya di label nomor seri, stiker, dan slot stiker |
 
-Kontras diukur dengan `contrast-check.py`: teks redup pada latar 5,23:1, pada kartu 5,62:1; teks tombol pada
+Kontras diukur dengan `contrast-check.py`: teks redup pada latar 5,08:1, pada lembar 5,71:1; teks tombol pada
 kobalt 7,37:1.
 
 ## Keputusan
@@ -46,3 +50,10 @@ kobalt 7,37:1.
 - Umpan kejadian dan pintasan memakai tombol sehingga bisa dijangkau keyboard.
 - Gerak: hanya transisi warna 160 ms; stiker tidak miring bila `prefers-reduced-motion`.
 - sloplint: 0 FAIL.
+- Putaran 2 (keluar dari rumpun "SaaS putih"): struktur permukaan berganti dari kartu putih membulat menjadi pita
+  penuh lebar dan lembar arsip bergaris; sudut siku; skala tipe naik (isi 15 px, stasiun 22 px, nomor seri 44 px,
+  angka hari ini 36 px).
+- Putaran 2: kode batang pada label dibangkitkan dari karakter nomor seri sebagai hiasan (`aria-hidden`), bukan
+  simbologi yang bisa dipindai; nomor seri tetap tercetak sebagai teks.
+- Putaran 2: stasiun yang belum dicapai menampilkan slot stiker kosong bergaris putus, supaya kolom tidak kosong.
+- Putaran 2: tepat satu penanda `data-pratinjau` di header; di mode pratinjau status koneksi disembunyikan.

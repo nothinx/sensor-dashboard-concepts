@@ -29,7 +29,10 @@ akhirnya memang dicetak atau diarsipkan.
 | Huruf judul | Newsreader 400/500 (serif dokumen) |
 | Huruf UI | Instrument Sans 400/500/600 |
 | Huruf angka & nomor | DM Mono 400/500, tabular |
-| Radius | lembar 4 (kertas), kontrol 8, kartu 12 |
+| Map arsip manila / garis / teks tab | `#e4d3a8` / `#c9b47f` / `#4d4233` |
+| Margin register / lubang perforator | `#d9a19a` / `#d8cfbf` |
+| Skala tipe (1920) | isi dan sel 15, label 13, temuan 18, h2 serif 22, h1 serif 40 |
+| Radius | lembar dan kartu dalam map 2, kontrol 4, map 6 dengan tab 8 |
 
 Kontras terukur: teks redup pada lembar 5,45:1, pada permukaan naik 4,92:1; aksen pada lembar 8,08:1;
 semua chip di atas 6,7:1; tombol primer 16,56:1.
@@ -47,9 +50,16 @@ semua chip di atas 6,7:1; tombol primer 16,56:1.
   (tautan unduh), gagal (sebab + langkah dari server).
 - **Cetak**: `@media print` menyembunyikan kerangka aplikasi, mencetak lembar A4 dengan margin 16 mm, dan
   mempertahankan warna sel.
+- **Putaran 2, kolom kanan = map arsip**: formulir, laporan terbaru, dan jejak audit berada dalam satu map
+  manila bertab "Map arsip QA/LK 2026", bukan tiga kartu SaaS. Isian formulir bergaris bawah seperti formulir
+  cetak; jejak audit memakai garis margin merah seperti buku register. Lembar diberi dua lubang perforator di
+  margin kiri, siap masuk map. Tata letak dilepas dari batas 1600 px supaya lembar memakai kanvas penuh.
+- **Putaran 2, pratinjau**: satu penanda `data-pratinjau` di header ("Pratinjau, data contoh"); teks koneksi
+  dikosongkan. Formulir tampil terisi dan aktif, tetapi kiriman hanya menjelaskan bahwa penerbitan butuh API
+  (tetap tidak berpura-pura berhasil). Di luar pratinjau, perilaku nonaktif lama berlaku.
 
 ## Hasil pemeriksaan
 
-- sloplint: 0 FAIL (2 REFLEX jarak kecil pada komponen bersama, 1 WARN garis + bayangan lembar yang disengaja
-  untuk kesan kertas).
-- Render 1920×1080 di Edge headless, mode API dan mode file.
+- sloplint putaran 2: 0 FAIL, 1 REFLEX (`.tip` milik `shared/charts.css`), 1 WARN garis + bayangan lembar yang
+  disengaja untuk kesan kertas. Kontras baru: teks tab pada map 6,62:1, teks utama pada map 11,56:1.
+- Render 1920×1080 dan 390×844 `?pratinjau` di Chrome headless: tanpa galat konsol, tanpa geser samping.

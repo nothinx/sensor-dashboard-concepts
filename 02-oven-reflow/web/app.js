@@ -8,6 +8,8 @@ let line = "L2", data = null, sampleMode = false, lastOk = null, focusRange = "2
 
 const sign = (x, d = 1) => `${x > 0 ? "+" : ""}${fmt(x, d)}`;
 const lineName = (l) => `Line ${l.slice(1)}`;
+// lebar kolom label tabel zona = ruang sumbu Y kurva, supaya tiap kolom zona lurus di bawah titik kurvanya
+const axW = (W) => (W < 700 ? 44 : 176);
 
 function renderHead(d) {
   const bad = d.zones.filter((z) => z.status === "crit");
@@ -23,9 +25,9 @@ function renderHead(d) {
     $("finding").textContent = `${lineName(d.line)} sesuai resep di kesepuluh zona`;
     $("finding2").textContent = `Selisih terbesar di zona ${f.zone.slice(1)}: ${sign(f.delta)} °C, masih dalam toleransi ±${fmt(d.tolerance_c, 0)} °C.`;
   }
+  $("np").textContent = `${lineName(d.line)} · 10 zona · resep ${d.recipe}`;
   $("kpis").innerHTML = `
     <div><dt>Zona di luar toleransi ±${fmt(d.tolerance_c, 0)} °C</dt><dd class="big ${bad.length ? "crit" : ""}">${bad.length}<span class="u">dari 10</span></dd></div>
-    <div><dt>Resep aktif</dt><dd class="text">${d.recipe}</dd></div>
     <div><dt>Kecepatan konveyor</dt><dd>${fmt(ov.conveyor_mpm, 2)}<span class="u">m/mnt</span></dd><div class="d">resep ${fmt(ov.conveyor_recipe_mpm, 2)} m/mnt</div></div>
     <div><dt>O₂ dalam oven</dt><dd>${fmt(ov.o2_ppm, 0)}<span class="u">ppm</span></dd><div class="d">batas 1.000 ppm</div></div>
     <div><dt>PCB diproses, shift ini</dt><dd>${fmt(ov.boards_shift, 0)}</dd></div>`;
@@ -33,12 +35,14 @@ function renderHead(d) {
 
 // momen: kurva 10 zona + pita toleransi + pelat zona
 function renderZones(d) {
-  const el = $("zones"), W = el.clientWidth || 900, H = 300, L = 44, R = 24, T = 16, B = 12;
+  const el = $("zones"), W = el.clientWidth || 900, L = axW(W), T = 20, B = 12;
+  const H = W < 700 ? 240 : Math.max(260, Math.min(380, innerHeight - 720));
   const lo = 50, hi = 280, tol = d.tolerance_c, z = d.zones;
-  const sx = (i) => L + (i / (z.length - 1)) * (W - L - R);
+  const sx = (i) => L + ((i + 0.5) / z.length) * (W - L);
   const sy = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
   let g = "";
-  for (let v = 50; v <= 275; v += 75) g += `<line x1="${L}" x2="${W - R}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--grid)"/><text x="${L - 8}" y="${sy(v) + 4}" text-anchor="end">${v}</text>`;
+  z.forEach((_, i) => { g += `<line x1="${L + (i / z.length) * (W - L)}" x2="${L + (i / z.length) * (W - L)}" y1="${T}" y2="${H - B}" stroke="var(--grid)"/>`; });
+  for (let v = 50; v <= 275; v += 75) g += `<line x1="${L}" x2="${W}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--grid)"/><text x="${L - 8}" y="${sy(v) + 4}" text-anchor="end">${v}</text>`;
   const up = z.map((r, i) => `${sx(i)},${sy(r.setpoint + tol)}`), dn = z.map((r, i) => `${sx(i)},${sy(r.setpoint - tol)}`).reverse();
   g += `<polygon points="${up.concat(dn).join(" ")}" fill="var(--accent-tint)" stroke="var(--accent-edge)"/>`;
   g += `<path d="${z.map((r, i) => `${i ? "L" : "M"}${sx(i)},${sy(r.setpoint)}`).join("")}" fill="none" stroke="var(--s2)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
@@ -48,9 +52,9 @@ function renderZones(d) {
     g += `<circle cx="${sx(i)}" cy="${sy(r.actual)}" r="${r.status === "ok" ? 4 : 6}" fill="${c}" stroke="var(--surface)" stroke-width="2"><title>${r.zone}: ${fmt(r.actual)} °C, setpoint ${fmt(r.setpoint, 0)} °C</title></circle>`;
     if (r.status === "crit") g += `<text class="ann" x="${sx(i) + (i > 7 ? -10 : 10)}" y="${sy(r.actual) - 10}" text-anchor="${i > 7 ? "end" : "start"}">${r.zone} ${sign(r.delta)} °C</text>`;
   });
-  el.innerHTML = `<svg class="zone-svg" viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Suhu aktual dan setpoint 10 zona ${lineName(d.line)}">${g}</svg>
-    <div class="plates" style="position:relative;height:44px">${z.map((r, i) =>
-      `<span class="plate ${r.status}" style="position:absolute;left:${(sx(i) / W) * 100}%;transform:translateX(-50%)">${r.zone}<small>${FN[i].split(" ")[0]}</small></span>`).join("")}</div>`;
+  el.innerHTML = `<svg class="zone-svg" viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Suhu aktual dan setpoint 10 zona ${lineName(d.line)}">${g}</svg>`;
+  el.style.setProperty("--ax", `${L}px`);
+  document.querySelector(".zt").style.setProperty("--ax", `${L}px`);
   $("zone-sub").textContent = `°C, pembacaan pukul ${hhmm(new Date(d.now))}`;
 }
 
@@ -72,7 +76,7 @@ function renderFocus(d, points) {
       </div></div>
     <div id="ftrend" data-label="Tren suhu zona ${f.zone}"></div>`;
   const pts = points || f.trend;
-  lineChart($("ftrend"), { x: pts.map((p) => new Date(p.t)), h: 170, unit: "°C", min: f.setpoint - 12, max: f.setpoint + 12,
+  lineChart($("ftrend"), { x: pts.map((p) => new Date(p.t)), h: 150, unit: "°C", min: f.setpoint - 12, max: f.setpoint + 12,
     series: [{ name: f.zone, color: "var(--s1)", data: pts.map((p) => p.v) }],
     bands: [{ y: f.setpoint + tol, label: "", color: "var(--crit)" }, { y: f.setpoint - tol, label: "", color: "var(--crit)" }] });
 }
@@ -82,7 +86,7 @@ function renderProfile(d) {
   if (!p) { $("profile").innerHTML = `<p class="skeleton">Belum ada lintasan papan uji dalam 25 menit terakhir. Papan uji lewat tiap 10 menit.</p>`; $("prof-dl").innerHTML = ""; return; }
   const t0 = new Date(p.start);
   $("prof-sub").textContent = `papan uji berprobe, mulai pukul ${hhmm(t0)}`;
-  lineChart($("profile"), { x: p.temps.map((_, i) => new Date(t0.getTime() + i * p.step_s * 1000)), h: 220, unit: "°C", min: 0, max: 280, dec: 1,
+  lineChart($("profile"), { x: p.temps.map((_, i) => new Date(t0.getTime() + i * p.step_s * 1000)), h: 160, unit: "°C", min: 0, max: 280, dec: 1,
     fmtX: (t) => `${Math.round((t - t0) / 1000)} dtk`, series: [{ name: "Papan", color: "var(--s1)", data: p.temps }],
     bands: [{ y: d.liquidus_c, label: `likuidus ${fmt(d.liquidus_c, 0)} °C`, color: "var(--warn)" }] });
   $("prof-dl").innerHTML = `
@@ -92,17 +96,24 @@ function renderProfile(d) {
 
 function renderTable(d) {
   $("table-sub").textContent = `${lineName(d.line)}, toleransi ±${fmt(d.tolerance_c, 0)} °C`;
-  $("zt").innerHTML = d.zones.map((z, i) => `<tr>
-    <td class="num">${z.zone}</td><td>${FN[i]}</td><td class="n">${fmt(z.setpoint)}</td><td class="n">${fmt(z.actual)}</td>
-    <td class="n ${z.status === "crit" ? "bad" : ""}">${sign(z.delta)}</td><td class="n">${fmt(z.heater_pct, 0)} %</td><td class="n">${fmt(z.fan_rpm, 0)}</td>
-    <td>${z.status === "crit" ? st("crit", "Di luar toleransi") : z.status === "warn" ? st("warn", "Mendekati batas") : st("ok", "Sesuai")}</td></tr>`).join("");
+  const zs = d.zones, row = (label, f, cls = () => "") => `<tr><th scope="row">${label}</th>${zs.map((z, i) => `<td class="n ${cls(z)}">${f(z, i)}</td>`).join("")}</tr>`;
+  $("zt-head").innerHTML = `<tr><th scope="col" class="corner">Zona</th>${zs.map((z, i) =>
+    `<th scope="col"><span class="plate ${z.status}">${z.zone}<small>${FN[i].split(" ")[0]}</small></span></th>`).join("")}</tr>`;
+  $("zt").innerHTML = [
+    row("Setpoint <span class=u>°C</span>", (z) => fmt(z.setpoint)),
+    row("Aktual <span class=u>°C</span>", (z) => fmt(z.actual)),
+    row("Selisih <span class=u>°C</span>", (z) => sign(z.delta), (z) => (z.status === "crit" ? "bad" : "")),
+    row("Keluaran pemanas <span class=u>%</span>", (z) => fmt(z.heater_pct, 0)),
+    row("Putaran kipas <span class=u>rpm</span>", (z) => fmt(z.fan_rpm, 0)),
+    row("Status", (z) => (z.status === "crit" ? st("crit", "Di luar") : z.status === "warn" ? st("warn", "Dekat batas") : st("ok", "Sesuai")), () => "stc"),
+  ].join("");
 }
 
 function render(d) {
   data = d;
   renderHead(d); renderZones(d); renderFocus(d); renderProfile(d); renderTable(d);
   $("main").removeAttribute("aria-busy");
-  $("updated").textContent = sampleMode ? "Mode data contoh" : `Diperbarui pukul ${new Date(d.now).toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour12: false })}`;
+  $("updated").textContent = sampleMode ? `Pembacaan pukul ${hhmm(new Date(d.now))}` : `Diperbarui pukul ${new Date(d.now).toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour12: false })}`;
 }
 
 // ---------- data contoh ----------
@@ -174,5 +185,6 @@ document.addEventListener("click", (e) => {
 });
 addEventListener("resize", () => data && render(data));
 
+if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
 if (!ONLINE) useSample("dasbor dibuka langsung dari file, bukan dari server.");
 else { load(); setInterval(load, POLL_MS); }

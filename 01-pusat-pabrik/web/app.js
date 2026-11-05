@@ -17,7 +17,12 @@ function limitOf(a) {
 
 function renderLive(l) {
   const k = l.kpi;
-  $("shift").textContent = `${l.shift.name} · ${l.shift.start} sampai ${l.shift.end} · sisa ${dur(l.shift.remainingMin)}`;
+  const mOf = (t) => { const [h, m] = String(t).split(/[.:]/).map(Number); return h * 60 + (m || 0); };
+  const len = (mOf(l.shift.end) - mOf(l.shift.start) + 1440) % 1440 || 1440;
+  $("shiftname").textContent = l.shift.name;
+  $("shift").textContent = `${l.shift.start} sampai ${l.shift.end}`;
+  $("shiftleft").textContent = dur(l.shift.remainingMin);
+  $("shiftbar").style.width = `${Math.max(0, Math.min(100, (1 - l.shift.remainingMin / len) * 100))}%`;
   $("kpis").innerHTML = `
     <div><dt>Alarm aktif</dt><dd class="big ${k.crit ? "crit" : ""}">${k.alarms}</dd></div>
     <div><dt>Sensor online</dt><dd>${k.online}<span class="u">dari ${k.total}</span></dd></div>
@@ -68,12 +73,12 @@ function renderHistory(s) {
     const label = `Status 24 jam ${a.name}: ${cells.filter((c) => c > 0).length} dari 96 periode beralarm`;
     return `<div class="srow" data-area="${a.id}"><span class="nm">${esc(a.name)}</span>
       <div class="cells" role="img" aria-label="${esc(label)}">${cells.map((c, i) =>
-        `<i class="${c === -1 ? "off" : c > 0 ? "l" + c : ""}${i === 95 ? " now" : ""}" title="${hhmm(at(i))}: ${c === -1 ? "sebagian offline" : LABEL[LV[c]]}"></i>`).join("")}</div>
+        `<i class="${c === -1 ? "off" : c > 0 ? "l" + c : ""}${i === 95 ? " now" : ""}${i && at(i).getHours() % 8 === 6 && at(i).getMinutes() < h.stepMin ? " sb" : ""}" title="${hhmm(at(i))}: ${c === -1 ? "sebagian offline" : LABEL[LV[c]]}"></i>`).join("")}</div>
       <span class="stat"></span></div>`;
   }).join("");
   $("strips").removeAttribute("aria-busy");
   const x = Array.from({ length: 96 }, (_, i) => at(i));
-  const hOf = (el) => Math.max(150, el.parentElement.clientHeight - 64);
+  const hOf = (el) => Math.max(150, el.parentElement.clientHeight - el.previousElementSibling.offsetHeight - 26);
   const lim = s.kpi.powerLimitKw ?? 1600;
   lineChart($("power"), { x, h: hOf($("power")), unit: "kW", min: 0, max: Math.ceil((lim * 1.15) / 200) * 200, dec: 0,
     series: [{ name: "Beban", color: "var(--s1)", data: h.power }],
@@ -86,7 +91,7 @@ function renderHistory(s) {
 function render(s) { snap = s; renderHistory(s); renderLive(s); }
 
 function setConn(ok, text) {
-  $("dot").className = "dot " + (ok ? "live" : "dead");
+  $("dot").className = "dot" + (ok ? " live" : ok === false ? " dead" : "");
   $("conn").textContent = text;
 }
 
@@ -121,7 +126,9 @@ function sample() {
 
 function useSample(reason) {
   sampleMode = true;
-  setConn(false, "Tidak terhubung");
+  // pratinjau: API sengaja mati, jadi status netral, bukan galat
+  if (PRATINJAU) setConn(null, `Cuplikan pukul ${hhmm(NOW)}`);
+  else setConn(false, "Tidak terhubung");
   const b = $("banner");
   b.hidden = false;
   b.textContent = `Mode data contoh: ${reason} Jalankan "docker compose up -d" di folder proyek 01, lalu buka http://localhost:18010.`;
@@ -154,8 +161,11 @@ document.addEventListener("click", async (e) => {
   else { e.target.disabled = false; e.target.textContent = "Gagal, coba lagi"; }
 });
 
+if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
+// tanpa API, jam berjalan dari waktu data contoh supaya cocok dengan pita dan grafik
+const t0 = Date.now(), clockBase = TANPA_API ? NOW.getTime() : null;
 const tickClock = () => {
-  $("clock").textContent = new Date().toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour12: false });
+  $("clock").textContent = new Date(clockBase == null ? Date.now() : clockBase + Date.now() - t0).toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour12: false });
 };
 tickClock();
 setInterval(tickClock, 1000);

@@ -49,7 +49,11 @@ function gambar() {
       ? `<b>${lewat.length} tiket sudah melewati batas tanggap SLA.</b> Tanggapi lebih dulu; keterlambatan tercatat di kinerja 30 hari.`
       : `<b>${menunggu.length} tiket menunggu tanggapan; yang paling mendesak harus ditanggapi dalam ${durasi(menunggu[0].sisa)}.</b> Tanggapi dengan menjadwalkan kunjungan teknisi.`;
 
-  $("papan-sla").innerHTML = menunggu.length ? menunggu.map((t) => {
+  // papan dispatcher: lajur menurut sisa waktu tanggap, dari paling mendesak di kiri
+  $("jam").textContent = hhmm(new Date());
+  $("tanggal").textContent = new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" });
+  const LAJUR = [["lewat", "Lewat batas", (x) => x < 0], ["mepet", "Kurang dari 1 jam", (x) => x < 60], ["hari", "1 sampai 8 jam", (x) => x < 480], ["longgar", "Lebih dari 8 jam", () => true]];
+  const kartu = (t) => {
     const kelas = t.sisa < 0 ? "terlambat" : t.sisa < 60 ? "mepet" : "";
     const pakai = Math.min(100, Math.max(0, 100 * (1 - t.sisa / t.total)));
     return `<li class="tiket ${kelas}">
@@ -63,7 +67,15 @@ function gambar() {
       <div class="bawah"><span class="muted">masuk ${tglJam(t.dibuat_pada)}</span>
         <button class="btn primary" type="button" data-tanggapi="${t.id}">Tanggapi dan jadwalkan</button></div>
     </li>`;
-  }).join("") : `<li class="kosong">Tidak ada tiket yang menunggu tanggapan.</li>`;
+  };
+  const sisa = [...menunggu];
+  $("papan-sla").innerHTML = menunggu.length ? LAJUR.map(([k, judul, cocok]) => {
+    const isi = sisa.filter((t) => cocok(t.sisa));
+    isi.forEach((t) => sisa.splice(sisa.indexOf(t), 1));
+    return `<section class="lajur l-${k}${isi.length ? "" : " kosong"}" aria-label="${judul}, ${isi.length} tiket">
+      <div class="lajur-h"><span>${judul}</span><b>${isi.length}</b></div>
+      <ol>${isi.length ? isi.map(kartu).join("") : `<li class="slot-kosong">Tidak ada tiket</li>`}</ol></section>`;
+  }).join("") : `<p class="kosong">Tidak ada tiket yang menunggu tanggapan.</p>`;
 
   $("tbl-berjalan").innerHTML = berjalan.length ? berjalan.map((t) => `<tr>
       <td class="mono">${esc(t.nomor)}</td><td>${esc(t.unit.model)}<br><span class="mono muted">${esc(t.unit.serial)}</span></td>
@@ -83,11 +95,11 @@ function gambar() {
     return `<div class="banding"><div class="l">${label}</div>
       <div class="baris saya"><span>Mitra Anda</span><span class="bar"><i style="width:${(100 * (saya_ ?? 0)) / maks}%"></i></span><span class="v">${saya_ == null ? "-" : fmt(+saya_, satuan === "%" ? 1 : 0)} ${satuan}</span></div>
       <div class="baris"><span>Semua mitra</span><span class="bar"><i style="width:${(100 * (semua ?? 0)) / maks}%"></i></span><span class="v">${semua == null ? "-" : fmt(+semua, satuan === "%" ? 1 : 0)} ${satuan}</span></div>
-      ${saya_ != null && semua != null ? `<p class="muted" style="margin-top:4px;font-size:12px">${(lebihBaikKecil ? +saya_ <= +semua : +saya_ >= +semua) ? "Lebih baik dari atau sama dengan rata-rata." : "Di bawah rata-rata semua mitra."}</p>` : ""}</div>`;
+      ${saya_ != null && semua != null ? `<p class="muted" style="margin-top:4px">${(lebihBaikKecil ? +saya_ <= +semua : +saya_ >= +semua) ? "Lebih baik dari atau sama dengan rata-rata." : "Di bawah rata-rata semua mitra."}</p>` : ""}</div>`;
   };
   $("kinerja-isi").innerHTML = baris("Waktu tanggap rata-rata", k.tanggap_saya_menit, k.tanggap_semua_menit, "menit", true)
     + baris("Tiket ditanggapi tepat SLA", k.tepat_sla_saya, k.tepat_sla_semua, "%", false)
-    + `<p class="muted" style="font-size:12px">${fmt(+(k.tiket_saya ?? 0), 0)} tiket mitra Anda dalam 30 hari. Nama mitra lain tidak ditampilkan.</p>`;
+    + `<p class="muted">${fmt(+(k.tiket_saya ?? 0), 0)} tiket mitra Anda dalam 30 hari. Nama mitra lain tidak ditampilkan.</p>`;
 }
 
 // ---------- aksi ----------
@@ -132,7 +144,7 @@ async function masukPortal(session) {
       .subscribe();
   }
   $("mitra-nama").textContent = `${saya.mitra.nama} · ${saya.mitra.kota}`;
-  $("pengguna").textContent = mode === "contoh" ? "Akun contoh" : `${saya.nama} · ${session.user.email}`;
+  $("pengguna").textContent = mode === "contoh" ? saya.nama : `${saya.nama} · ${session.user.email}`;
   try { await muat(); } catch (e) { $("temuan").textContent = `Data tidak bisa dimuat: ${e.message}. Muat ulang halaman.`; }
 }
 
@@ -162,6 +174,9 @@ async function mulai() {
     $("banner").hidden = false;
     $("banner").textContent = `Mode data contoh: Supabase tidak terhubung (${e.message}). Jalankan "npx supabase@3.0.0 start" dan "docker compose -p konsep-12 up -d" di folder 12-supabase-mitra, lalu buka http://localhost:18120.`;
     $("sumber").textContent = "Data contoh bawaan";
+    // pratinjau: satu penanda di header, status koneksi disembunyikan
+    document.querySelector("[data-pratinjau]").hidden = !PRATINJAU;
+    $("sumber").hidden = PRATINJAU;
     return masukPortal(null);
   }
 

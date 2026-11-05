@@ -31,6 +31,7 @@ async function muat() {
     data = { ringkas, unit, kota, galat, tiket };
     mode = "api";
     $("banner").hidden = true;
+    document.querySelector("[data-pratinjau]").hidden = true;
     $("sumber").className = "sumber live";
     $("sumber").textContent = `Terhubung ke API · diperbarui pukul ${jam(ringkas.diperbarui)}`;
   } catch (e) {
@@ -38,8 +39,12 @@ async function muat() {
     mode = "contoh";
     $("banner").hidden = false;
     $("banner").textContent = `Mode data contoh: API tidak terhubung (${e.message}). Jalankan "docker compose up -d" di folder 09-ac-pintar lalu buka http://localhost:18090.`;
-    $("sumber").className = "sumber";
-    $("sumber").textContent = "Data contoh bawaan";
+    const tanda = document.querySelector("[data-pratinjau]");
+    tanda.hidden = false;
+    tanda.textContent = PRATINJAU ? "Pratinjau, data contoh" : "Data contoh";
+    // pratinjau: status sumber netral, bukan teks galat koneksi
+    $("sumber").className = PRATINJAU ? "sumber live" : "sumber";
+    $("sumber").textContent = PRATINJAU ? `Diperbarui pukul ${jam(data.ringkas.diperbarui)}` : "Data contoh bawaan";
   }
   gambar();
 }
@@ -122,12 +127,12 @@ async function detail(u) {
   if (!t.length) { $("grafikSuhu").innerHTML = `<p class="empty">Belum ada telemetri 24 jam terakhir untuk unit ini.</p>`; return; }
   $("catatanSuhu").textContent = t.every((r) => r.suhu_ruang == null) ? "Sensor suhu ruang galat: tidak ada bacaan suhu ruang, hanya suhu set yang tampil." : "";
   const x = t.map((r) => new Date(r.waktu)), n = (k) => t.map((r) => (r[k] == null ? null : +r[k]));
-  lineChart($("grafikSuhu"), { x, h: 240, unit: "°C", min: 18, max: 36, dec: 1,
+  lineChart($("grafikSuhu"), { x, h: 300, unit: "°C", min: 18, max: 36, dec: 1,
     series: [{ name: "Ruang", color: "var(--s1)", data: n("suhu_ruang") }, { name: "Set", color: "var(--s2)", data: n("suhu_set") }] });
   const pk = +u.kapasitas_pk * 3.9;
-  lineChart($("grafikArus"), { x, h: 150, unit: "A", min: 0, max: Math.ceil((pk * 1.8) / 2) * 2, dec: 0, ticks: 2,
+  lineChart($("grafikArus"), { x, h: 170, unit: "A", min: 0, max: Math.ceil((pk * 1.8) / 2) * 2, dec: 0, ticks: 2,
     series: [{ name: "Arus", color: "var(--s3)", data: n("arus_kompresor") }], bands: [{ y: +(pk * 1.25).toFixed(1), label: "batas 125 %", color: "var(--warn)" }] });
-  lineChart($("grafikTekanan"), { x, h: 150, unit: "psi", min: 60, max: 180, dec: 0, ticks: 3,
+  lineChart($("grafikTekanan"), { x, h: 170, unit: "psi", min: 60, max: 180, dec: 0, ticks: 3,
     series: [{ name: "Tekanan", color: "var(--s3)", data: n("tekanan_hisap") }], bands: [{ y: 115, label: "rendah 115", color: "var(--warn)" }] });
 }
 

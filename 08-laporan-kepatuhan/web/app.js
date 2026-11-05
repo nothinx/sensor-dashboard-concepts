@@ -177,7 +177,10 @@ function modeContoh(sebab) {
   renderKepatuhan(contoh());
   $("banner").hidden = false;
   $("banner").innerHTML = `Mode data contoh: ${esc(sebab)}. Formulir, daftar laporan, dan jejak audit butuh API. Jalankan <code>docker compose -p konsep-08 up -d</code> lalu buka <code>http://localhost:18080</code>.`;
-  $("conn").textContent = "Tidak tersambung ke API";
+  const tanda = document.querySelector("[data-pratinjau]");
+  tanda.hidden = false;
+  tanda.textContent = PRATINJAU ? "Pratinjau, data contoh" : "Data contoh";
+  $("conn").textContent = PRATINJAU ? "" : "Tidak tersambung ke API";
   // daftar laporan & jejak audit contoh, supaya pratinjau tanpa API tetap terisi
   const now = new Date(), jam = (h) => new Date(now - h * 36e5).toISOString(), hr = (d) => iso(new Date(now - d * 864e5));
   laporan = [
@@ -202,8 +205,17 @@ function modeContoh(sebab) {
     return `<li><time datetime="${esc(a.waktu)}">${w.toDateString() === hariIni ? hhmm(w) : `${w.getDate()}/${w.getMonth() + 1}`}</time>
       <div><span class="who">${esc(a.aktor)}</span> ${cerita(a)}</div></li>`;
   }).join("");
-  $("form").querySelectorAll("input, select, button").forEach((el) => { el.disabled = true; });
-  if (!document.documentElement.classList.contains("pratinjau")) tampilGalat("Formulir nonaktif karena API tidak terhubung.");
+  const f = $("form");
+  if (PRATINJAU) {
+    // pratinjau: formulir tampil terisi seperti aslinya, tetapi kiriman tidak pura-pura berhasil
+    f.dari.value = hr(6);
+    f.sampai.value = hr(0);
+    $("f-area").insertAdjacentHTML("beforeend", contoh().area.map((a) => `<option>${esc(a.nama)}</option>`).join(""));
+    f.addEventListener("submit", (e) => { e.preventDefault(); tampilGalat("Pratinjau tidak menerbitkan laporan. Penerbitan butuh API yang berjalan."); });
+    return;
+  }
+  f.querySelectorAll("input, select, button").forEach((el) => { el.disabled = true; });
+  tampilGalat("Formulir nonaktif karena API tidak terhubung.");
 }
 
 async function init() {

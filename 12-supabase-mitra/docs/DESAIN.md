@@ -24,9 +24,15 @@ nama atau peringkat mitra lain.
 ## Tata letak
 
 - Layar masuk: kartu 400 px di tengah (satu-satunya tugas di layar itu).
-- Portal: sidebar ramping 208 px (logo, 4 tautan, status koneksi), konten fluid hingga 1600 px.
-- Papan SLA: kisi kartu `auto-fill` minimal 300 px; di bawahnya tiket berjalan (lebar) + kinerja (sempit),
-  lalu tabel unit berulang. Di bawah 1200 px bertumpuk; di bawah 900 px sidebar menjadi baris atas.
+- Layar masuk: berkas kertas dengan tab "Mitra" di atas papan hijau gelap; logo klien di dasar kartu.
+- Portal: sidebar ramping 200 px (logo, 4 tautan, status koneksi), konten fluid selebar layar.
+- Kepala: judul 44 px, temuan 20 px; di kanan jam dinding meja dispatcher 48 px mono dan baris akun berisi penanda
+  pratinjau.
+- Papan SLA = papan dispatcher hijau botol gelap dengan empat lajur menurut sisa waktu tanggap: Lewat batas,
+  Kurang dari 1 jam, 1 sampai 8 jam, Lebih dari 8 jam. Kartu tiket kertas berpita atas (abu, peringatan, kritis),
+  hitung mundur 56 px, tombol tanggapi selebar kartu. Lajur kosong menampilkan slot putus-putus.
+- Di bawahnya tiket berjalan dan kinerja dalam satu lembar menyatu, lalu tabel unit berulang. Di bawah 1100 px
+  papan dua lajur; di bawah 900 px satu lajur, lajur kosong disembunyikan, jam dinding disembunyikan.
 
 ## Token
 
@@ -37,7 +43,11 @@ nama atau peringkat mitra lain.
 | `--accent` | `#1f5f4a` hijau botol | tombol primer, badge mitra, batang "Mitra Anda" (teks di atasnya 7,2:1) |
 | status | peringatan `#7a3f06`/`#fdf3e2`, kritis `#8f1717`/`#fbe9e9` | sisa waktu, chip status; ≥ 7,5:1 |
 | huruf | Onest 400/500/600, Spline Sans Mono 400/500 | antarmuka; nomor tiket, sisa waktu, angka |
-| radius | 6 / 8 / 14 / 16 px | badge / tombol & input / panel & kartu / kartu masuk |
+| `--papan` / `--papan-rel` / `--papan-ink` | `#183a2f` / `#24493c` / `#d6e4dd` | papan dispatcher, rel lajur, teks lajur (9,5:1) |
+| `--papan-terang` / `--papan-lewat` | `#f7fbf9` / `#ffb4ac` | angka lajur / angka lajur lewat batas (7,3:1) |
+| `--kertas` | `#fbfaf6` | kartu tiket; `--ink-3` 5,8:1, `--crit-ink` 8,7:1 |
+| radius | 3 / 4 / 6 px | kartu tiket / tombol, badge, input / papan |
+| skala tipe | 14 / 16 / 18 / 20 / 44 / 48 / 56 px | label / isi / judul kartu / temuan / judul / jam dinding / hitung mundur |
 
 ## Keputusan
 
@@ -46,4 +56,7 @@ nama atau peringkat mitra lain.
 - Warna status hanya untuk sisa waktu dan chip; kerangka tetap netral.
 - Notifikasi tiket baru berupa toast 4 detik dengan `role="status"`.
 - `[hidden]` dipaksa `display: none` karena `.masuk` dan `.portal` memakai `display: grid`.
+- Putaran 2: kisi kartu putih diganti papan berlajur menurut sisa waktu supaya urutan mendesak terbaca dari kiri.
+- Tepat satu penanda `data-pratinjau` di kepala; di pratinjau status koneksi di sidebar disembunyikan dan nama
+  akun contoh ditulis sebagai peran ("Koordinator Semarang"). Alur login Supabase tidak berubah.
 - sloplint: 0 FAIL.

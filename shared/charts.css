@@ -4,7 +4,7 @@
    --serious-bg/--serious-ink, --crit-bg/--crit-ink, --off-bg/--off-ink. Boleh ditimpa. */
 .chart { position: relative; width: 100%; }
 .chart svg { display: block; width: 100%; overflow: visible; }
-.chart text { fill: var(--ink-3); font: 11px var(--font-mono); }
+.chart text { fill: var(--ink-3); font-family: var(--font-mono); font-size: var(--chart-fs, 12px); }
 .tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface);
   padding: 6px 8px; border-radius: 4px; font: 12px/1.4 var(--font-mono); white-space: nowrap;
   transform: translate(-50%, calc(-100% - 10px)); z-index: 3; }
@@ -17,3 +17,4 @@
 .st.serious { background: var(--serious-bg); color: var(--serious-ink); }
 .st.crit { background: var(--crit-bg); color: var(--crit-ink); }
 .st.off { background: var(--off-bg); color: var(--off-ink); }
+.chart text.halo { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }

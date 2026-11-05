@@ -59,7 +59,8 @@ function render(d, modeContoh) {
 
   $("k-beban").innerHTML = `${fmt(r.beban_sekarang_kw ?? 0, 0)}<small>kW</small>`;
   $("k-beban-ts").textContent = r.beban_sekarang_ts ? `dibaca pukul ${jamMenit(r.beban_sekarang_ts)}` : "-";
-  $("k-energi").innerHTML = `${fmt(r.energi_hari_ini_kwh ?? 0, 0)}<small>kWh</small>`;
+  const roda = (t) => `<span class="roda"><span class="vh">${t}</span>${[...t].map((c) => (/\d/.test(c) ? `<i aria-hidden="true">${c}</i>` : `<b aria-hidden="true">${c}</b>`)).join("")}</span>`;
+  $("k-energi").innerHTML = `${roda(fmt(r.energi_hari_ini_kwh ?? 0, 0))}<small>kWh</small>`;
   $("k-energi-d").textContent = r.data_sampai ? `00.00 sampai ${jamMenit(r.data_sampai)}` : "-";
   $("k-pf").textContent = r.pf_rata_hari_ini == null ? "-" : fmt(r.pf_rata_hari_ini, 2);
 
@@ -69,7 +70,7 @@ function render(d, modeContoh) {
   const kw = b.map((p) => p.kw);
   const iMax = kw.indexOf(Math.max(...kw));
   lineChart($("grafik-beban"), {
-    x, h: 340, unit: "kW", dec: 0, min: 0, max: Math.ceil((batas * 1.15) / 200) * 200,
+    x, h: innerWidth > 1280 ? 420 : 300, unit: "kW", dec: 0, min: 0, max: Math.ceil((batas * 1.15) / 200) * 200,
     series: [{ name: "Beban", color: "var(--s1)", data: kw }],
     bands: [{ y: batas, label: `batas kontrak ${fmt(batas, 0)} kW`, color: "var(--crit)" }],
     marks: [{ i: iMax, label: `tertinggi 24 jam ${fmt(kw[iMax], 0)} kW` }],
@@ -84,7 +85,7 @@ function render(d, modeContoh) {
       <span class="bar"><span style="width:${(a.kwh / maks) * 100}%"></span></span>
       <span class="num">${fmt(a.kwh, 0)}</span><span class="pct num">${fmt((a.kwh / total) * 100, 0)} %</span></li>`).join("");
 
-  $("panel-ts").textContent = modeContoh ? "pembacaan sesaat (contoh)" : `pembacaan sesaat, pukul ${jamMenit(r.beban_sekarang_ts)}`;
+  $("panel-ts").textContent = `pembacaan sesaat, pukul ${jamMenit(r.beban_sekarang_ts)}`;
   $("panel").innerHTML = d.panel.map((p) => {
     const tanda = (k) => p.masalah.some((m) => m.startsWith(k)) ? ' class="n buruk"' : ' class="n"';
     return `<tr${p.jenis === "utama" || p.id === "MDP" ? ' class="utama"' : ""}>
@@ -102,7 +103,7 @@ function render(d, modeContoh) {
 
 // Batang energi per jam + garis batas kontrak (batas kW × 1 jam = kWh maksimum per jam)
 function barsBatas(el, rows, batas) {
-  const W = el.clientWidth || 700, H = 240, L = 48, R = 8, T = 16, B = 24;
+  const W = el.clientWidth || 700, H = 300, L = 48, R = 8, T = 16, B = 24;
   const hi = Math.ceil((batas * 1.12) / 400) * 400;
   const bw = (W - L - R) / 24;
   const sy = (v) => T + (1 - v / hi) * (H - T - B);
@@ -115,7 +116,7 @@ function barsBatas(el, rows, batas) {
   }
   rows.forEach((r, i) => {
     const x0 = L + i * bw + 2, w = bw - 4;
-    if (i % 3 === 0) g += `<text x="${x0 + w / 2}" y="${H - 6}" text-anchor="middle">${String(r.jam).padStart(2, "0")}.00</text>`;
+    if (i % (W < 600 ? 6 : 3) === 0) g += `<text x="${x0 + w / 2}" y="${H - 6}" text-anchor="middle">${String(r.jam).padStart(2, "0")}.00</text>`;
     if (r.kwh == null) return;
     const y = sy(r.kwh), rad = Math.min(3, w / 2);
     g += `<path d="M${x0},${H - B}V${y + rad}q0,-${rad} ${rad},-${rad}h${w - 2 * rad}q${rad},0 ${rad},${rad}V${H - B}z" fill="${i === iMax ? "var(--s1)" : "var(--s3)"}"><title>${String(r.jam).padStart(2, "0")}.00: ${fmt(r.kwh, 0)} kWh</title></path>`;
@@ -136,7 +137,9 @@ function modeContoh(sebab) {
   const b = $("banner");
   b.hidden = false;
   b.innerHTML = `<b>Mode data contoh: API tidak terhubung.</b> ${sebab} Jalankan <code>docker compose -p konsep-03 up -d</code> lalu buka <code>http://localhost:18030</code>.`;
-  koneksi("Tidak terhubung", "putus");
+  // pratinjau: API sengaja mati, status netral (bukan galat)
+  if (PRATINJAU) koneksi(`Pembacaan sampai pukul ${hhmm(NOW)}`, "");
+  else koneksi("Tidak terhubung", "putus");
   if (!terakhir) render(contoh(), true);
 }
 
@@ -160,6 +163,7 @@ async function tarik() {
   }
 }
 
+if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
 tarik();
 setInterval(tarik, POLL_MS);
-addEventListener("resize", () => terakhir ? render(terakhir, false) : null);
+addEventListener("resize", () => (terakhir ? render(terakhir, false) : TANPA_API ? render(contoh(), true) : null));

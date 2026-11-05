@@ -101,7 +101,8 @@ function renderDetail(m) {
   $("jejak").textContent = `${m.area} / ${m.id}`;
   $("nama").textContent = m.nama;
   const zAktif = m.status === "OFFLINE" ? null : m.zona;
-  $("stempel").outerHTML = `<span class="stempel besar z-${zAktif || "x"}" id="stempel" aria-hidden="true">${zAktif || "-"}</span>`;
+  $("stempel").outerHTML = `<span class="stempel besar z-${zAktif || "x"}" id="stempel" aria-hidden="true"><i>zona</i><b>${zAktif || "-"}</b><i>ISO 10816-1</i></span>`;
+  $("kop-mesin").textContent = `${m.id}, ${fmt(m.rpm, 0)} rpm`;
   $("temuan").innerHTML = temuan(m);
   const [k, label] = STATUS_ST[m.status];
   $("k-rms").innerHTML = m.rmsTerkiniMmS == null ? "-" : `${fmt(m.rmsTerkiniMmS, 1)}<small>mm/s</small>`;
@@ -119,7 +120,7 @@ function renderDetail(m) {
   const t = m.tren;
   if (t.length > 1) {
     lineChart($("tren"), {
-      x: t.map((p) => new Date(p.tanggal + "T12:00:00+07:00")), h: 240, unit: "mm/s", dec: 1, min: 0,
+      x: t.map((p) => new Date(p.tanggal + "T12:00:00+07:00")), h: 190, unit: "mm/s", dec: 1, min: 0,
       max: Math.ceil(Math.max(m.batasZona.cd * 1.1, ...t.map((p) => p.rmsMmS))),
       fmtX: (d) => `${d.getDate()}/${d.getMonth() + 1}`,
       series: [{ name: "RMS", color: "var(--s1)", data: t.map((p) => p.rmsMmS) }],
@@ -143,7 +144,7 @@ function renderDetail(m) {
 function spektrum(el, s) {
   if (!s) { el.innerHTML = `<p class="kosong">Tidak ada spektrum: sensor tidak mengirim data.</p>`; $("spek-legend").innerHTML = ""; return; }
   $("spek-d").textContent = `mm/s per garis ${fmt(s.resolusiHz, 0)} Hz, diukur ${hhmm(new Date(s.diukurPada))}`;
-  const W = el.clientWidth || 900, H = 300, L = 48, R = 16, T = 34, B = 26;
+  const W = el.clientWidth || 900, H = W < 600 ? 220 : 256, L = 48, R = 16, T = 34, B = 26;
   const a = s.amplitudoMmS, n = a.length, fMax = n * s.resolusiHz;
   const hi = Math.ceil(Math.max(...a) * 1.15 * 2) / 2;
   const sx = (f) => L + (f / fMax) * (W - L - R), sy = (v) => T + (1 - v / hi) * (H - T - B);
@@ -154,7 +155,7 @@ function spektrum(el, s) {
     const v = (hi * k) / 4;
     g += `<line x1="${L}" x2="${W - R}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--grid)"/><text x="${L - 6}" y="${sy(v) + 4}" text-anchor="end">${fmt(v, 1, false)}</text>`;
   }
-  for (let f = 0; f <= fMax; f += 50) g += `<text x="${sx(f)}" y="${H - 6}" text-anchor="middle">${f} Hz</text>`;
+  for (let f = 0; f <= fMax; f += W < 600 ? 100 : 50) g += `<text x="${sx(f)}" y="${H - 6}" text-anchor="middle">${f} Hz</text>`;
   const bw = Math.max(1, (W - L - R) / n - 1);
   a.forEach((v, i) => {
     const f = i * s.resolusiHz;
@@ -162,7 +163,7 @@ function spektrum(el, s) {
   });
   penanda.forEach(([f, lbl], k) => {
     g += `<line x1="${sx(f)}" x2="${sx(f)}" y1="${T - 4}" y2="${H - B}" stroke="${lbl.includes("BPFO") ? "var(--s1)" : "var(--ink-3)"}" stroke-dasharray="2 3" opacity=".8"/>
-          <text x="${sx(f)}" y="${T - 10 - (k % 2) * 0}" text-anchor="middle" style="fill:${lbl.includes("BPFO") ? "var(--accent-ink)" : "var(--ink-2)"}">${lbl}</text>`;
+          <text x="${sx(f)}" y="${T - 10 - (W < 600 ? (k % 2) * 13 : 0)}" text-anchor="middle" style="fill:${lbl.includes("BPFO") ? "var(--accent-ink)" : "var(--ink-2)"}">${lbl}</text>`;
   });
   el.classList.add("chart");
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${el.dataset.label}">${g}</svg><div class="tip"></div>`;
@@ -188,7 +189,9 @@ function keModeContoh(sebab) {
   const b = $("banner");
   b.hidden = false;
   b.innerHTML = `<b>Mode data contoh: API tidak terhubung.</b> ${sebab} Jalankan <code>docker compose -p konsep-04 up -d</code> lalu buka <code>http://localhost:18040</code>.`;
-  koneksi("Tidak terhubung", "putus");
+  // Pratinjau: API memang tidak dijalankan, jadi status netral, bukan galat.
+  if (PRATINJAU) koneksi("Pratinjau tanpa API", "");
+  else koneksi("Tidak terhubung", "putus");
   renderDaftar(contohDaftar());
   renderDetail(contohDetail(pilihan));
 }
@@ -238,6 +241,7 @@ $("form-pk").addEventListener("submit", async (e) => {
   }
 });
 
+if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
 muat();
 setInterval(muat, POLL_MS);
 addEventListener("resize", () => detail && renderDetail(detail));

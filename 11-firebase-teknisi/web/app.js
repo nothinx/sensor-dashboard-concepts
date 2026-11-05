@@ -43,13 +43,26 @@ function renderSemua() {
     tab === "dikerjakan" ? "Belum ada tugas yang sedang dikerjakan." : "Belum ada tugas selesai hari ini."}</li>`;
   document.querySelectorAll(".tab button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
   if (pilih) renderDetail();
+  renderRak();
+}
+
+// desktop: rak kartu absen semua tugas shift ini, di samping bingkai HP
+function renderRak() {
+  const urut = { dikerjakan: 0, baru: 1, selesai: 2 };
+  const isi = tugas.filter((t) => t.status !== "selesai" || hariIni(t.selesaiPada)).sort((a, b) => urut[a.status] - urut[b.status]);
+  const lubang = (nama, w) => `<span>${nama}</span><b>${w ? pukul(w) : "-"}</b>`;
+  $("rak").innerHTML = `<h3>Rak kartu tugas shift ini</h3><div class="slot-baris">${isi.map((t) => `<button type="button" class="slot s-${t.status}" data-buka="${t.id}" aria-current="${t.id === pilih}">
+      <span class="kop"><span>${esc(t.mesinId)}</span><span>${t.status}</span></span>
+      <span class="nm">${esc(t.mesinNama)}</span>
+      <span class="lubang">${lubang("Dibuat", t.dibuat)}${lubang("Diambil", t.diambilPada)}${lubang("Selesai", t.selesaiPada)}</span>
+    </button>`).join("")}</div>`;
 }
 
 function itemTugas(t) {
   const [k, teks] = PRIO[t.prioritas] || PRIO.sedang;
   const info = t.status === "baru" ? `dibuat ${sejak(t.dibuat)}` :
     t.status === "dikerjakan" ? `diambil ${esc(t.diambilOleh?.nama)}, pukul ${pukul(t.diambilPada)}` : `selesai pukul ${pukul(t.selesaiPada)} oleh ${esc(t.diambilOleh?.nama)}`;
-  return `<li><button class="item" type="button" data-id="${t.id}" aria-current="${t.id === pilih}">
+  return `<li><button class="item p-${t.status === "baru" ? t.prioritas : "x"}" type="button" data-id="${t.id}" aria-current="${t.id === pilih}">
     <span class="nama">${esc(t.mesinNama)}</span>
     <span class="lok">${esc(t.lokasi)} · ${esc(t.besaran)}</span>
     <span class="angka"><b>${fmt(t.nilaiPemicu)}</b><span>${esc(t.satuan)}, ambang ${fmt(t.ambang)}</span></span>
@@ -65,15 +78,15 @@ async function renderAktif(t) {
   const el = $("aktif");
   if (!t) { el.innerHTML = ""; return; }
   const m = mesin[t.mesinId]?.terakhir;
-  el.innerHTML = `<div class="kartu-aktif">
-    <span class="label">Sedang kamu kerjakan</span>
+  el.innerHTML = `<div class="kartu-aktif absen">
+    <span class="label">Sedang kamu kerjakan<span>${esc(t.mesinId)}</span></span>
     <div><h2>${esc(t.mesinNama)}</h2><p class="muted">${esc(t.lokasi)} · ${esc(t.besaran)}</p></div>
     <div class="nilai"><b>${fmt(m ? m.nilai : t.nilaiPemicu)}</b><span>${esc(t.satuan)} sekarang · ambang ${fmt(t.ambang)}</span></div>
     <div id="trenAktif" data-label="Tren ${esc(t.mesinNama)} 6 jam"><p class="memuat">Memuat tren…</p></div>
     ${capWaktu(t)}
     <button class="btn primary lebar" type="button" data-buka="${t.id}">Tutup tugas ini</button>
   </div>`;
-  await gambarTren("trenAktif", t, 6, 160);
+  await gambarTren("trenAktif", t, 6, 170);
 }
 
 async function gambarTren(elId, t, jam, h) {
@@ -108,22 +121,29 @@ function renderDetail() {
   else if (t.status === "dikerjakan" && milikSaya) aksi = `<label>Catatan penanganan<textarea id="catatan" maxlength="500" placeholder="Mis. bearing diganti, getaran turun ke 2,1 mm/s"></textarea></label>
     <button class="btn primary lebar" type="button" id="btnSelesai">Selesai</button>`;
   else if (t.status === "dikerjakan") aksi = `<p class="muted">Tugas ini sedang dikerjakan ${esc(t.diambilOleh?.nama)}.</p>`;
+  // kartu absen tugas: jam dibuat, diambil, selesai seperti baris kartu mesin jam
+  const baris = (nama, w, ket = "") => `<tr><th scope="row">${nama}</th><td>${w ? `<span class="tinta">${pukul(w)}</span>` : "-"}${ket ? `<span class="sub">${ket}</span>` : ""}</td></tr>`;
   d.innerHTML = `
     <button class="kembali" type="button" id="kembali">Kembali ke daftar</button>
-    <div><h2>${esc(t.mesinNama)}</h2><p class="muted">${esc(t.lokasi)}</p></div>
-    <div class="row-st">${t.status === "baru" ? st(k, teks) : t.status === "dikerjakan" ? st("warn", "Dikerjakan") : st("ok", "Selesai")}</div>
-    ${t.diambilOleh ? capWaktu(t) : ""}
-    <dl>
-      <dt>Pemicu</dt><dd><span class="num">${fmt(t.nilaiPemicu)} ${esc(t.satuan)}</span> (ambang ${fmt(t.ambang)})</dd>
-      <dt>Besaran</dt><dd>${esc(t.besaran)}</dd>
-      <dt>Dibuat</dt><dd>pukul ${pukul(t.dibuat)}, ${sejak(t.dibuat)}</dd>
-      ${t.selesaiPada ? `<dt>Selesai</dt><dd>pukul ${pukul(t.selesaiPada)}</dd>` : ""}
-    </dl>
-    ${t.catatan ? `<div class="catatan">${esc(t.catatan)}</div>` : ""}
-    <div><h3 style="font-size:15px;margin-bottom:8px">${esc(t.besaran)}, 24 jam</h3><div id="trenDetail" data-label="Tren ${esc(t.mesinNama)} 24 jam"><p class="memuat">Memuat tren…</p></div></div>
-    ${aksi}
-    <p class="galat" id="galatAksi" role="alert" hidden></p>`;
-  gambarTren("trenDetail", t, 24, 200);
+    <div class="d-kepala"><div><p class="kecil">Tugas terpilih · ${esc(t.besaran)}</p><h2>${esc(t.mesinNama)}</h2><p class="muted">${esc(t.lokasi)}</p></div>
+      <div class="row-st">${t.status === "baru" ? st(k, teks) : t.status === "dikerjakan" ? st("warn", "Dikerjakan") : st("ok", "Selesai")}</div></div>
+    <div class="d-isi">
+      <div class="d-kartu absen">
+        <div class="kop"><span>Kartu tugas</span><span>${esc(t.mesinId)}</span></div>
+        <div class="pemicu"><b>${fmt(t.nilaiPemicu)}</b><span>${esc(t.satuan)} saat dipicu · ambang ${fmt(t.ambang)}</span></div>
+        <table class="jam"><tbody>
+          ${baris("Dibuat", t.dibuat, sejak(t.dibuat))}
+          ${baris("Diambil", t.diambilPada, t.diambilOleh ? esc(t.diambilOleh.nama) : "")}
+          ${baris("Selesai", t.selesaiPada)}
+        </tbody></table>
+        ${t.diambilOleh ? capWaktu(t) : ""}
+        ${t.catatan ? `<div class="catatan">${esc(t.catatan)}</div>` : ""}
+        ${aksi}
+        <p class="galat" id="galatAksi" role="alert" hidden></p>
+      </div>
+      <div class="d-tren"><h3>${esc(t.besaran)}, 24 jam</h3><div id="trenDetail" data-label="Tren ${esc(t.mesinNama)} 24 jam"><p class="memuat">Memuat tren…</p></div></div>
+    </div>`;
+  gambarTren("trenDetail", t, 24, matchMedia("(min-width: 1280px)").matches ? 300 : 200);
   $("kembali").onclick = () => { pilih = null; renderSemua(); renderDetail(); };
   if ($("btnAmbil")) $("btnAmbil").onclick = () => ubah(t, "ambil");
   if ($("btnSelesai")) $("btnSelesai").onclick = () => ubah(t, "selesai", $("catatan").value.trim());
@@ -256,6 +276,10 @@ function modeContoh() {
   ];
   mesin = { "K-02": { terakhir: { nilai: 96.1, ts: new Date() } } };
   tampilUtama();
+  // satu penanda di header; di pratinjau berbunyi "Pratinjau, data contoh"
+  const tanda = document.querySelector("[data-pratinjau]");
+  tanda.hidden = false;
+  tanda.textContent = PRATINJAU ? "Pratinjau, data contoh" : "Data contoh";
   tampilBanner(`Mode data contoh: aplikasi dibuka langsung dari berkas, jadi tidak terhubung ke Firebase. Jalankan <code>docker compose -p konsep-11 up -d</code> lalu buka <code>http://localhost:18110</code>.`);
   renderSemua();
 }

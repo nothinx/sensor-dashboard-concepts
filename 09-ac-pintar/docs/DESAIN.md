@@ -18,8 +18,9 @@ tiket** (KPI pertama, warna aksen). Temuan di bawah judul menyebut jumlahnya dal
 
 ## Tata letak
 
-Daftar + detail tiga kolom: daftar unit bermasalah (340 px), detail unit (fluid), konteks per kota dan kode
-galat (320 px). Di bawah 1400 px kolom konteks turun ke bawah; di bawah 1100 px semua bertumpuk.
+Putaran 2: satu lembar menyatu bersekat garis. Kolom kiri 380 px berisi daftar unit bermasalah, lalu per kota
+dan kode galat; kolom kanan (sisa lebar) adalah detail unit, yaitu momen. Sel KPI pertama sejajar dengan kolom
+kiri. Di bawah 1700 px tiket turun ke bawah adegan; di bawah 1100 px semua bertumpuk.
 
 ## Token
 
@@ -30,7 +31,11 @@ galat (320 px). Di bawah 1400 px kolom konteks turun ke bawah; di bawah 1100 px 
 | `--accent` | `#b5481f` terakota | angka jawaban, tiket, batang per kota (5,2:1 pada surface) |
 | `--s1` / `--s2` / `--s3` | terakota / abu / hijau tua | suhu ruang / suhu set / arus & tekanan |
 | status | `--good` `--warn` `--crit` + pasangan `-bg`/`-ink` | chip status selalu ikon + teks |
-| radius | kartu 14 px, kontrol 8 px | radius bersarang |
+| radius | lembar 4 px, kontrol 4 px, tiket dan adegan 2 px | keluar dari rumpun kartu 8 sampai 14 px |
+| `--dinding` / `--plin` / `--lantai-1` | `#ece3d4` / `#cdbfa8` / `#b98d62` | adegan rumah di detail unit |
+| `--pelat` / `--pelat-teks` | `#2c2621` / `#f3ede4` | ID unit sebagai pelat nomor rumah (12,83:1) |
+| `--tiket` / `--tiket-garis` | `#fbf1cc` / `#d9c88c` | kertas tiket rangkap kuning (teks redup 5,05:1) |
+| skala tipe (1920) | isi 15, label 13, temuan 18, alasan 20, h1 36, ID unit 28, angka 32, jawaban 48 | `--chart-fs` 13 |
 | gerak | `cubic-bezier(0.22, 1, 0.36, 1)`, 120 sampai 150 ms | hover warna, tekan skala 0,98 |
 
 Huruf: **Plus Jakarta Sans** (rancangan Indonesia, ramah, angka tabular) untuk antarmuka;
@@ -43,3 +48,15 @@ Huruf: **Plus Jakarta Sans** (rancangan Indonesia, ramah, angka tabular) untuk a
 - Gambar unit dibuat dengan CSS, bukan foto atau ilustrasi generatif, supaya ringan dan statusnya hidup.
   Slot `[LOGO]` di badan unit menunggu aset merek.
 - Tombol aksi utama memfilter daftar ke unit tanpa tiket (aksi paling sering), bukan menulis ke database.
+- **Putaran 2, rumah di lebih banyak permukaan**: unit AC diperbesar (tinggi 124 px, layar 26 px) dan dipasang di
+  adegan dinding plester dengan list plafon, plin, dan lantai kayu; ID unit di daftar tampil sebagai pelat nomor
+  rumah; tiket memakai kertas rangkap kuning teknisi.
+- **Putaran 2, struktur permukaan**: tidak ada kartu putih melayang. KPI dan tiga wilayah berada dalam satu
+  lembar bersekat garis 1 px, sel KPI jawaban diberi latar aksen lembut.
+- **Putaran 2, pratinjau**: satu penanda `data-pratinjau` di header ("Pratinjau, data contoh"); status sumber
+  netral ("Diperbarui pukul …"), bukan "Data contoh bawaan".
+
+## Hasil pemeriksaan
+
+- sloplint putaran 2: 0 FAIL, 1 REFLEX (`.tip` milik `shared/charts.css`), 0 WARN.
+- Render 1920×1080 dan 390×844 `?pratinjau` di Chrome headless: tanpa galat konsol, tanpa geser samping.

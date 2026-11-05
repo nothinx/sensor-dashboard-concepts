@@ -42,14 +42,17 @@ function pintuTeks(g) {
   if (!p.terbuka) return `<span class="pintu">Pintu tertutup</span>`;
   const lama = Date.now() - p.sejak, sisa = g.pintu.batas_detik * 1000 - lama;
   return sisa > 0
-    ? `<span class="pintu buka">Pintu terbuka ${durasi(lama)} · <b>tutup dalam ${durasi(sisa)}</b></span>`
-    : `<span class="pintu lewat">Pintu terbuka ${durasi(lama)} · <b>lewat batas ${durasi(-sisa)}</b></span>`;
+    ? `<span class="pintu buka">Pintu terbuka ${durasi(lama)}<b>tutup dalam ${durasi(sisa)}</b></span>`
+    : `<span class="pintu lewat">Pintu terbuka ${durasi(lama)}<b>lewat batas ${durasi(-sisa)}</b></span>`;
 }
 
 // ---------- kerangka (dibuat sekali, lalu hanya isinya yang diperbarui supaya fokus keyboard tidak hilang)
 function kerangka() {
+  // kartu = label pintu/rak: kode ruang terbalik di kiri atas, seperti label bernomor di gudang
   const kartu = (g, besar) => `<button type="button" class="kartu" data-id="${g.id}" aria-pressed="${g.id === pilih}">
-      <span class="k-atas"><span class="k-nama">${g.nama}</span><span class="k-status" data-f="status"></span></span>
+      <span class="tirai" aria-hidden="true"></span>
+      <span class="k-atas"><span class="k-kode">${g.id.toUpperCase()}</span><span class="k-status" data-f="status"></span></span>
+      <span class="k-nama">${g.nama}</span>
       <span class="k-isi">${g.isi}${g.lokasi ? `<br>${g.lokasi}` : ""}</span>
       <span class="k-nilai num" data-f="nilai"></span>
       ${besar ? `<span class="termo" data-f="termo"></span>` : `<span class="rh-bar" data-f="rhbar"></span>`}
@@ -63,7 +66,7 @@ function kerangka() {
 
 function termometer(g, v) {
   const a = g.metrik.suhu, lo = a.k[0] - 3, hi = a.k[1] + 3, pos = (x) => `${Math.min(100, Math.max(0, ((x - lo) / (hi - lo)) * 100))}%`;
-  return `<span class="termo-track"><span class="termo-aman" style="left:${pos(a.w[0])};right:calc(100% - ${pos(a.w[1])})"></span>
+  return `<span class="termo-track"><span class="termo-bola"></span><span class="termo-aman" style="left:${pos(a.w[0])};right:calc(100% - ${pos(a.w[1])})"></span>
     ${v != null ? `<span class="termo-titik" style="left:${pos(v)}"></span>` : ""}</span>
     <span class="termo-label"><span style="left:${pos(a.w[0])}">${fmt(a.w[0], 0)} °C</span><span style="left:${pos(a.w[1])}">${fmt(a.w[1], 0)} °C</span></span>`;
 }
@@ -74,6 +77,7 @@ function perbarui() {
     const { s, teks } = status(g);
     if (!el) continue;
     el.dataset.status = s;
+    el.dataset.pintu = g.pintu_status?.terbuka ? "buka" : "";
     el.setAttribute("aria-pressed", g.id === pilih);
     const m = Object.keys(g.metrik)[0], v = g.nilai[m];
     el.querySelector('[data-f="status"]').innerHTML = st(s, teks);
@@ -137,7 +141,7 @@ async function grafik() {
   a.w.forEach((v, i) => v != null && bands.push({ y: v, label: `${i ? "maks" : "min"} ${fmt(v, 0)}`, color: "var(--warn)" }));
   const vals = deret.map((d) => d.v).concat(bands.map((b) => b.y));
   lineChart($("g-utama"), { x: deret.map((d) => d.ts), series: [{ name: g.nama, color: "var(--s1)", data: deret.map((d) => d.v) }],
-    unit: a.satuan, dec: 1, h: 240, bands, min: Math.floor(Math.min(...vals) - 1), max: Math.ceil(Math.max(...vals) + 1) });
+    unit: a.satuan, dec: 1, h: 220, bands, min: Math.floor(Math.min(...vals) - 1), max: Math.ceil(Math.max(...vals) + 1) });
 }
 
 // ---------- data & koneksi
@@ -181,7 +185,9 @@ function pollingSaja(sebab) {
 function modeContoh(pesan) {
   contohAktif = true;
   pita(pesan);
-  koneksi("Mode data contoh", "putus");
+  // Pratinjau: API memang tidak dijalankan, jadi status netral, bukan galat.
+  if (PRATINJAU) koneksi("Pratinjau tanpa API", "");
+  else koneksi("Mode data contoh", "putus");
   const c = window.CONTOH_RUANG, geser = Date.now() - c.ts;
   ruang = c.ruang.map((g) => ({ ...g, ts: Object.fromEntries(Object.entries(g.ts).map(([k, v]) => [k, v + geser])),
     pintu_status: g.pintu_status && { ...g.pintu_status, sejak: g.pintu_status.sejak + geser } }));
@@ -200,4 +206,5 @@ async function mulai() {
   if (!contohAktif) setInterval(grafik, 60e3);
 }
 
+if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
 mulai();

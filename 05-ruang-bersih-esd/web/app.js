@@ -36,7 +36,9 @@ async function mulai() {
 function modeContoh(pesan) {
   contohAktif = true;
   pita(pesan);
-  koneksi("Mode data contoh", "putus");
+  // Pratinjau: API memang tidak dijalankan, jadi status netral, bukan galat.
+  if (PRATINJAU) koneksi("Pratinjau tanpa API");
+  else koneksi("Mode data contoh", "putus");
   terima(window.CONTOH_SNAPSHOT, true);
 }
 
@@ -69,10 +71,14 @@ function renderEsd() {
   const { lulus, gagal } = snap.esd.hari_ini;
   $("esd-lulus").textContent = fmt(lulus, 0);
   const total = lulus + gagal;
+  $("esd-bar").firstElementChild.style.width = total ? `${(lulus / total) * 100}%` : "0";
   $("esd-rinci").innerHTML = total
     ? `${gagal ? st("warn", `${gagal} gagal`) : st("ok", "tidak ada yang gagal")} <span class="mono">${fmt((lulus / total) * 100, 1)} %</span> lulus dari ${fmt(total, 0)} uji`
     : "Belum ada uji hari ini";
 }
+
+// label titik di kiri pin bila pin dekat dinding kanan ruangnya
+const kiri = (t) => { const g = snap.ruang.find((r) => r.id === t.ruang).geometri; return t.x > g.x + g.w - 9; };
 
 function renderDenah() {
   const plan = $("plan");
@@ -82,11 +88,14 @@ function renderDenah() {
     const info = iklim ? `${fmt(iklim.nilai.suhu, 1)} °C · ${fmt(iklim.nilai.rh, 0)} %RH`
       : g.id === "airlock" ? (() => { const p = snap.titik.find((t) => t.jenis === "tekanan"); return p ? `beda tekanan ${fmt(p.nilai.dp, 1)} Pa` : ""; })() : "";
     const { x, y, w, h } = g.geometri;
-    return `<div class="zona ${g.status}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"><b>${g.nama}</b><span class="mono">${info}</span></div>`;
+    // pintu menghadap koridor tengah; airlock punya pintu kedua ke luar gedung
+    const pintu = y < 50 ? "p-bawah" : g.id === "airlock" ? "p-atas p-luar" : "p-atas";
+    const tanda = g.status === "ok" ? "" : st(g.status, { warn: "Perlu perhatian", crit: "Di luar syarat", off: "Ada sensor offline" }[g.status]);
+    return `<div class="zona ${g.status} ${pintu}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"><b>${g.nama}</b><span class="mono">${info}</span>${tanda}</div>`;
   }).join("");
   const pins = snap.titik.map((t) =>
     `<button type="button" class="pin ${t.status}" style="left:${t.x}%;top:${t.y}%" data-id="${t.id}" aria-pressed="${t.id === pilih}"
-      aria-label="${t.id}, ${NAMA_JENIS[t.jenis]}, ${LABEL[t.status]}">${KODE[t.jenis]}</button>`).join("");
+      aria-label="${t.id}, ${NAMA_JENIS[t.jenis]}, ${LABEL[t.status]}">${KODE[t.jenis]}<span class="pin-id${kiri(t) ? " kiri" : ""}" aria-hidden="true">${t.id}</span></button>`).join("");
   plan.innerHTML = zona + pins;
   plan.querySelectorAll(".pin").forEach((b) => b.addEventListener("click", () => { pilih = b.dataset.id; renderDenah(); renderDetail(); }));
 }
@@ -184,4 +193,5 @@ function renderRuang() {
     : `<tr><td colspan="5" class="kosong">Belum ada uji gelang hari ini.</td></tr>`;
 }
 
+if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
 mulai();

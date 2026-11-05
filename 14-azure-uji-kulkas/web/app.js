@@ -9,6 +9,7 @@ const persen = (v) => (v == null ? "-" : `${fmt(v, 0)} %`);
 
 let data = null, pilihan = null, modeContoh = false, ikuti = true; // ikuti = panel unit mengikuti unit terbaru
 const cacheUnit = new Map(); // unit → daftar percobaan (dengan kurva)
+if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
 
 // ---------- render ----------
 function render(d) {
@@ -23,15 +24,19 @@ function render(d) {
     $("temuan").innerHTML = `<b>${d.jumlah_menunggu} unit menunggu uji ulang.</b> ${utama ? `Penyebab gagal terbanyak 24 jam: ${esc(utama.label.toLowerCase())}.` : ""}`;
   }
   const unit24 = L.L1.unit_24j + L.L2.unit_24j;
+  // merah hanya untuk unit gagal; angka ringkasan tetap netral, FPY di bawah target diberi tanda peringatan
   const kpi = [
     ["FPY Lini 1, 24 jam", persen(L.L1.fpy_24j), L.L1.fpy_24j < d.fpy_min],
     ["FPY Lini 2, 24 jam", persen(L.L2.fpy_24j), L.L2.fpy_24j < d.fpy_min],
     ["Unit diuji, 24 jam", `${fmt(unit24, 0)}<small>unit</small>`],
-    ["Menunggu uji ulang", `${d.jumlah_menunggu}<small>unit</small>`, d.jumlah_menunggu > 0],
-    ["Alarm, 24 jam", `${d.alarm.length}`, d.alarm.some((a) => a.tingkat === "kritis")],
+    ["Menunggu uji ulang", `${d.jumlah_menunggu}<small>unit</small>`],
+    ["Alarm, 24 jam", `${d.alarm.length}`],
   ];
-  $("kpis").innerHTML = kpi.map(([l, v, buruk]) => `<div><dt>${l}</dt><dd class="${buruk ? "buruk" : ""}">${v}</dd></div>`).join("");
-  for (const l of ["L1", "L2"]) $(`lini-${l}`).innerHTML = kartuLini(l, L[l], d.fpy_min);
+  $("kpis").innerHTML = kpi.map(([l, v, bawah]) => `<div><dt>${l}</dt><dd>${v}${bawah ? `<small class="bawah">di bawah ${fmt(d.fpy_min, 0)} %</small>` : ""}</dd></div>`).join("");
+  for (const l of ["L1", "L2"]) {
+    $(`lini-${l}`).innerHTML = kartuLini(l, L[l], d.fpy_min);
+    $(`lini-${l}`).classList.toggle("bawah", L[l].fpy_20_terakhir != null && L[l].fpy_20_terakhir < d.fpy_min);
+  }
   if (ikuti || !cacheUnit.has(pilihan)) {
     const t = [L.L1.terakhir, L.L2.terakhir].filter(Boolean).sort((a, b) => b.waktu.localeCompare(a.waktu))[0];
     if (t) { if (!modeContoh) cacheUnit.set(t.unit, [t]); pilihan = t.unit; }
@@ -52,23 +57,28 @@ function render(d) {
   $("main").setAttribute("aria-busy", "false");
 }
 
+// lajur lini: pelat nama di kiri, sabuk 10 percobaan terakhir (terbaru di kanan, dekat bilik uji), rincian di bawah sabuk
 function kartuLini(l, x, fpyMin) {
-  const t = x.terakhir;
-  return `<div class="nama"><h2 id="h-${l}">${NAMA[l]}</h2><span class="model">${esc(t?.model ?? "")}</span></div>
-    <div class="angka">
-      <div><span>FPY 20 unit terakhir</span><b class="${x.fpy_20_terakhir < fpyMin ? "buruk" : ""}">${persen(x.fpy_20_terakhir)}</b></div>
-      <div><span>Unit 24 jam</span><b class="kecil">${fmt(x.unit_24j, 0)}</b></div>
+  const t = x.terakhir, bawah = x.fpy_20_terakhir != null && x.fpy_20_terakhir < fpyMin;
+  return `<div class="pelat">
+      <div class="nama"><h2 id="h-${l}">${NAMA[l]}</h2><span class="model">${esc(t?.model ?? "")}</span></div>
+      <div class="fpy"><span>FPY 20 unit terakhir</span><b>${persen(x.fpy_20_terakhir)}</b></div>
+      ${bawah ? st("warn", `Di bawah target ${fmt(fpyMin, 0)} %`) : st("ok", `Memenuhi target ${fmt(fpyMin, 0)} %`)}
     </div>
-    <h3>10 percobaan terakhir</h3>
-    <div class="stempel-grid">${x.riwayat.map((u) => stempel(u)).join("")}</div>
-    <dl class="rinci"><dt>Unit pada jam berjalan</dt><dd>${x.fpy_per_jam[23].unit}</dd><dt>Gagal percobaan pertama, 24 jam</dt><dd>${x.gagal_24j}</dd><dt>Menunggu uji ulang</dt><dd>${x.menunggu}</dd><dt>FPY 24 jam</dt><dd>${persen(x.fpy_24j)}</dd></dl>`;
+    <div class="jalur">
+      <h3>10 percobaan terakhir, terbaru di kanan</h3>
+      <div class="sabuk">${[...x.riwayat].reverse().map((u) => stempel(u)).join("")}<span class="bilik">bilik uji</span></div>
+      <dl class="rinci"><div><dt>Unit 24 jam</dt><dd>${fmt(x.unit_24j, 0)}</dd></div><div><dt>Unit jam berjalan</dt><dd>${x.fpy_per_jam[23].unit}</dd></div>
+        <div><dt>Gagal percobaan pertama</dt><dd>${x.gagal_24j}</dd></div><div><dt>Menunggu uji ulang</dt><dd>${x.menunggu}</dd></div><div><dt>FPY 24 jam</dt><dd>${persen(x.fpy_24j)}</dd></div></dl>
+    </div>`;
 }
 
 function stempel(u, besar = false) {
   const t = u.hasil === "lulus" ? "LULUS" : "GAGAL", seq = u.unit.slice(-4);
   const label = `${u.unit}, percobaan ${u.percobaan}, ${u.hasil}, pukul ${pukul(u.waktu)}`;
   if (besar) return `<div class="stempel besar ${u.hasil}" role="img" aria-label="Hasil: ${t}"><span class="t">${t}</span><span class="s">P${u.percobaan}</span></div>`;
-  return `<button type="button" class="stempel ${u.hasil}" data-unit="${esc(u.unit)}" aria-pressed="${u.unit === pilihan}" aria-label="${esc(label)}" title="${esc(label)}">
+  const miring = ((parseInt(seq, 10) || 0) % 5) * 2 - 4; // cap tangan tidak pernah lurus sempurna
+  return `<button type="button" class="stempel ${u.hasil}" style="--r:${miring}deg" data-unit="${esc(u.unit)}" aria-pressed="${u.unit === pilihan}" aria-label="${esc(label)}" title="${esc(label)}">
     <span><span class="t">${t}</span><br><span class="s">${seq}${u.percobaan > 1 ? "·2" : ""}</span></span></button>`;
 }
 
@@ -107,16 +117,16 @@ const terbaruUnit = () => [data.lini.L1.terakhir, data.lini.L2.terakhir].filter(
 
 // Momen: kurva penurunan tekanan (skala log) dengan jendela target
 function grafikVakum(el, u, b) {
-  const W = el.clientWidth || 700, H = 260, L = 64, R = 16, T = 12, B = 28;
+  const W = el.clientWidth || 700, H = 220, L = 64, R = 16, T = 12, B = 28;
   const lo = 1, hi = Math.log10(200000);
   const sx = (t) => L + (t / 300) * (W - L - R);
   const sy = (p) => T + (1 - (Math.log10(Math.max(p, 10)) - lo) / (hi - lo)) * (H - T - B);
   let g = `<rect x="${sx(0)}" y="${sy(b.vakum_target_pa)}" width="${sx(b.vakum_waktu_maks_s) - sx(0)}" height="${sy(10) - sy(b.vakum_target_pa)}"
       fill="var(--target)" stroke="var(--lulus)" stroke-dasharray="4 3"/>
-    <text x="${sx(4)}" y="${sy(b.vakum_target_pa) + 14}" style="fill:var(--lulus)">jendela target: ≤ ${b.vakum_target_pa} Pa dalam ${b.vakum_waktu_maks_s} dtk</text>`;
+    <text x="${sx(4)}" y="${sy(b.vakum_target_pa) + 18}" style="fill:var(--lulus)">jendela target: ≤ ${b.vakum_target_pa} Pa dalam ${b.vakum_waktu_maks_s} dtk</text>`;
   for (const [p, lbl] of [[100, "100 Pa"], [1000, "1 kPa"], [10000, "10 kPa"], [100000, "100 kPa"]])
     g += `<line x1="${L}" x2="${W - R}" y1="${sy(p)}" y2="${sy(p)}" stroke="var(--grid)"/><text x="${L - 6}" y="${sy(p) + 4}" text-anchor="end">${lbl}</text>`;
-  for (let t = 0; t <= 300; t += 60) g += `<text x="${sx(t)}" y="${H - 8}" text-anchor="${t === 0 ? "start" : t === 300 ? "end" : "middle"}">${t} dtk</text>`;
+  for (let t = 0; t <= 300; t += W < 500 ? 100 : 60) g += `<text x="${sx(t)}" y="${H - 8}" text-anchor="${t === 0 ? "start" : t === 300 ? "end" : "middle"}">${t} dtk</text>`;
   const k = u.vakum_kurva;
   g += `<path d="${k.map(([t, p], i) => `${i ? "L" : "M"}${sx(t).toFixed(1)},${sy(p).toFixed(1)}`).join("")}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round"/>`;
   if (u.vakum_capai_s != null) {
@@ -143,10 +153,10 @@ function grafikVakum(el, u, b) {
 function grafikFpy(d) {
   const x = d.lini.L1.fpy_per_jam.map((h) => new Date(h.jam));
   lineChart($("fpy"), {
-    x, h: 220, unit: "%", min: 50, max: 100, dec: 0, ticks: 5,
+    x, h: 230, unit: "%", min: 50, max: 100, dec: 0, ticks: 5,
     series: [{ name: "Lini 1", color: "var(--s1)", data: d.lini.L1.fpy_per_jam.map((h) => h.fpy) },
              { name: "Lini 2", color: "var(--s2)", data: d.lini.L2.fpy_per_jam.map((h) => h.fpy) }],
-    bands: [{ y: d.fpy_min, label: `target ${fmt(d.fpy_min, 0)} %`, color: "var(--crit)" }],
+    bands: [{ y: d.fpy_min, label: `target ${fmt(d.fpy_min, 0)} %`, color: "var(--ink-2)" }],
   });
 }
 
@@ -250,7 +260,8 @@ function contoh() {
 function pakaiContoh(sebab) {
   modeContoh = true;
   render(contoh());
-  sambung("Data contoh bawaan");
+  sambung("API tidak terhubung, memakai data contoh bawaan");
+  $("conn").hidden = PRATINJAU; // pratinjau: cukup penanda di header
   banner(`Mode data contoh: ${esc(sebab)}. Jalankan <code>docker compose -p konsep-14 up -d</code> di folder proyek 14 lalu buka <code>http://localhost:18140</code>.`);
 }
 
