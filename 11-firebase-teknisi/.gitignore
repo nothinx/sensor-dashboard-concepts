@@ -1,0 +1,6 @@
+.env
+public/
+functions/node_modules/
+simulator/node_modules/
+.firebase/
+*-debug.log

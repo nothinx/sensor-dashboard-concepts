@@ -1,0 +1,47 @@
+# Proyek 01 · Pusat Pemantauan Pabrik. Jalankan: docker compose up -d --build
+name: konsep-01
+services:
+  db:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_DB: ${PGDATABASE:?isi .env, salin dari .env.example}
+      POSTGRES_USER: ${PGUSER:?isi .env}
+      POSTGRES_PASSWORD: ${PGPASSWORD:?isi .env}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    ports: ["127.0.0.1:18011:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 20
+
+  api:
+    build: { context: ., dockerfile: api/Dockerfile }
+    image: konsep-01-app:dev
+    command: ["node", "api/server.js"]
+    environment: &pgenv
+      PGHOST: db
+      PGDATABASE: ${PGDATABASE}
+      PGUSER: ${PGUSER}
+      PGPASSWORD: ${PGPASSWORD}
+      TZ_OFFSET_MIN: ${TZ_OFFSET_MIN:-420}
+      SHIFT_STARTS: ${SHIFT_STARTS:-06:00,14:00,22:00}
+    volumes:
+      - ./web:/srv/web:ro
+      - ../shared:/srv/shared:ro
+    ports: ["18010:8080"]
+    depends_on: { db: { condition: service_healthy } }
+    restart: unless-stopped
+
+  simulator:
+    image: konsep-01-app:dev
+    command: ["node", "simulator/sim.js"]
+    environment: *pgenv
+    depends_on:
+      db: { condition: service_healthy }
+      api: { condition: service_started }
+    restart: unless-stopped
+
+volumes:
+  dbdata:

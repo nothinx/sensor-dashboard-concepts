@@ -1,0 +1,158 @@
+openapi: 3.0.3
+info:
+  title: API IPAL & Emisi Lingkungan (mockup proyek 10)
+  version: 1.0.0
+  description: >
+    REST baca-saja untuk dasbor pemantauan air limbah. Semua angka adalah data contoh.
+    Baku mutu di parameter adalah contoh [REAL DATA: baku mutu sesuai izin].
+servers:
+  - url: http://localhost:18102/api/v1
+security:
+  - kunciApi: []
+components:
+  securitySchemes:
+    kunciApi: { type: apiKey, in: header, name: X-API-Key }
+  parameters:
+    titik: { name: titik, in: query, schema: { type: string, enum: [S1, S2, S3, S4], default: S4 } }
+  schemas:
+    Galat:
+      type: object
+      required: [galat, pesan]
+      properties: { galat: { type: string }, pesan: { type: string } }
+    Parameter:
+      type: object
+      properties:
+        kode: { type: string, enum: [ph, cod, tss, nh3n, debit, suhu] }
+        nama: { type: string }
+        satuan: { type: string }
+        bm_min: { type: number, nullable: true }
+        bm_maks: { type: number, nullable: true }
+        desimal: { type: integer }
+        keterangan: { type: string, nullable: true }
+    NilaiTerakhir:
+      type: object
+      properties:
+        nilai: { type: number }
+        waktu: { type: string, format: date-time }
+        status: { type: string, enum: [melewati, mendekati, normal, tanpa_baku_mutu, dipantau] }
+    Titik:
+      type: object
+      properties:
+        kode: { type: string }
+        nama: { type: string }
+        tahap: { type: string }
+        urutan: { type: integer }
+        wajib_baku_mutu: { type: boolean }
+        nilai: { type: object, additionalProperties: { $ref: '#/components/schemas/NilaiTerakhir' } }
+    Kejadian:
+      type: object
+      properties:
+        id: { type: integer }
+        titik: { type: string }
+        parameter: { type: string }
+        nama_parameter: { type: string }
+        satuan: { type: string }
+        mulai: { type: string, format: date-time }
+        selesai: { type: string, format: date-time, nullable: true }
+        puncak: { type: number }
+        batas: { type: number }
+        durasi_menit: { type: integer }
+    LogWebhook:
+      type: object
+      properties:
+        id: { type: integer }
+        waktu: { type: string, format: date-time }
+        url: { type: string }
+        dari: { type: string, format: date-time }
+        sampai: { type: string, format: date-time }
+        jumlah_data: { type: integer }
+        status_http: { type: integer, nullable: true }
+        durasi_ms: { type: integer, nullable: true }
+        hasil: { type: string, enum: [terkirim, gagal] }
+        galat: { type: string, nullable: true }
+  responses:
+    Salah: { description: Input tidak valid, content: { application/json: { schema: { $ref: '#/components/schemas/Galat' } } } }
+    TanpaIzin: { description: Kunci API kosong atau salah, content: { application/json: { schema: { $ref: '#/components/schemas/Galat' } } } }
+paths:
+  /sehat:
+    get:
+      summary: Pemeriksaan kesehatan (tanpa kunci)
+      security: []
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { status: { type: string }, waktu: { type: string, format: date-time } } } } } }
+  /parameter:
+    get:
+      summary: Parameter dan baku mutu
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Parameter' } } } } } } }
+        '401': { $ref: '#/components/responses/TanpaIzin' }
+  /titik:
+    get:
+      summary: Titik sampling dengan nilai terakhir dan status baku mutu
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Titik' } } } } } } }
+        '401': { $ref: '#/components/responses/TanpaIzin' }
+  /pembacaan:
+    get:
+      summary: Deret pembacaan teragregasi per kelompok waktu
+      parameters:
+        - $ref: '#/components/parameters/titik'
+        - { name: parameter, in: query, required: true, schema: { type: string, enum: [ph, cod, tss, nh3n, debit, suhu] } }
+        - { name: jam, in: query, schema: { type: integer, minimum: 1, maximum: 168, default: 24 } }
+        - { name: interval, in: query, description: menit per kelompok, schema: { type: integer, minimum: 1, maximum: 240, default: 15 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  titik: { type: string }
+                  parameter: { type: string }
+                  interval_menit: { type: integer }
+                  data:
+                    type: array
+                    items: { type: object, properties: { waktu: { type: string, format: date-time }, rata: { type: number }, min: { type: number }, maks: { type: number }, n: { type: integer } } }
+        '400': { $ref: '#/components/responses/Salah' }
+        '401': { $ref: '#/components/responses/TanpaIzin' }
+  /kejadian:
+    get:
+      summary: Kejadian melewati baku mutu
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [aktif, semua], default: semua } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 20 } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Kejadian' } } } } } } }
+        '400': { $ref: '#/components/responses/Salah' }
+        '401': { $ref: '#/components/responses/TanpaIzin' }
+  /webhook:
+    get:
+      summary: Ringkasan dan log pengiriman ke sistem pelaporan
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 10 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ringkasan:
+                    type: object
+                    properties:
+                      terakhir_terkirim: { type: string, format: date-time, nullable: true }
+                      data_terkirim_sampai: { type: string, format: date-time, nullable: true }
+                      gagal_24jam: { type: integer }
+                      total_24jam: { type: integer }
+                  data: { type: array, items: { $ref: '#/components/schemas/LogWebhook' } }
+        '401': { $ref: '#/components/responses/TanpaIzin' }
+  /lab:
+    get:
+      summary: Hasil uji laboratorium per titik
+      parameters: [{ $ref: '#/components/parameters/titik' }]
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Salah' }
+        '401': { $ref: '#/components/responses/TanpaIzin' }

@@ -1,0 +1,25 @@
+{
+  "_catatan": "Konfigurasi ruang penyimpanan (sumber tunggal untuk simulator, API, dan dasbor). Ambang adalah CONTOH; sesuaikan dengan lembar data material dan prosedur gudang klien.",
+  "ruang": [
+    { "id": "cs-a", "nama": "Cold storage A", "jenis": "dingin", "isi": "Pasta solder lot berjalan", "setpoint": 4.0,
+      "metrik": { "suhu": { "w": [2, 10], "k": [0, 12], "satuan": "°C" } }, "pintu": { "batas_detik": 300 } },
+    { "id": "cs-b", "nama": "Cold storage B", "jenis": "dingin", "isi": "Pasta solder cadangan, lem SMT", "setpoint": 4.0,
+      "metrik": { "suhu": { "w": [2, 10], "k": [0, 12], "satuan": "°C" } }, "pintu": { "batas_detik": 300 } },
+    { "id": "fz-01", "nama": "Freezer lem epoksi", "jenis": "beku", "isi": "Lem epoksi, underfill", "setpoint": -18.0,
+      "metrik": { "suhu": { "w": [-25, -15], "k": [-30, -12], "satuan": "°C" } }, "pintu": { "batas_detik": 120 } },
+    { "id": "dc-01", "nama": "Lemari kering DC-01", "jenis": "lemari_kering", "isi": "IC BGA, MCU", "lokasi": "Gudang komponen, rak A",
+      "metrik": { "rh": { "w": [null, 5], "k": [null, 10], "satuan": "%RH" } }, "pintu": { "batas_detik": 60 } },
+    { "id": "dc-02", "nama": "Lemari kering DC-02", "jenis": "lemari_kering", "isi": "LED driver", "lokasi": "Gudang komponen, rak A",
+      "metrik": { "rh": { "w": [null, 5], "k": [null, 10], "satuan": "%RH" } }, "pintu": { "batas_detik": 60 } },
+    { "id": "dc-03", "nama": "Lemari kering DC-03", "jenis": "lemari_kering", "isi": "Modul Wi-Fi", "lokasi": "Gudang komponen, rak B",
+      "metrik": { "rh": { "w": [null, 5], "k": [null, 10], "satuan": "%RH" } }, "pintu": { "batas_detik": 60 } },
+    { "id": "dc-05", "nama": "Lemari kering DC-05", "jenis": "lemari_kering", "isi": "Reel sisa produksi", "lokasi": "Ruang SMT, sisi Line 1",
+      "metrik": { "rh": { "w": [null, 5], "k": [null, 10], "satuan": "%RH" } }, "pintu": { "batas_detik": 60 } },
+    { "id": "dc-06", "nama": "Lemari kering DC-06", "jenis": "lemari_kering", "isi": "Reel sisa produksi", "lokasi": "Ruang SMT, sisi Line 2",
+      "metrik": { "rh": { "w": [null, 5], "k": [null, 10], "satuan": "%RH" } }, "pintu": { "batas_detik": 60 } },
+    { "id": "dc-09", "nama": "Lemari kering DC-09", "jenis": "lemari_kering", "isi": "Panel LCD driver", "lokasi": "Gudang komponen, rak C",
+      "metrik": { "rh": { "w": [null, 5], "k": [null, 10], "satuan": "%RH" } }, "pintu": { "batas_detik": 60 } },
+    { "id": "gd-umum", "nama": "Gudang umum", "jenis": "gudang", "isi": "Barang jadi dan kemasan",
+      "metrik": { "suhu": { "w": [null, 32], "k": [null, 35], "satuan": "°C" }, "rh": { "w": [null, 70], "k": [null, 80], "satuan": "%RH" } } }
+  ]
+}

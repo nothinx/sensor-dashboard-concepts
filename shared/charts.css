@@ -1,0 +1,19 @@
+/* Gaya minimum komponen dari charts.js. Situs WAJIB mendefinisikan variabel:
+   --s1 --s2 --s3 --grid --ink --ink-2 --ink-3 --surface --font-mono --font-sans
+   --good --warn --serious --crit dan pasangan chip --good-bg/--good-ink, --warn-bg/--warn-ink,
+   --serious-bg/--serious-ink, --crit-bg/--crit-ink, --off-bg/--off-ink. Boleh ditimpa. */
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { fill: var(--ink-3); font: 11px var(--font-mono); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface);
+  padding: 6px 8px; border-radius: 4px; font: 12px/1.4 var(--font-mono); white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 10px)); z-index: 3; }
+.js .tip { opacity: 0; }
+.st { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 4px;
+  font-size: 12px; font-weight: 500; white-space: nowrap; }
+.st svg { width: 12px; height: 12px; flex: none; }
+.st.ok { background: var(--good-bg); color: var(--good-ink); }
+.st.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.st.serious { background: var(--serious-bg); color: var(--serious-ink); }
+.st.crit { background: var(--crit-bg); color: var(--crit-ink); }
+.st.off { background: var(--off-bg); color: var(--off-ink); }

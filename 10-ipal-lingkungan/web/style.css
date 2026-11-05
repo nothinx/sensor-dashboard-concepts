@@ -1,0 +1,126 @@
+/* Hallmark · design · layar aplikasi HSE (pemantauan kepatuhan air limbah) · dial E1/R1/M1
+   karakter tenang, bertanggung jawab, membumi · dunia kolam pengolahan & botol sampel air
+   momen: grafik parameter outlet terhadap garis baku mutu · tanda tangan: penanda titik sampling S1 sampai S4
+   font: Fraunces untuk judul (rasa dokumen lingkungan yang tenang) + Instrument Sans isi + Geist Mono angka */
+
+:root {
+  color-scheme: light;
+  --bg: #f5f6f3;
+  --surface: #ffffff;
+  --raised: #eceeea;
+  --line: rgba(23, 26, 21, 0.09);
+  --ink: #171a15;
+  --ink-2: #4d5348;
+  --ink-3: #676d61;
+  --moss: #4a6627;             /* lumut: aksen tunggal; [BRAND: warna klien] */
+  --moss-soft: #e7eddc;
+  --s1: #4a6627; --s2: #8b9183; --s3: #2f6f86;
+  --grid: #e7e9e3;
+  --good: #3c8a3a; --warn: #c98500; --serious: #d0662f; --crit: #c23a33;
+  --good-bg: #e4f0e1; --good-ink: #245c24;
+  --warn-bg: #f7edd2; --warn-ink: #6b4a00;
+  --serious-bg: #f8e3d8; --serious-ink: #8a3a17;
+  --crit-bg: #f6e0de; --crit-ink: #8e231e;
+  --off-bg: #eceeea; --off-ink: #4d5348;
+  --font-sans: "Instrument Sans", system-ui, sans-serif;
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --on-moss: #fbfcf8;
+  --bayang-kecil: rgba(0, 0, 0, 0.06);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: clip; }
+body { background: var(--bg); color: var(--ink); font: 400 14px/1.5 var(--font-sans); min-height: 100dvh; }
+h1, h2 { margin: 0; text-wrap: balance; }
+h1 { font: 400 36px/1.15 var(--font-serif); letter-spacing: -0.01em; }
+h2 { font-size: 15px; font-weight: 600; }
+p { margin: 0; }
+:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+.num, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.top { display: flex; align-items: center; gap: 24px; height: 60px; padding: 0 32px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.logo-slot { display: grid; place-items: center; height: 32px; padding: 0 12px; border: 1px dashed var(--ink-3); border-radius: 6px; font: 500 11px var(--font-mono); color: var(--ink-3); }
+.product { font: 500 18px var(--font-serif); }
+.tabs { display: flex; gap: 4px; align-self: stretch; }
+.tabs a { display: flex; align-items: center; padding: 0 12px; color: var(--ink-2); text-decoration: none; border-bottom: 2px solid transparent; }
+.tabs a:hover { color: var(--ink); }
+.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--moss); }
+.top-meta { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.sample { padding: 4px 8px; border-radius: 6px; background: var(--warn-bg); color: var(--warn-ink); font-size: 12px; font-weight: 500; }
+.sumber { font-size: 13px; color: var(--ink-2); }
+.sumber::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; background: var(--ink-3); }
+.sumber.live::before { background: var(--good); }
+.banner { margin: 16px 32px 0; padding: 12px 16px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-ink); }
+
+main { padding: 32px 32px 32px; max-width: 1680px; margin: 0 auto; }
+.head { margin-bottom: 24px; }
+.finding { margin-top: 8px; font-size: 16px; color: var(--ink-2); max-width: 80ch; }
+.finding b { color: var(--ink); font-weight: 600; }
+
+/* alur S1 -> S4 */
+.alur { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-bottom: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.tahap { position: relative; padding: 16px 20px 16px 72px; border-left: 1px solid var(--line); min-width: 0; }
+.tahap:first-child { border-left: 0; }
+.tahap::after { content: ""; position: absolute; right: -7px; top: 30px; width: 12px; height: 12px; background: var(--surface); border-top: 1px solid var(--line); border-right: 1px solid var(--line); transform: rotate(45deg); z-index: 1; }
+.tahap:last-child::after { display: none; }
+.penanda { position: absolute; left: 20px; top: 16px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font: 500 13px var(--font-mono); color: var(--moss); background: var(--moss-soft); box-shadow: inset 0 0 0 1.5px var(--moss); }
+.tahap.wajib .penanda { background: var(--moss); color: var(--on-moss); }
+.tahap .nm { font-weight: 600; }
+.tahap .th { font-size: 12px; color: var(--ink-3); }
+.tahap .vals { display: flex; gap: 16px; margin-top: 8px; font-size: 13px; color: var(--ink-2); flex-wrap: wrap; }
+.tahap .vals b { font: 500 15px var(--font-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.tahap .vals b.lewat { color: var(--crit-ink); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; }
+@media (max-width: 1200px) { .grid { grid-template-columns: 1fr; } .alur { grid-template-columns: 1fr 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; min-width: 0; }
+.panel-h { display: flex; align-items: flex-start; gap: 16px; padding: 16px 20px 12px; flex-wrap: wrap; }
+.panel-h .sub { font-size: 12px; color: var(--ink-3); }
+.panel-h .seg { margin-left: auto; }
+.utama { padding-bottom: 12px; }
+.utama #grafik { padding: 0 20px; }
+.kolom { display: grid; gap: 20px; grid-row: span 2; }
+.lebar { grid-column: 1; }
+.seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--raised); flex-wrap: wrap; }
+.seg button { border: 0; background: none; padding: 4px 12px; min-height: 32px; border-radius: 6px; font: 500 13px var(--font-sans); color: var(--ink-2); cursor: pointer; transition: background-color 150ms var(--ease); }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px var(--bayang-kecil); }
+.bm-note { padding: 8px 20px 4px; font-size: 12px; color: var(--ink-3); }
+
+/* kejadian */
+.kej { list-style: none; margin: 0; padding: 0 20px 16px; }
+.kej li { padding: 12px 0; border-top: 1px solid var(--line); }
+.kej li:first-child { border-top: 0; padding-top: 0; }
+.kej .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kej .ttl { font-weight: 600; }
+.kej .det { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+.kej .det b { font-family: var(--font-mono); font-weight: 500; color: var(--ink); }
+.kosong { padding: 16px 20px; color: var(--ink-2); }
+
+/* pengiriman */
+.kirim { padding: 0 20px 8px; }
+.kirim .ring { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.kirim .ring .l { font-size: 12px; color: var(--ink-3); }
+.kirim .ring .v { font: 500 18px var(--font-mono); font-variant-numeric: tabular-nums; }
+.log { list-style: none; margin: 0; padding: 8px 0 0; font-size: 13px; }
+.log li { display: grid; grid-template-columns: 56px auto 1fr; gap: 8px; align-items: center; padding: 6px 0; }
+.log .w { font-family: var(--font-mono); color: var(--ink-2); }
+.log .g { color: var(--ink-3); font-size: 12px; grid-column: 2 / -1; }
+
+.tbl-wrap { overflow-x: auto; padding: 0 8px 8px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th { text-align: left; font-weight: 500; font-size: 12px; color: var(--ink-3); padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl .n { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.tbl tr.wajib td { background: var(--moss-soft); }
+.tbl tr.wajib td:first-child { box-shadow: inset 3px 0 0 var(--moss); }
+.tbl td.lewat { color: var(--crit-ink); font-weight: 600; }
+.tbl td.dekat { color: var(--warn-ink); font-weight: 600; }
+.tbl .pk { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border-radius: 50%; font: 500 11px var(--font-mono); color: var(--moss); box-shadow: inset 0 0 0 1.5px var(--moss); }
+footer.pg { padding: 0 32px 24px; color: var(--ink-3); font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.muted { color: var(--ink-3); }
+.tbl th.n { font-family: var(--font-sans); }

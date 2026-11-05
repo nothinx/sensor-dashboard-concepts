@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Proyek 13, Pemantauan Genset & UPS Cabang. IoT Core -> Lambda ingest -> DynamoDB <- Lambda API <- HTTP API.
+  Kode Lambda sama dengan versi emulator (folder app/). Lihat docs/CLOUD.md untuk langkah deploy.
+
+Parameters:
+  AsalDasbor:
+    Type: String
+    Description: Origin dasbor yang diizinkan CORS, mis. https://dasbor.contoh.co.id
+  TopikIoT:
+    Type: String
+    Default: konsep/cabang/+/telemetri
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Architectures: [arm64]
+    MemorySize: 256
+    Timeout: 10
+    CodeUri: app/
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref Tabel
+
+Resources:
+  Tabel:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: PK, AttributeType: S }
+        - { AttributeName: SK, AttributeType: S }
+        - { AttributeName: GSI1PK, AttributeType: S }
+        - { AttributeName: GSI1SK, AttributeType: S }
+      KeySchema:
+        - { AttributeName: PK, KeyType: HASH }
+        - { AttributeName: SK, KeyType: RANGE }
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - { AttributeName: GSI1PK, KeyType: HASH }
+            - { AttributeName: GSI1SK, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+      TimeToLiveSpecification: { AttributeName: kedaluwarsa, Enabled: true }
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: [!Ref AsalDasbor]
+        AllowMethods: [GET]
+      # [REAL DATA: mekanisme login klien, mis. JWT authorizer Amazon Cognito atau SSO perusahaan]
+
+  FungsiApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions/api.handler
+      Policies:
+        - DynamoDBReadPolicy: { TableName: !Ref Tabel }
+      Events:
+        Ringkasan: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /ringkasan } }
+        Cabang: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /cabang } }
+        SatuCabang: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/cabang/{kode}" } }
+        Riwayat: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/cabang/{kode}/riwayat" } }
+        Padam: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /padam } }
+
+  FungsiIngest:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions/ingest.handler
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Tabel }
+      Events:
+        Telemetri:
+          Type: IoTRule
+          Properties:
+            AwsIotSqlVersion: "2016-03-23"
+            Sql: !Sub "SELECT *, topic() AS topic FROM '${TopikIoT}'"
+
+Outputs:
+  UrlApi:
+    Description: Isi sebagai alamat /api dasbor (lihat docs/CLOUD.md)
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  NamaTabel:
+    Value: !Ref Tabel

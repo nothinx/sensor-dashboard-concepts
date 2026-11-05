@@ -1,0 +1,11 @@
+{
+  "name": "konsep-11-simulator",
+  "private": true,
+  "type": "module",
+  "description": "Simulator sensor + uji aturan untuk Firebase Emulator Suite",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "firebase": "10.14.1",
+    "firebase-admin": "12.7.0"
+  }
+}

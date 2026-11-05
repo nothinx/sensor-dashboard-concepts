@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getaran mesin · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 06: pemantauan getaran dan suhu bearing mesin berputar untuk perawatan prediktif.">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Getaran mesin</h1>
+      <p class="finding"><b>Getaran kompresor K-02 naik dari 3,1 menjadi 5,3 mm/s dalam 30 hari.</b> Puncak spektrum berada pada frekuensi cacat lintasan luar bearing (BPFO); jadwalkan pemeriksaan bearing sebelum getaran masuk zona D.</p>
+    </div>
+    <div class="actions">
+      <button class="btn primary" type="button">Buat perintah kerja K-02</button>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-h"><h2>Daftar mesin</h2><span class="sub">kecepatan getaran RMS 10 sampai 1.000 Hz, zona menurut ISO 10816-1 kelas II</span></div>
+    <div class="panel-b table-wrap">
+      <table>
+        <thead><tr><th>Mesin</th><th>Area</th><th class="n">Getaran mm/s</th><th>Zona</th><th class="n">Suhu bearing °C</th><th class="n">Perubahan 30 hari</th><th class="n">Jam operasi</th><th>Status</th></tr></thead>
+        <tbody id="mt"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="grid g-12" style="margin-top:16px">
+    <section class="panel c7">
+      <div class="panel-h"><h2>K-02: getaran 30 hari</h2><span class="sub">mm/s RMS, rata-rata harian</span></div>
+      <div class="panel-b"><div id="vt" data-label="Getaran K-02 30 hari"></div></div>
+    </section>
+    <section class="panel c5">
+      <div class="panel-h"><h2>K-02: spektrum getaran</h2><span class="sub">mm/s per pita frekuensi, 14.00</span></div>
+      <div class="panel-b"><div id="fft" data-label="Spektrum getaran K-02"></div>
+        <p class="small muted" style="margin-top:6px">Batang oranye: frekuensi putaran 1× (24,8 Hz) dan BPFO (89 Hz) beserta harmoniknya.</p></div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 06 dari 10 · semua angka adalah data contoh</footer>
+<script src="assets/app.js"></script>
+<script>
+  const M = [
+    ["Kompresor udara K-02", "Kompresor & utilitas", 5.3, "C", 71, "+2,2", "18.420", "warn"],
+    ["Pompa air pendingin P-01", "Kompresor & utilitas", 2.4, "B", 48, "+0,3", "22.100", "ok"],
+    ["Kompresor udara K-01", "Kompresor & utilitas", 1.9, "B", 55, "+0,1", "21.870", "ok"],
+    ["Blower oven Line 2", "SMT Line 2", 1.6, "B", 62, "0,0", "9.650", "ok"],
+    ["Blower oven Line 1", "SMT Line 1", 1.4, "B", 60, "-0,1", "9.880", "ok"],
+    ["AHU produksi 1", "HVAC produksi", 1.0, "A", 39, "0,0", "30.210", "ok"],
+    ["Konveyor perakitan TV", "Perakitan TV", null, "", null, "", "12.004", "off"],
+  ];
+  mt.innerHTML = M.map((m) => `<tr><td>${m[0]}</td><td>${m[1]}</td><td class="n" style="${m[7] === "warn" ? "font-weight:600;color:var(--warn-ink)" : ""}">${m[2] == null ? "tidak ada data" : m[2].toFixed(1).replace(".", ",")}</td>
+    <td class="num">${m[3] || "-"}</td><td class="n">${m[4] ?? "-"}</td><td class="n">${m[5] || "-"}</td><td class="n">${m[6]}</td>
+    <td>${m[7] === "warn" ? st("warn", "Periksa bearing") : m[7] === "off" ? st("off", "Sensor offline 2 jam") : st("ok")}</td></tr>`).join("");
+  const days = Array.from({ length: 30 }, (_, i) => new Date(2026, 9, 7 + i));
+  const v = Array.from({ length: 30 }, (_, i) => +(3.1 + Math.pow(i / 29, 2.2) * 2.2 + Math.sin(i * 1.7) * 0.12).toFixed(2));
+  lineChart(vt, { x: days, series: [{ name: "K-02", color: "var(--s1)", data: v }], unit: "mm/s", min: 0, max: 8, dec: 1, h: 240,
+    fmtX: (d) => `${d.getDate()}/${d.getMonth() + 1}`,
+    bands: [{ y: 7.1, label: "zona D 7,1", color: "var(--crit)" }, { y: 4.5, label: "alarm 4,5", color: "var(--warn)" }, { y: 2.8, label: "zona C 2,8", color: "var(--ink-3)" }] });
+  const f = Array.from({ length: 60 }, (_, i) => (i + 1) * 5);
+  const r = rng(5);
+  const amp = f.map((hz) => 0.08 + r() * 0.1);
+  const peak = (hz, a) => { const i = Math.round(hz / 5) - 1; amp[i] = a; return i; };
+  const hi = [peak(25, 1.9), peak(50, 0.8), peak(90, 2.6), peak(180, 1.4), peak(270, 0.6)];
+  barChart(fft, { x: f, data: amp, unit: "mm/s", dec: 2, h: 240, hiIdx: hi, fmtX: (hz) => `${hz} Hz` });
+</script>
+</body>
+</html>

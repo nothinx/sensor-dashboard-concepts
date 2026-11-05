@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genset & UPS Cabang</title>
+<meta name="description" content="Mockup proyek 13: pemantauan genset dan UPS di 12 cabang saat PLN padam, data dari DynamoDB lewat Lambda.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500&family=Sora:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <span class="logo-slot">[LOGO KLIEN]</span>
+  <span class="product">Genset & UPS Cabang</span>
+  <span class="sample">Data contoh</span>
+  <span class="sumber" id="sumber" role="status">Memuat data…</span>
+</header>
+
+<div class="banner" id="banner" role="status" hidden></div>
+
+<main>
+  <section class="head">
+    <div>
+      <h1>Cabang yang berisiko mati listrik</h1>
+      <p class="finding" id="temuan">Memuat keadaan 12 cabang…</p>
+    </div>
+    <button class="btn primary" type="button" id="btnGawat" hidden>Buka cabang paling gawat</button>
+  </section>
+
+  <section class="kpis" id="kpis" aria-label="Ringkasan cabang"></section>
+
+  <div class="layout">
+    <section class="panel peta-wrap" aria-labelledby="h-peta">
+      <div class="panel-h">
+        <h2 id="h-peta">Peta cabang</h2>
+        <span class="sub">tangki = sisa solar genset, batang = baterai UPS; pilih cabang untuk detail</span>
+      </div>
+      <div class="peta" id="peta" aria-busy="true"></div>
+    </section>
+
+    <aside class="panel detail" id="detail" aria-live="polite"></aside>
+  </div>
+
+  <section class="panel" aria-labelledby="h-padam">
+    <div class="panel-h">
+      <h2 id="h-padam">Kejadian PLN padam</h2>
+      <span class="sub">semua cabang, terbaru dulu</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Cabang</th><th>Mulai</th><th>Selesai</th><th class="n">Durasi</th><th>Genset</th></tr></thead>
+        <tbody id="padam"></tbody>
+      </table>
+    </div>
+    <button class="btn" type="button" id="btnLagi" hidden>Muat kejadian sebelumnya</button>
+  </section>
+</main>
+<footer class="pg">Mockup proyek 13 · semua angka adalah data contoh · data dari DynamoDB lewat Lambda (emulator lokal)</footer>
+
+<script src="../../shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

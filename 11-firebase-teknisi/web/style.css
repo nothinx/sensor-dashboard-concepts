@@ -1,0 +1,118 @@
+/* Hallmark · design · aplikasi HP teknisi lapangan (PWA, utama 390 px) · dial E1/R1/M1
+   tanda tangan: cap waktu "Diambil oleh ... pukul ..." bergaya kartu absen mesin jam
+   momen: kartu tugas aktif dengan tren sensor besar · font: Manrope (ramah, jelas di layar kecil) + JetBrains Mono (angka)
+   palet: ramp hangat-netral terang, aksen oranye bara dari dunia sabuk perkakas, dipakai hemat */
+:root {
+  color-scheme: light;
+  --bg: #f7f6f3; --surface: #ffffff; --raised: #efede8; --line: rgba(31, 27, 22, 0.1); --line-2: rgba(31, 27, 22, 0.18);
+  --ink: #1f1b16; --ink-2: #5e554a; --ink-3: #6f665b;
+  --accent: #c2410c; --accent-bg: #fdeee5;
+  --s1: #c2410c; --s2: #2a78d6; --s3: #7b7266; --grid: #ebe8e1;
+  --good: #16a34a; --warn: #d99000; --serious: #e2703a; --crit: #dc2626;
+  --good-bg: #e5f4ea; --good-ink: #14532d; --warn-bg: #fbf0d4; --warn-ink: #6b4500;
+  --serious-bg: #fbe7dc; --serious-ink: #8a3a12; --crit-bg: #fbe4e4; --crit-ink: #8f1d1d;
+  --off-bg: #ecebe7; --off-ink: #4a453f;
+  --focus: #1d4ed8; --on-ink: #ffffff; --ink-hover: #3a332b; --bayang: rgba(0, 0, 0, 0.06);
+  --font-sans: "Manrope", system-ui, sans-serif; --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; overflow-x: clip; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--font-sans); min-height: 100dvh; }
+.num, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
+h1 { font-size: 24px; line-height: 1.2; }
+h2 { font-size: 17px; }
+p { margin: 0; }
+.muted { color: var(--ink-2); }
+
+.bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; min-height: 56px;
+  padding: 8px 16px; padding-top: max(8px, env(safe-area-inset-top)); background: var(--surface); border-bottom: 1px solid var(--line); }
+.logo-slot { padding: 4px 8px; border: 1px dashed var(--line-2); border-radius: 4px; font: 400 10px var(--font-mono); color: var(--ink-3); white-space: nowrap; }
+.product { font-weight: 600; white-space: nowrap; }
+.sample { margin-left: auto; padding: 2px 8px; border-radius: 4px; background: var(--warn-bg); color: var(--warn-ink); font-size: 12px; white-space: nowrap; }
+.akun { min-height: 40px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 20px; background: var(--surface); color: var(--ink);
+  font: 500 13px var(--font-sans); cursor: pointer; white-space: nowrap; }
+
+.banner { margin: 12px 16px 0; padding: 12px 16px; border: 1px solid var(--warn); border-radius: 10px; background: var(--warn-bg); color: var(--warn-ink); font-size: 13px; }
+.banner code { font-family: var(--font-mono); font-size: 12px; }
+
+.masuk { max-width: 420px; margin: 48px auto; padding: 0 16px; display: grid; gap: 12px; }
+.akun-demo { display: grid; gap: 8px; }
+.galat { color: var(--crit-ink); font-size: 14px; }
+
+main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.kolom-daftar { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.finding { color: var(--ink-2); margin-top: 4px; }
+.finding b { color: var(--ink); font-weight: 600; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 12px;
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font: 600 15px var(--font-sans); cursor: pointer;
+  transition: background-color 150ms var(--ease), transform 120ms var(--ease); }
+.btn:hover { background: var(--raised); }
+.btn:active { transform: scale(0.98); }
+.btn.primary { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+.btn.primary:hover { background: var(--ink-hover); }
+.btn.lebar { width: 100%; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* momen: kartu tugas aktif */
+.aktif:empty { display: none; }
+.kartu-aktif { display: grid; gap: 12px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.kartu-aktif .label { color: var(--accent); font-size: 13px; font-weight: 600; }
+.kartu-aktif .nilai { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.kartu-aktif .nilai b { font: 500 32px/1 var(--font-mono); }
+.kartu-aktif .nilai span { color: var(--ink-2); font-size: 13px; }
+
+/* tanda tangan: cap waktu */
+.cap { display: inline-grid; grid-template-columns: auto auto; gap: 0 12px; align-items: baseline; justify-self: start;
+  padding: 6px 12px; border: 1.5px solid var(--accent); border-radius: 6px; background: var(--accent-bg); color: var(--accent);
+  font: 500 12px/1.5 var(--font-mono); }
+.cap b { font-weight: 500; color: var(--ink); font-family: var(--font-sans); font-size: 13px; }
+
+.tab { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; background: var(--raised); border-radius: 12px; }
+.tab button { min-height: 44px; border: 0; border-radius: 9px; background: transparent; color: var(--ink-2); font: 600 14px var(--font-sans); cursor: pointer; }
+.tab button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px var(--bayang); }
+.tab span { font-family: var(--font-mono); font-weight: 400; font-size: 12px; color: var(--ink-3); }
+
+.daftar { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.item { width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 16px; min-height: 48px; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; color: inherit; font: inherit; cursor: pointer;
+  transition: border-color 150ms var(--ease); }
+.item:hover { border-color: var(--line-2); }
+.item[aria-current="true"] { border-color: var(--accent); }
+.item .nama { font-weight: 600; }
+.item .lok { color: var(--ink-2); font-size: 13px; grid-column: 1; }
+.item .angka { grid-column: 2; grid-row: 1 / span 2; text-align: right; align-self: center; }
+.item .angka b { display: block; font: 500 18px var(--font-mono); }
+.item .angka span { color: var(--ink-3); font-size: 12px; }
+.item .meta { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; color: var(--ink-3); font-size: 12px; }
+.tertunda { color: var(--warn-ink); font-weight: 600; }
+.kosong { padding: 24px 16px; text-align: center; color: var(--ink-2); background: var(--surface); border: 1px dashed var(--line-2); border-radius: 14px; }
+
+.detail { display: grid; gap: 16px; align-content: start; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; min-width: 0; }
+.detail .kembali { justify-self: start; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--accent); font: 600 14px var(--font-sans); cursor: pointer; }
+.detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; font-size: 14px; }
+.detail dt { color: var(--ink-3); }
+.detail dd { margin: 0; }
+.detail textarea { width: 100%; min-height: 96px; padding: 12px; border: 1px solid var(--line-2); border-radius: 12px; font: 400 15px var(--font-sans); color: var(--ink); background: var(--surface); resize: vertical; }
+.detail label { display: grid; gap: 6px; font-size: 14px; color: var(--ink-2); }
+.catatan { padding: 12px; background: var(--raised); border-radius: 10px; font-size: 14px; }
+
+.sinkron { position: sticky; bottom: 0; z-index: 5; padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--ink); color: var(--on-ink); font-size: 14px; text-align: center; }
+.memuat { color: var(--ink-3); padding: 16px 0; }
+footer.pg { padding: 8px 16px 24px; color: var(--ink-3); font-size: 12px; max-width: 1200px; margin: 0 auto; }
+
+/* HP: detail menggantikan daftar */
+@media (max-width: 959px) { main.lihat-detail .kolom-daftar { display: none; } }
+/* desktop: daftar dan detail berdampingan */
+@media (min-width: 960px) {
+  main { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 24px; gap: 24px; }
+  .detail .kembali { display: none; }
+  .detail { position: sticky; top: 80px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.siapa { color: var(--ink-3); font-size: 13px; margin-top: 2px; }

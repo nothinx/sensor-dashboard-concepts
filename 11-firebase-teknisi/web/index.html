@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tugas Teknisi</title>
+<meta name="description" content="Mockup proyek 11: aplikasi teknisi lapangan untuk menerima dan menutup tugas dari sensor mesin, data real-time dari Firestore.">
+<meta name="theme-color" content="#f7f6f3">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="ikon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <span class="logo-slot">[LOGO KLIEN]</span>
+  <span class="product">Tugas Teknisi</span>
+  <span class="sample">Data contoh</span>
+  <button class="akun" id="akun" type="button" hidden></button>
+</header>
+
+<div class="banner" id="banner" role="status" hidden></div>
+
+<section class="masuk" id="masuk" hidden aria-labelledby="h-masuk">
+  <h1 id="h-masuk">Masuk</h1>
+  <p class="muted">Pilih akun teknisi demo di emulator lokal.</p>
+  <div class="akun-demo" id="akunDemo"></div>
+  <p class="galat" id="galatMasuk" role="alert" hidden></p>
+</section>
+
+<main id="utama" hidden>
+  <div class="kolom-daftar">
+    <section class="head">
+      <h1>Tugas hari ini</h1>
+      <p class="siapa" id="siapa"></p>
+      <p class="finding" id="temuan">Memuat tugas…</p>
+    </section>
+
+    <section class="aktif" id="aktif" aria-label="Tugas yang sedang dikerjakan"></section>
+
+    <div class="tab" role="tablist" aria-label="Status tugas">
+      <button role="tab" type="button" data-tab="baru" aria-selected="true">Baru <span id="n-baru"></span></button>
+      <button role="tab" type="button" data-tab="dikerjakan" aria-selected="false">Dikerjakan <span id="n-dikerjakan"></span></button>
+      <button role="tab" type="button" data-tab="selesai" aria-selected="false">Selesai <span id="n-selesai"></span></button>
+    </div>
+    <ul class="daftar" id="daftar" aria-live="polite"></ul>
+  </div>
+
+  <section class="detail" id="detail" aria-live="polite" hidden></section>
+</main>
+
+<div class="sinkron" id="sinkron" role="status" hidden></div>
+<footer class="pg">Mockup proyek 11 · semua angka adalah data contoh · data real-time dari Firestore (emulator lokal)</footer>
+
+<script src="konfigurasi.js"></script>
+<script src="../../shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

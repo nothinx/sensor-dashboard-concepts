@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// Aturan keamanan Firestore, Aplikasi Teknisi Lapangan.
+// - Semua data hanya bisa dibaca teknisi yang sudah masuk (Firebase Auth).
+// - Mesin, bacaan, dan profil teknisi hanya ditulis server (Admin SDK / Cloud Functions), bukan aplikasi.
+// - Aplikasi hanya boleh dua perubahan pada tugas: mengambil tugas baru, dan menutup tugas miliknya sendiri.
+// Diuji oleh simulator/uji-rules.mjs terhadap emulator.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function masuk() { return request.auth != null; }
+    function hanyaUbah(kunci) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(kunci); }
+
+    match /mesin/{id} { allow read: if masuk(); allow write: if false; }
+    match /bacaan/{id} { allow read: if masuk(); allow write: if false; }
+    match /teknisi/{uid} { allow read: if masuk(); allow write: if false; }
+
+    match /tugas/{id} {
+      allow read: if masuk();
+      allow create, delete: if false;
+
+      // ambil tugas: baru -> dikerjakan, tercatat atas nama yang mengambil, waktu dari server
+      allow update: if masuk()
+        && resource.data.status == 'baru'
+        && request.resource.data.status == 'dikerjakan'
+        && request.resource.data.diambilOleh.uid == request.auth.uid
+        && request.resource.data.diambilOleh.nama is string
+        && request.resource.data.diambilPada == request.time
+        && hanyaUbah(['status', 'diambilOleh', 'diambilPada']);
+
+      // selesaikan tugas: hanya oleh yang mengambilnya, catatan maksimal 500 karakter
+      allow update: if masuk()
+        && resource.data.status == 'dikerjakan'
+        && resource.data.diambilOleh.uid == request.auth.uid
+        && request.resource.data.status == 'selesai'
+        && request.resource.data.selesaiPada == request.time
+        && request.resource.data.catatan is string
+        && request.resource.data.catatan.size() <= 500
+        && hanyaUbah(['status', 'selesaiPada', 'catatan']);
+    }
+  }
+}

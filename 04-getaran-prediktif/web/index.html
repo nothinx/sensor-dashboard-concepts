@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perawatan Prediktif Getaran</title>
+<meta name="description" content="Mockup proyek 04: getaran mesin berputar, zona ISO 10816-1, spektrum frekuensi, dan perintah kerja perawatan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="side" aria-label="Daftar mesin">
+    <div class="brand">
+      <span class="logo-slot">[LOGO KLIEN]</span>
+      <span class="product">Perawatan Prediktif Getaran</span>
+    </div>
+    <p class="side-ringkas" id="ringkas">Memuat daftar mesin</p>
+    <nav>
+      <ul class="mesin-list" id="daftar" aria-busy="true"></ul>
+    </nav>
+    <div class="side-foot">
+      <span class="koneksi" id="koneksi" role="status">Menghubungkan ke API</span>
+      <span class="sample" title="Semua angka di layar ini adalah contoh untuk mockup">Data contoh</span>
+    </div>
+  </aside>
+
+  <main id="isi" aria-busy="true">
+    <div class="banner" id="banner" hidden></div>
+    <header class="kepala">
+      <p class="jejak muted" id="jejak">&nbsp;</p>
+      <div class="judul">
+        <span class="stempel besar" id="stempel" aria-hidden="true">&nbsp;</span>
+        <div>
+          <h1 id="nama">Memuat mesin</h1>
+          <p class="temuan" id="temuan">&nbsp;</p>
+        </div>
+        <button class="btn primer" id="tombol-pk" type="button" aria-controls="form-pk">Buat perintah kerja</button>
+      </div>
+    </header>
+
+    <section class="kpis" aria-label="Kondisi terkini">
+      <div class="kpi"><span class="l">Getaran terkini</span><span class="v besar" id="k-rms">&nbsp;</span><span class="d" id="k-rms-d">&nbsp;</span></div>
+      <div class="kpi"><span class="l">Zona ISO 10816-1</span><span class="v" id="k-zona">&nbsp;</span><span class="d" id="k-zona-d">&nbsp;</span></div>
+      <div class="kpi"><span class="l">Perubahan 30 hari</span><span class="v" id="k-ubah">&nbsp;</span><span class="d">rata-rata harian terakhir dibanding 30 hari lalu</span></div>
+      <div class="kpi"><span class="l">Suhu bearing</span><span class="v" id="k-suhu">&nbsp;</span><span class="d" id="k-suhu-d">&nbsp;</span></div>
+      <div class="kpi"><span class="l">Jam operasi</span><span class="v" id="k-jam">&nbsp;</span><span class="d">[REAL DATA: dari CMMS klien]</span></div>
+    </section>
+
+    <section class="panel momen" aria-labelledby="h-spek">
+      <header class="panel-h"><h2 id="h-spek">Spektrum getaran</h2><span class="muted" id="spek-d">mm/s per garis frekuensi</span>
+        <span class="legend" id="spek-legend"></span></header>
+      <div id="spektrum" data-label="Spektrum getaran dengan penanda frekuensi cacat"></div>
+    </section>
+
+    <div class="duo">
+      <section class="panel" aria-labelledby="h-tren">
+        <header class="panel-h"><h2 id="h-tren">Tren 30 hari</h2><span class="muted">mm/s RMS, rata-rata harian</span></header>
+        <div id="tren" data-label="Tren getaran 30 hari"></div>
+      </section>
+      <section class="panel" aria-labelledby="h-pk">
+        <header class="panel-h"><h2 id="h-pk">Perintah kerja</h2><span class="muted" id="pk-d">&nbsp;</span></header>
+        <form class="form-pk" id="form-pk" hidden>
+          <label>Judul<input id="pk-judul" name="judul" required minlength="3" maxlength="120"></label>
+          <label>Prioritas<select id="pk-prioritas" name="prioritas"><option value="TINGGI">Tinggi</option><option value="SEDANG" selected>Sedang</option><option value="RENDAH">Rendah</option></select></label>
+          <div class="form-aksi"><button class="btn primer" type="submit">Simpan perintah kerja</button><button class="btn" type="button" id="pk-batal">Batal</button></div>
+
+        </form>
+        <p class="form-pesan" id="pk-pesan" role="status"></p>
+        <ul class="pk-list" id="pk-list"></ul>
+        <dl class="identitas" id="identitas"></dl>
+      </section>
+    </div>
+    <footer class="pg">Mockup proyek 04 · semua angka adalah data contoh · data ditarik lewat GraphQL setiap 60 detik</footer>
+  </main>
+</div>
+<script src="../../shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

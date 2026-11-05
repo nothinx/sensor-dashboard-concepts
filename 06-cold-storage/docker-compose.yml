@@ -1,0 +1,91 @@
+# Gudang & Cold Storage: Mosquitto (MQTT + WebSocket) → bridge → Redis; API riwayat; simulator.
+# Jalankan: docker compose -p konsep-06 up -d --build   → dasbor http://localhost:18060
+name: konsep-06
+
+x-redis-env: &redis-env
+  REDIS_HOST: redis
+  REDIS_PASSWORD: ${REDIS_PASSWORD:-ganti-sandi-redis}
+  RUANG_JSON: /app/db/ruang.json
+  TZ: ${TZ:-Asia/Jakarta}
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0.20
+    environment:
+      MQTT_USER: ${MQTT_SENSOR_USER:-sensor}
+      MQTT_PASSWORD: ${MQTT_SENSOR_PASSWORD:-ganti-sandi-sensor}
+    # buat berkas sandi dari env setiap start, lalu jalankan broker
+    command: >
+      sh -c 'mosquitto_passwd -c -b /mosquitto/data/passwd "$$MQTT_USER" "$$MQTT_PASSWORD"
+      && chown mosquitto:mosquitto /mosquitto/data/passwd && chmod 0700 /mosquitto/data/passwd
+      && exec mosquitto -c /mosquitto/config/mosquitto.conf'
+    volumes:
+      - ./mosquitto:/mosquitto/config:ro
+      - mqtt-data:/mosquitto/data
+    ports:
+      - "18061:1883"   # MQTT TCP (gateway sensor)
+      - "18062:9001"   # MQTT over WebSocket (dasbor)
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-ganti-sandi-redis}", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    ports:
+      - "127.0.0.1:18063:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep PONG"]
+      interval: 5s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-ganti-sandi-redis}
+    restart: unless-stopped
+
+  bridge:
+    build: ./api
+    command: ["python", "app.py", "bridge"]
+    environment:
+      <<: *redis-env
+      MQTT_HOST: mosquitto
+    volumes:
+      - ./db:/app/db:ro
+    depends_on:
+      redis: { condition: service_healthy }
+      mosquitto: { condition: service_started }
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    environment:
+      <<: *redis-env
+      PORT: "8080"
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:18060}
+    volumes:
+      - ./db:/app/db:ro
+      - ./web:/app/web:ro
+      - ../shared:/app/shared:ro
+    ports:
+      - "18060:8080"
+    depends_on:
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+  simulator:
+    build: ./simulator
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_USER: ${MQTT_SENSOR_USER:-sensor}
+      MQTT_PASSWORD: ${MQTT_SENSOR_PASSWORD:-ganti-sandi-sensor}
+      RUANG_JSON: /app/db/ruang.json
+      SIM_INTERVAL: "5"
+      TZ: ${TZ:-Asia/Jakarta}
+    volumes:
+      - ./db:/app/db:ro
+    depends_on:
+      - bridge
+    restart: unless-stopped
+
+volumes:
+  mqtt-data:
+  redis-data:

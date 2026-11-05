@@ -1,0 +1,4 @@
+.env
+.shot/
+supabase/.temp/
+supabase/.branches/

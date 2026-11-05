@@ -1,0 +1,12 @@
+# Situs Vercel hanya berisi pratinjau statis: galeri, pustaka grafik, dan folder web/ tiap proyek.
+/*
+!/vercel.json
+!/pratinjau.html
+!/pratinjau
+!/shared
+/shared/*
+!/shared/charts.js
+!/shared/charts.css
+!/[0-9][0-9]-*
+/[0-9][0-9]-*/*
+!/[0-9][0-9]-*/web

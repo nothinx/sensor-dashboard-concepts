@@ -1,0 +1,40 @@
+# Proyek 03 · Pemantauan Energi Listrik
+# Jalankan: docker compose -p konsep-03 up -d --build   → dasbor http://localhost:18030
+name: konsep-03
+
+services:
+  simulator:
+    build: .
+    command: ["python", "simulator/simulator.py"]
+    environment:
+      DB_PATH: /data/energi.db
+      SESAAT_DETIK: ${SESAAT_DETIK:-60}
+      RIWAYAT_HARI: ${RIWAYAT_HARI:-8}
+    volumes:
+      - energi-data:/data
+    restart: unless-stopped
+
+  api:
+    build: .
+    command: ["python", "api/server.py"]
+    environment:
+      DB_PATH: /data/energi.db
+      SHARED_DIR: /shared
+      PORT: 8000
+    volumes:
+      - energi-data:/data
+      - ../shared:/shared:ro
+      - ./web:/app/web:ro
+    ports:
+      - "${PORT_DASBOR:-18030}:8000"
+    depends_on:
+      - simulator
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/v1/kesehatan')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  energi-data:

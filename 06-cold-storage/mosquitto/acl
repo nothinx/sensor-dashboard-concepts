@@ -1,0 +1,8 @@
+# Aturan sebelum baris "user" berlaku untuk klien anonim: baca saja.
+topic read gudang/#
+topic read riwayat/#
+
+# Simulator (atau gateway sensor nyata) boleh menulis.
+user sensor
+topic readwrite gudang/#
+topic readwrite riwayat/#

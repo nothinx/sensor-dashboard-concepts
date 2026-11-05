@@ -1,0 +1,39 @@
+# Aturan alert contoh. Ambang mengikuti docs/DAFTAR-TITIK.md; sesuaikan dengan SOP klien.
+groups:
+  - name: noc-perangkat
+    rules:
+      - alert: GatewayPutus
+        expr: noc_gateway_up == 0
+        for: 2m
+        labels:
+          severity: kritis
+        annotations:
+          ringkasan: "Gateway {{ $labels.gateway }} tidak terhubung ke kolektor"
+          langkah: "Periksa catu daya dan kabel jaringan gateway, lalu status switch di rak."
+
+      - alert: SensorTidakMengirim
+        expr: time() - noc_sensor_last_seen_timestamp_seconds > 300 unless on(gateway) (noc_gateway_up == 0)
+        for: 1m
+        labels:
+          severity: kritis
+        annotations:
+          ringkasan: "Sensor {{ $labels.sensor }} tidak mengirim data lebih dari 5 menit"
+          langkah: "Lihat dugaan penyebab di dasbor NOC; sensor di belakang gateway yang putus tidak dialertkan terpisah."
+
+      - alert: BateraiRendah
+        expr: noc_sensor_battery_percent < 20
+        for: 10m
+        labels:
+          severity: peringatan
+        annotations:
+          ringkasan: "Baterai {{ $labels.sensor }} tinggal {{ $value | printf \"%.0f\" }} %"
+          langkah: "Jadwalkan penggantian baterai pada ronde perawatan berikutnya."
+
+      - alert: GalatCRCBeruntun
+        expr: rate(noc_sensor_crc_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: peringatan
+        annotations:
+          ringkasan: "Galat CRC Modbus beruntun pada {{ $labels.sensor }}"
+          langkah: "Periksa kabel RS485, terminasi 120 ohm, dan alamat slave ganda."

@@ -1,0 +1,6 @@
+# Satu image Python untuk api/ dan simulator/ (perintah berbeda di docker-compose.yml)
+FROM python:3.12-slim
+RUN pip install --no-cache-dir pymongo==4.10.1
+WORKDIR /app
+COPY api/ api/
+COPY simulator/ simulator/

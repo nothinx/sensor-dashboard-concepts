@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPAL & Emisi Lingkungan</title>
+<meta name="description" content="Mockup proyek 10: pemantauan air limbah IPAL terhadap baku mutu dan status pelaporan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Geist+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <span class="logo-slot">[LOGO KLIEN]</span>
+  <span class="product">IPAL & Emisi Lingkungan</span>
+  <nav class="tabs" aria-label="Bagian">
+    <a href="#ringkas" aria-current="page">Air limbah</a>
+    <a href="#kejadian">Kejadian</a>
+    <a href="#pelaporan">Pelaporan</a>
+  </nav>
+  <div class="top-meta">
+    <span class="sample">Data contoh</span>
+    <span id="sumber" class="sumber" role="status">Memuat data…</span>
+  </div>
+</header>
+<div id="banner" class="banner" hidden></div>
+
+<main id="ringkas">
+  <section class="head">
+    <div>
+      <h1>Outlet IPAL hari ini</h1>
+      <p class="finding" id="temuan">Memuat kondisi outlet…</p>
+    </div>
+  </section>
+
+  <!-- tanda tangan: alur titik sampling S1 sampai S4 -->
+  <section class="alur" aria-label="Titik sampling sepanjang proses IPAL" id="alur"></section>
+
+  <div class="grid">
+    <section class="panel utama" aria-labelledby="judulGrafik">
+      <div class="panel-h">
+        <div>
+          <h2 id="judulGrafik">Outlet S4 terhadap baku mutu, 24 jam</h2>
+          <p class="sub" id="subGrafik">rata-rata 10 menit</p>
+        </div>
+        <div class="seg" role="group" aria-label="Pilih parameter" id="pilihParam"></div>
+      </div>
+      <div id="grafik" data-label="Parameter outlet 24 jam terhadap baku mutu"></div>
+      <p class="bm-note">Garis putus-putus merah adalah baku mutu contoh. [REAL DATA: baku mutu sesuai izin pembuangan air limbah]</p>
+    </section>
+
+    <aside class="kolom">
+      <section class="panel" id="kejadian" aria-labelledby="jk">
+        <div class="panel-h"><h2 id="jk">Kejadian melewati baku mutu</h2></div>
+        <ul class="kej" id="daftarKejadian"></ul>
+      </section>
+      <section class="panel" id="pelaporan" aria-labelledby="jp">
+        <div class="panel-h"><h2 id="jp">Pengiriman ke sistem pelaporan</h2></div>
+        <div class="kirim" id="kirim"></div>
+        <p class="bm-note">Penerima di mockup adalah tiruan lokal. [REAL DATA: spesifikasi sistem pelaporan lingkungan]</p>
+      </section>
+    </aside>
+
+    <section class="panel lebar" aria-labelledby="jm">
+      <div class="panel-h"><h2 id="jm">Nilai terakhir per titik sampling</h2><p class="sub">status baku mutu hanya berlaku di outlet S4</p></div>
+      <div class="tbl-wrap"><table class="tbl" id="matriks"></table></div>
+    </section>
+    <section class="panel" aria-labelledby="jl">
+      <div class="panel-h"><h2 id="jl">Uji laboratorium outlet</h2><p class="sub">pembanding sensor online</p></div>
+      <div class="tbl-wrap"><table class="tbl" id="lab"></table></div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup proyek 10 · semua angka adalah data contoh · baku mutu dan format pelaporan menunggu dokumen izin klien</footer>
+<script src="../../shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

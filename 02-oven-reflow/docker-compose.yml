@@ -1,0 +1,55 @@
+# Proyek 02 · Monitor Oven Reflow SMT. Jalankan: docker compose up -d --build
+name: konsep-02
+services:
+  influxdb:
+    image: influxdb:2.7.10
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_ADMIN_USER:?isi .env, salin dari .env.example}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_ADMIN_PASSWORD:?isi .env}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG:?isi .env}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUX_BUCKET:?isi .env}
+      DOCKER_INFLUXDB_INIT_RETENTION: 7d
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:?isi .env}
+    volumes:
+      - influxdata:/var/lib/influxdb2
+      - ./db/influx-init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
+      - ./db/downsample_oven_1m.flux:/etc/influx-tasks/downsample_oven_1m.flux:ro
+    ports: ["127.0.0.1:18021:8086"]
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 5s
+      retries: 30
+
+  api:
+    build: { context: ., dockerfile: api/Dockerfile }
+    image: konsep-02-app:dev
+    command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment: &influxenv
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_TOKEN: ${INFLUX_TOKEN}
+      INFLUX_ORG: ${INFLUX_ORG}
+      INFLUX_BUCKET: ${INFLUX_BUCKET}
+      TZ_OFFSET_MIN: ${TZ_OFFSET_MIN:-420}
+      ZONE_TOLERANCE_C: ${ZONE_TOLERANCE_C:-3}
+      LIQUIDUS_C: ${LIQUIDUS_C:-217}
+      RECIPE_L1: "${RECIPE_L1:-[REAL DATA: nama resep Line 1]}"
+      RECIPE_L2: "${RECIPE_L2:-[REAL DATA: nama resep Line 2]}"
+    volumes:
+      - ./web:/srv/web:ro
+      - ../shared:/srv/shared:ro
+    ports: ["18020:8000"]
+    depends_on: { influxdb: { condition: service_healthy } }
+    restart: unless-stopped
+
+  simulator:
+    image: konsep-02-app:dev
+    command: ["python", "simulator/sim.py"]
+    environment: *influxenv
+    depends_on:
+      influxdb: { condition: service_healthy }
+      api: { condition: service_started }
+    restart: unless-stopped
+
+volumes:
+  influxdata:

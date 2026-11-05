@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Armada AC Pintar · Purnajual</title>
+<meta name="description" content="Mockup proyek 09: pemantauan armada AC terhubung untuk tim layanan purnajual.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <span class="logo-slot">[LOGO KLIEN]</span>
+  <span class="product">Armada AC Pintar</span>
+  <span class="sep" aria-hidden="true"></span>
+  <span class="muted">Layanan purnajual</span>
+  <div class="top-meta">
+    <span class="sample">Data contoh</span>
+    <span id="sumber" class="sumber" role="status">Memuat data…</span>
+  </div>
+</header>
+
+<div id="banner" class="banner" hidden></div>
+
+<main>
+  <section class="head">
+    <div>
+      <h1>Unit yang perlu servis</h1>
+      <p class="finding" id="temuan">Memuat ringkasan armada…</p>
+    </div>
+    <div class="head-actions">
+      <button class="btn primary" type="button" id="btnTanpaTiket">Tampilkan unit tanpa tiket</button>
+    </div>
+  </section>
+
+  <section class="kpis" id="kpis" aria-label="Ringkasan armada"></section>
+
+  <div class="layout">
+    <section class="panel list" aria-labelledby="judulDaftar">
+      <div class="panel-h">
+        <h2 id="judulDaftar">Unit bermasalah</h2>
+        <div class="seg" role="group" aria-label="Filter daftar">
+          <button type="button" data-f="semua" aria-pressed="true">Semua</button>
+          <button type="button" data-f="tanpa" aria-pressed="false">Tanpa tiket</button>
+        </div>
+      </div>
+      <ul id="daftar" class="units" aria-live="polite"></ul>
+    </section>
+
+    <section class="panel detail" id="detail" aria-live="polite" aria-labelledby="judulUnit">
+      <div class="detail-top">
+        <div class="ac-wrap">
+          <div class="ac" id="ac" aria-hidden="true">
+            <div class="ac-brand">[LOGO]</div>
+            <div class="ac-display"><span id="acSuhu">--</span><i id="acLed"></i></div>
+            <div class="ac-louver"></div>
+          </div>
+          <div class="ac-flow" id="acFlow" aria-hidden="true"><span></span><span></span><span></span></div>
+        </div>
+        <div class="unit-info">
+          <div class="row"><h2 id="judulUnit">Pilih unit</h2><span id="unitStatus"></span></div>
+          <p class="alasan" id="unitAlasan"></p>
+          <dl class="dl" id="unitDl"></dl>
+        </div>
+        <article class="tiket" id="tiket" aria-label="Tiket servis"></article>
+      </div>
+      <div class="chart-h">
+        <h3>Suhu ruang dibanding suhu set, 24 jam</h3>
+        <div class="legend"><span><i class="lg-a"></i>Suhu ruang</span><span><i class="lg-b"></i>Suhu set</span></div>
+      </div>
+      <div id="grafikSuhu" data-label="Suhu ruang dan suhu set 24 jam"></div>
+      <p class="small muted" id="catatanSuhu" role="status"></p>
+      <div class="mini">
+        <div><h3>Arus kompresor</h3><div id="grafikArus" data-label="Arus kompresor 24 jam"></div></div>
+        <div><h3>Tekanan hisap (perkiraan)</h3><div id="grafikTekanan" data-label="Tekanan hisap 24 jam"></div></div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="panel">
+        <div class="panel-h"><h2>Per kota</h2><span class="sub">unit bermasalah dari total</span></div>
+        <div id="kota" class="kota"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-h"><h2>Kode galat, 24 jam</h2></div>
+        <table class="tbl"><thead><tr><th>Kode</th><th>Arti</th><th class="n">Unit</th></tr></thead><tbody id="galat"></tbody></table>
+        <p class="note">Kode galat di atas generik untuk mockup. [REAL DATA: tabel kode galat resmi]</p>
+      </section>
+    </aside>
+  </div>
+</main>
+<footer class="pg">Mockup proyek 09 · semua angka adalah data contoh · data pelanggan disamarkan</footer>
+<script src="../../shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

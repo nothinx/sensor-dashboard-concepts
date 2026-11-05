@@ -1,0 +1,70 @@
+name: konsep-10
+
+# IPAL & Emisi: MariaDB <- simulator (PHP) -> webhook ke penerima tiruan; API REST (Slim 4) -> nginx (dasbor + proxy /api)
+x-php: &php
+  build: { context: ., dockerfile: api/Dockerfile }
+  image: konsep-10-php
+  environment: &phpenv
+    DB_HOST: db
+    DB_NAME: ipal
+    DB_USER: ${DB_USER:-ipal_app}
+    DB_PASSWORD: ${DB_PASSWORD:?isi DB_PASSWORD di .env}
+    TZ: Asia/Jakarta
+
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: ipal
+      MARIADB_USER: ${DB_USER:-ipal_app}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?isi DB_ROOT_PASSWORD di .env}
+      TZ: Asia/Jakarta
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d:ro
+      - data:/var/lib/mysql
+    ports: ["127.0.0.1:18101:3306"]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 30
+
+  api:
+    <<: *php
+    environment:
+      <<: *phpenv
+      API_KEY: ${API_KEY:?isi API_KEY di .env}
+    depends_on: { db: { condition: service_healthy } }
+    ports: ["127.0.0.1:18102:8080"]
+
+  simulator:
+    <<: *php
+    environment:
+      <<: *phpenv
+      TICK_DETIK: ${TICK_DETIK:-30}
+      WEBHOOK_DETIK: ${WEBHOOK_DETIK:-60}
+      WEBHOOK_URL: http://penerima:8090/
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?isi WEBHOOK_SECRET di .env}
+    depends_on: { db: { condition: service_healthy }, penerima: { condition: service_started } }
+    command: ["php", "simulator/sim.php"]
+
+  penerima:
+    <<: *php
+    environment:
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+    ports: ["127.0.0.1:18103:8090"]
+    command: ["php", "-S", "0.0.0.0:8090", "penerima/index.php"]
+
+  web:
+    image: nginx:1.27-alpine
+    depends_on: [api]
+    environment:
+      API_KEY: ${API_KEY}             # disisipkan nginx ke header; tidak pernah dikirim ke peramban
+    volumes:
+      - ./web:/srv/web:ro
+      - ../shared:/srv/shared:ro
+      - ./web/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+    ports: ["127.0.0.1:18100:80"]
+
+volumes:
+  data:

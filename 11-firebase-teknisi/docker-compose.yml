@@ -1,0 +1,42 @@
+name: konsep-11
+
+# Aplikasi Teknisi Lapangan, versi Firebase Emulator Suite:
+# simulator (Admin SDK) -> Firestore emulator -> Cloud Function (trigger) -> tugas -> aplikasi (onSnapshot)
+services:
+  emulator:
+    build: { context: ., dockerfile: emulator.Dockerfile }
+    env_file: .env
+    environment:
+      SHARED_DIR: /shared
+      TZ: Asia/Jakarta
+    command: >
+      sh -c "node alat/bangun.mjs &&
+             firebase emulators:start --project $${FIREBASE_PROJECT_ID} --only firestore,auth,functions,hosting"
+    volumes:
+      - ./:/proyek
+      - fungsi-modul:/proyek/functions/node_modules   # modul dari image, tidak tertimpa folder host
+      - ../shared:/shared:ro
+    ports:
+      - "127.0.0.1:18110:18110"   # Hosting (aplikasi)
+      - "127.0.0.1:18111:18111"   # Firestore
+      - "127.0.0.1:18112:18112"   # Auth
+      - "127.0.0.1:18113:18113"   # Functions
+      - "127.0.0.1:18114:18114"   # Emulator UI
+      - "127.0.0.1:18115:18115"   # Hub
+      - "127.0.0.1:18116:18116"   # Logging
+      - "127.0.0.1:18117:18117"   # Firestore websocket (UI)
+
+  simulator:
+    build: ./simulator
+    env_file: .env
+    environment:
+      FIRESTORE_EMULATOR_HOST: emulator:18111
+      FIREBASE_AUTH_EMULATOR_HOST: emulator:18112
+      EMULATOR_HUB: emulator:18115
+      GCLOUD_PROJECT: ${FIREBASE_PROJECT_ID}
+      TZ: Asia/Jakarta
+    depends_on: [emulator]
+    restart: on-failure
+
+volumes:
+  fungsi-modul:

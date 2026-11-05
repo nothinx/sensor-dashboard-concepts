@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alarm · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 02: alarm aktif, penanggung jawab, dan riwayat alarm.">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Alarm</h1>
+      <p class="finding"><b>Satu alarm kritis belum diakui selama 34 menit.</b> Aturan eskalasi: alarm kritis yang 30 menit belum diakui diteruskan ke kepala shift.</p>
+    </div>
+    <div class="actions">
+      <div class="seg" role="group" aria-label="Filter status">
+        <button type="button" aria-pressed="true">Aktif (3)</button>
+        <button type="button" aria-pressed="false">Diakui (0)</button>
+        <button type="button" aria-pressed="false">Selesai, 7 hari terakhir (41)</button>
+      </div>
+      <select aria-label="Filter area"><option>Semua area</option><option>SMT Line 1</option><option>SMT Line 2</option><option>Kompresor & utilitas</option><option>Cold storage B</option></select>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-h"><h2>Alarm aktif</h2><span class="sub">diurutkan dari tingkat tertinggi, lalu yang paling lama</span></div>
+    <div class="panel-b table-wrap">
+      <table>
+        <thead><tr><th>Tingkat</th><th>Sensor</th><th>Area</th><th class="n">Nilai</th><th class="n">Batas</th><th>Mulai</th><th class="n">Lama</th><th>Penanggung jawab</th><th></th></tr></thead>
+        <tbody id="active"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="grid g-12" style="margin-top:16px">
+    <section class="panel c5">
+      <div class="panel-h"><h2>Area dengan alarm terbanyak, 7 hari</h2><span class="sub">jumlah kejadian</span></div>
+      <div class="panel-b" id="byArea"></div>
+    </section>
+    <section class="panel c7">
+      <div class="panel-h"><h2>Alarm per hari, 14 hari</h2><span class="sub">kejadian, semua tingkat</span></div>
+      <div class="panel-b"><div id="perDay" data-label="Jumlah alarm per hari 14 hari"></div>
+        <p class="small muted" style="margin-top:6px">Lonjakan 29 Oktober: kalibrasi ulang 12 sensor suhu Line 1 memicu alarm palsu selama 3 jam.</p></div>
+    </section>
+    <section class="panel c12">
+      <div class="panel-h"><h2>Riwayat terbaru</h2><span class="sub">5 dari 41 alarm selesai</span><a class="right small" href="#">Lihat semua 41</a></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>Tingkat</th><th>Sensor</th><th>Area</th><th class="n">Puncak</th><th>Mulai</th><th class="n">Durasi</th><th>Ditangani oleh</th><th>Catatan penanganan</th></tr></thead>
+          <tbody id="hist"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 02 dari 10 · semua angka dan nama peran adalah data contoh</footer>
+<script src="assets/app.js"></script>
+<script>
+  const A = [
+    ["crit", "TC-L2-Z6 suhu zona 6", "SMT Line 2", "252,4 °C", "250 °C", "13.58", "34 mnt", "Belum ditugaskan"],
+    ["warn", "DS-CSB-01 pintu", "Cold storage B", "terbuka", "5 mnt", "14.23", "9 mnt", "Belum ditugaskan"],
+    ["warn", "VB-K02 getaran", "Kompresor & utilitas", "5,3 mm/s", "4,5 mm/s", "11.40", "2 jam 52 mnt", "Teknisi utilitas (shift 1)"],
+  ];
+  active.innerHTML = A.map((a) => `<tr><td>${st(a[0])}</td><td><a href="03-detail-sensor.html">${a[1]}</a></td><td>${a[2]}</td>
+    <td class="n">${a[3]}</td><td class="n muted">${a[4]}</td><td class="num">${a[5]}</td><td class="n">${a[6]}</td>
+    <td class="${a[7].startsWith("Belum") ? "muted" : ""}">${a[7]}</td>
+    <td class="n"><div class="row" style="justify-content:flex-end"><button class="btn" type="button">Tugaskan</button><button class="btn primary" type="button">Akui</button></div></td></tr>`).join("");
+
+  const areas = [["Kompresor & utilitas", 14], ["SMT Line 1", 9], ["SMT Line 2", 7], ["Cold storage B", 6], ["Perakitan kulkas", 3], ["Uji akhir (QC)", 2]];
+  byArea.innerHTML = areas.map(([n, v]) => `<div class="hbar"><span>${n}</span><div class="track"><div class="fill" style="width:${(v / 14) * 100}%"></div></div><span class="val num">${v}</span></div>`).join("");
+
+  const days = Array.from({ length: 14 }, (_, i) => new Date(2026, 9, 23 + i));
+  barChart(perDay, { data: [4, 3, 5, 2, 3, 6, 19, 5, 4, 3, 2, 4, 3, 3], x: days, unit: "alarm", h: 190, hiIdx: [6],
+    fmtX: (d) => `${d.getDate()}/${d.getMonth() + 1}` });
+
+  const H = [
+    ["warn", "TH-SMT1-03 kelembapan", "SMT Line 1", "61,8 %RH", "4 Nov 21.10", "42 mnt", "Teknisi fasilitas", "Dehumidifier 2 macet, lalu diatur ulang"],
+    ["serious", "PM-MDP arus fasa R", "Panel listrik utama", "1.120 A", "4 Nov 13.05", "18 mnt", "Teknisi listrik", "Beban puncak oven dan kompresor bersamaan"],
+    ["warn", "VB-K02 getaran", "Kompresor & utilitas", "4,7 mm/s", "3 Nov 10.20", "1 jam 10 mnt", "Teknisi utilitas", "Dipantau; penggantian bearing dijadwalkan"],
+    ["crit", "TS-CSB-02 suhu", "Cold storage B", "9,4 °C", "2 Nov 02.45", "25 mnt", "Satpam malam, teknisi", "Pintu tidak menutup rapat"],
+    ["warn", "PC-L1 partikel 0,5 µm", "SMT Line 1", "41.200 /m³", "1 Nov 15.30", "12 mnt", "QC", "Pintu airlock terbuka saat pemindahan material"],
+  ];
+  hist.innerHTML = H.map((a) => `<tr><td>${st(a[0])}</td><td>${a[1]}</td><td>${a[2]}</td><td class="n">${a[3]}</td><td class="num">${a[4]}</td><td class="n">${a[5]}</td><td>${a[6]}</td><td class="muted">${a[7]}</td></tr>`).join("");
+</script>
+</body>
+</html>

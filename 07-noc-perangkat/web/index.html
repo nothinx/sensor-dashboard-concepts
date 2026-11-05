@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOC Perangkat & Gateway</title>
+<meta name="description" content="Mockup proyek 07: pemantauan kesehatan sensor dan gateway pabrik dari Prometheus.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">
+      <span class="logo-slot">[LOGO KLIEN]</span>
+      <span class="prod">NOC Perangkat</span>
+    </div>
+    <nav class="nav" aria-label="Bagian dasbor">
+      <a href="#ringkasan" aria-current="true">Ringkasan</a>
+      <a href="#topologi">Topologi</a>
+      <a href="#offline">Sensor offline <span class="count mono" id="nav-off"></span></a>
+      <a href="#gateway">Gateway</a>
+      <a href="#riwayat">Riwayat 24 jam</a>
+      <a href="#alert">Alert aktif <span class="count mono" id="nav-alert"></span></a>
+      <a href="#baterai">Baterai</a>
+      <a href="#firmware">Firmware</a>
+    </nav>
+    <div class="side-foot">
+      <span class="sample">Data contoh</span>
+      <p class="mono small"><span class="beat" id="beat" aria-hidden="true"></span><span id="sumber">Prometheus, scrape 15 dtk</span></p>
+      <p class="mono small muted" id="sinkron">Belum sinkron</p>
+    </div>
+  </aside>
+
+  <main>
+    <div class="banner" id="banner" role="status" hidden></div>
+
+    <header class="head" id="ringkasan">
+      <div>
+        <h1>Perangkat & gateway</h1>
+        <p class="finding" id="temuan">Memuat data dari Prometheus…</p>
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="button" id="fokus" disabled>Tampilkan sensor offline</button>
+      </div>
+    </header>
+
+    <section class="kpis" aria-label="Angka utama">
+      <div class="kpi"><div class="l">Sensor tidak mengirim data</div><div class="v big mono" id="k-off">…</div><div class="d mono" id="k-off-d"></div></div>
+      <div class="kpi"><div class="l">Gateway terhubung</div><div class="v mono" id="k-gw">…</div><div class="d mono" id="k-gw-d"></div></div>
+      <div class="kpi"><div class="l">Baterai di bawah 20 %</div><div class="v mono" id="k-bat">…</div><div class="d">sensor nirkabel LoRa</div></div>
+      <div class="kpi"><div class="l">Firmware belum terbaru</div><div class="v mono" id="k-fw">…</div><div class="d mono" id="k-fw-d"></div></div>
+    </section>
+
+    <section class="panel" id="topologi">
+      <div class="panel-h">
+        <h2>Topologi kolektor, gateway, dan sensor</h2>
+        <span class="sub">satu kotak satu sensor; arahkan kursor untuk detail</span>
+        <div class="legend right">
+          <span><i class="sq on"></i>Mengirim data</span>
+          <span><i class="sq low"></i>Baterai &lt; 20 %</span>
+          <span><i class="sq off"></i>Tidak mengirim data</span>
+        </div>
+      </div>
+      <div class="panel-b"><div id="topo" class="topo"><p class="empty">Memuat topologi…</p></div></div>
+    </section>
+
+    <div class="grid">
+      <section class="panel c8" id="offline">
+        <div class="panel-h"><h2>Sensor tidak mengirim data</h2><span class="sub">diurutkan dari yang paling lama</span></div>
+        <div class="panel-b table-wrap">
+          <table>
+            <thead><tr><th>Sensor</th><th>Jenis</th><th>Lokasi</th><th>Gateway</th><th>Terakhir mengirim data</th><th>Dugaan penyebab</th></tr></thead>
+            <tbody id="t-off"><tr><td colspan="6" class="empty">Memuat…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel c4" id="gateway">
+        <div class="panel-h"><h2>Gateway</h2></div>
+        <div class="panel-b table-wrap">
+          <table>
+            <thead><tr><th>Gateway</th><th class="n">Online</th><th class="n">Uptime</th><th>Status</th></tr></thead>
+            <tbody id="t-gw"><tr><td colspan="4" class="empty">Memuat…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel c8" id="riwayat">
+        <div class="panel-h"><h2>Sensor yang mengirim data, 24 jam</h2><span class="sub">jumlah, langkah 5 menit, dari 418 sensor</span></div>
+        <div class="panel-b"><div id="c-online" data-label="Jumlah sensor online 24 jam"></div></div>
+      </section>
+
+      <section class="panel c4" id="alert">
+        <div class="panel-h"><h2>Alert aktif</h2><span class="sub">dari aturan Prometheus</span></div>
+        <div class="panel-b" id="l-alert"><p class="empty">Memuat…</p></div>
+      </section>
+
+      <section class="panel c6" id="baterai">
+        <div class="panel-h"><h2>Baterai terendah</h2><span class="sub" id="bat-sub">sensor nirkabel</span></div>
+        <div class="panel-b" id="l-bat"><p class="empty">Memuat…</p></div>
+      </section>
+
+      <section class="panel c6" id="firmware">
+        <div class="panel-h"><h2>Firmware perlu diperbarui</h2><span class="sub" id="fw-sub"></span></div>
+        <div class="panel-b" id="l-fw"><p class="empty">Memuat…</p></div>
+      </section>
+    </div>
+    <footer class="pg">Mockup proyek 07 · semua angka adalah data contoh · sumber: Prometheus lewat proxy <span class="mono">/prom/api/v1</span></footer>
+  </main>
+</div>
+<script src="../../shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

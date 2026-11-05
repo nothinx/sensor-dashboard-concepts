@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal Mitra Servis</title>
+<meta name="description" content="Mockup proyek 12: portal mitra servis resmi untuk mengelola tiket dan SLA waktu tanggap.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="banner" class="banner" role="status" hidden></div>
+
+<!-- layar masuk -->
+<section id="layar-masuk" class="masuk" hidden aria-labelledby="judul-masuk">
+  <div class="masuk-kartu">
+    <span class="logo-slot">[LOGO KLIEN]</span>
+    <h1 id="judul-masuk">Portal Mitra Servis</h1>
+    <p class="muted">Masuk dengan akun yang diberikan pabrik untuk mitra Anda.</p>
+    <form id="form-masuk" novalidate>
+      <label>Email<input name="email" type="email" autocomplete="username" required></label>
+      <label>Sandi<input name="sandi" type="password" autocomplete="current-password" required minlength="8"></label>
+      <p id="galat-masuk" class="galat" role="alert" hidden></p>
+      <button class="btn primary" type="submit">Masuk</button>
+    </form>
+    <details class="akun-contoh" id="akun-contoh" hidden>
+      <summary>Akun contoh untuk emulator lokal</summary>
+      <p>Sandi semua akun: <code>Contoh-Mitra-2026</code></p>
+      <ul>
+        <li><button type="button" class="isi-akun" data-email="mitra.smg@contoh.test">mitra.smg@contoh.test</button></li>
+        <li><button type="button" class="isi-akun" data-email="mitra.sby@contoh.test">mitra.sby@contoh.test</button></li>
+        <li><button type="button" class="isi-akun" data-email="mitra.mks@contoh.test">mitra.mks@contoh.test</button></li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<!-- portal -->
+<div id="portal" class="portal" hidden>
+  <aside class="samping" aria-label="Navigasi">
+    <span class="logo-slot">[LOGO KLIEN]</span>
+    <nav>
+      <a href="#papan" aria-current="true">Papan SLA</a>
+      <a href="#berjalan">Tiket berjalan</a>
+      <a href="#unit">Unit berulang</a>
+      <a href="#kinerja">Kinerja</a>
+    </nav>
+    <div class="samping-bawah">
+      <span class="sample">Data contoh</span>
+      <span id="sumber" class="sumber" role="status"></span>
+    </div>
+  </aside>
+
+  <main>
+    <header class="kepala">
+      <div>
+        <p class="mitra" id="mitra-nama"></p>
+        <h1 id="papan">Papan SLA</h1>
+        <p class="temuan" id="temuan">Memuat tiket…</p>
+      </div>
+      <div class="akun">
+        <span id="pengguna" class="muted"></span>
+        <button class="btn" type="button" id="keluar">Keluar</button>
+      </div>
+    </header>
+
+    <section aria-label="Tiket menunggu tanggapan">
+      <ol class="papan" id="papan-sla"><li class="memuat">Memuat…</li></ol>
+    </section>
+
+    <div class="dua">
+      <section class="panel" aria-labelledby="berjalan">
+        <div class="panel-h"><h2 id="berjalan">Tiket berjalan</h2><span class="sub">sudah ditanggapi, belum selesai</span></div>
+        <div class="tabel-bungkus">
+          <table>
+            <thead><tr><th>Tiket</th><th>Unit</th><th>Keluhan</th><th>Status</th><th>Kunjungan</th></tr></thead>
+            <tbody id="tbl-berjalan"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="kinerja">
+        <div class="panel-h"><h2 id="kinerja">Kinerja 30 hari</h2><span class="sub">mitra Anda dibanding rata-rata semua mitra</span></div>
+        <div class="kinerja" id="kinerja-isi"></div>
+      </section>
+    </div>
+
+    <section class="panel" aria-labelledby="unit">
+      <div class="panel-h"><h2 id="unit">Unit pelanggan bermasalah berulang</h2><span class="sub">2 tiket atau lebih dalam 30 hari</span></div>
+      <div class="tabel-bungkus">
+        <table>
+          <thead><tr><th>Unit</th><th>Model</th><th>Pelanggan</th><th class="n">Tiket 30 hari</th><th>Keluhan terakhir</th></tr></thead>
+          <tbody id="tbl-unit"></tbody>
+        </table>
+      </div>
+    </section>
+    <footer class="pg">Mockup proyek 12 · semua angka dan nama mitra adalah data contoh · data dari Supabase (lokal: Supabase CLI)</footer>
+  </main>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="../../shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detail sensor · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 03: detail satu sensor, tren, ambang batas, dan riwayat kejadian.">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<main>
+  <p class="small muted" style="margin-bottom:6px"><a href="04-lini-smt.html">SMT Line 2</a> / Oven reflow / Zona 6</p>
+  <div class="head">
+    <div>
+      <div class="row"><h1>TC-L2-Z6 · Suhu zona 6</h1><span id="s"></span></div>
+      <p class="finding"><b>Suhu naik 7,4 °C dalam 40 menit setelah kecepatan konveyor diturunkan pukul 13.50.</b> Setpoint tetap 245 °C, sehingga pemanas zona 6 kemungkinan tidak lagi mengikuti pengendali.</p>
+    </div>
+    <div class="actions">
+      <div class="seg" role="group" aria-label="Rentang waktu">
+        <button type="button" aria-pressed="false">1 jam</button><button type="button" aria-pressed="true">24 jam</button><button type="button" aria-pressed="false">7 hari</button><button type="button" aria-pressed="false">30 hari</button>
+      </div>
+      <button class="btn" type="button">Unduh CSV</button>
+      <button class="btn primary" type="button">Akui alarm</button>
+    </div>
+  </div>
+
+  <div class="grid g-12">
+    <section class="panel c9">
+      <div class="kpis" style="border-bottom:1px solid var(--line)">
+        <div class="kpi"><div class="l">Nilai sekarang</div><div class="v big num" style="color:var(--crit-ink)">252,4<span class="u">°C</span></div><div class="d">dibaca 14.32.05</div></div>
+        <div class="kpi"><div class="l">Setpoint</div><div class="v num">245,0<span class="u">°C</span></div></div>
+        <div class="kpi"><div class="l">Maks 24 jam</div><div class="v num">252,9<span class="u">°C</span></div><div class="d">14.21</div></div>
+        <div class="kpi"><div class="l">Min 24 jam</div><div class="v num">243,1<span class="u">°C</span></div><div class="d">04.10</div></div>
+        <div class="kpi"><div class="l">Waktu di luar batas</div><div class="v num">34<span class="u">mnt</span></div><div class="d">hari ini</div></div>
+      </div>
+      <div class="panel-b">
+        <div id="trend" data-label="Suhu zona 6, 24 jam"></div>
+        <p class="note" style="margin-top:10px">Data terputus pukul 03.15 sampai 03.45 karena gateway GW-L2 dinyalakan ulang. Dua titik ambang tidak dapat dinilai pada rentang itu.</p>
+      </div>
+    </section>
+
+    <aside class="panel c3">
+      <div class="panel-h"><h2>Identitas sensor</h2></div>
+      <div class="panel-b">
+        <dl class="dl">
+          <dt>Jenis</dt><dd>Termokopel tipe K</dd>
+          <dt>Lokasi</dt><dd>Oven reflow Line 2, zona 6 atas</dd>
+          <dt>Gateway</dt><dd class="mono">GW-L2 · Modbus RTU id 16</dd>
+          <dt>Register</dt><dd class="mono">30012 (×0,1 °C)</dd>
+          <dt>Interval pembacaan</dt><dd>5 detik</dd>
+          <dt>Kalibrasi</dt><dd class="muted">[REAL DATA: tanggal kalibrasi terakhir]</dd>
+        </dl>
+      </div>
+      <div class="panel-h" style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px"><h2>Ambang batas</h2><button class="btn right" type="button">Ubah</button></div>
+      <div class="panel-b">
+        <table>
+          <tbody>
+            <tr><td><span id="t1"></span></td><td class="n">&gt; 250,0 °C</td></tr>
+            <tr><td><span id="t2"></span></td><td class="n">&gt; 248,0 °C</td></tr>
+            <tr><td><span id="t3"></span></td><td class="n">&lt; 240,0 °C</td></tr>
+            <tr><td class="muted">Tunda alarm</td><td class="n">60 detik</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </aside>
+
+    <section class="panel c6">
+      <div class="panel-h"><h2>Zona tetangga, 2 jam</h2><span class="sub">Apakah masalahnya hanya di zona 6?</span></div>
+      <div class="panel-b"><div class="legend" id="lg"></div><div id="nb" data-label="Zona 5, 6, 7, 2 jam"></div></div>
+    </section>
+    <section class="panel c6">
+      <div class="panel-h"><h2>Riwayat kejadian</h2></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>Waktu</th><th>Kejadian</th><th>Oleh</th></tr></thead>
+          <tbody>
+            <tr><td class="num">14.21</td><td>Puncak 252,9 °C</td><td class="muted">sistem</td></tr>
+            <tr><td class="num">13.58</td><td>Alarm kritis: lewat 250,0 °C</td><td class="muted">sistem</td></tr>
+            <tr><td class="num">13.52</td><td>Peringatan: lewat 248,0 °C</td><td class="muted">sistem</td></tr>
+            <tr><td class="num">13.50</td><td>Kecepatan konveyor 0,90 → 0,75 m/mnt</td><td>Operator Line 2</td></tr>
+            <tr><td class="num">03.45</td><td>Data kembali setelah gateway dinyalakan ulang</td><td class="muted">sistem</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 03 dari 10 · semua angka adalah data contoh</footer>
+<script src="assets/app.js"></script>
+<script>
+  s.innerHTML = st("crit");
+  t1.innerHTML = st("crit"); t2.innerHTML = st("warn"); t3.innerHTML = st("warn", "Peringatan rendah");
+  const n = 288, x = times(n, 5);
+  const d = gen(n, { base: 245.4, amp: 0.8, noise: 0.5, seed: 11 });
+  for (let i = 0; i < 9; i++) d[n - 9 + i] = +(248 + i * 0.55 + (i % 2) * 0.3).toFixed(1);
+  for (let i = 0; i < 6; i++) d[n - 18 + i] = +(245.6 + i * 0.4).toFixed(1);
+  d[n - 1] = 252.4;
+  for (let i = 135; i < 141; i++) d[i] = null;
+  lineChart(trend, { x, series: [{ name: "Zona 6", color: "var(--s1)", data: d }], unit: "°C", min: 238, max: 256, h: 300,
+    bands: [{ y: 250, label: "kritis 250", color: "var(--crit)" }, { y: 248, label: "peringatan 248", color: "var(--warn)" }, { y: 240, label: "rendah 240", color: "var(--warn)" }],
+    marks: [{ i: n - 9, label: "13.50 konveyor diperlambat" }] });
+
+  const m = 24, x2 = times(m, 5);
+  const z6 = d.slice(n - m);
+  lg.innerHTML = `<span><i style="background:var(--s1)"></i>Zona 6</span><span><i style="background:var(--s2)"></i>Zona 5</span><span><i style="background:var(--s3)"></i>Zona 7</span>`;
+  lineChart(nb, { x: x2, h: 200, unit: "°C", min: 225, max: 257, series: [
+    { name: "Zona 6", color: "var(--s1)", data: z6 },
+    { name: "Zona 5", color: "var(--s2)", data: gen(m, { base: 235, amp: 0.3, noise: 0.4, seed: 21, period: 48 }) },
+    { name: "Zona 7", color: "var(--s3)", data: gen(m, { base: 241, amp: 0.3, noise: 0.4, seed: 22, period: 48 }) },
+  ] });
+</script>
+</body>
+</html>

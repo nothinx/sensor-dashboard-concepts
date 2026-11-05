@@ -1,0 +1,56 @@
+# Pemantauan Ruang Bersih & ESD: MongoDB + API Express (REST + SSE) + simulator.
+# Jalankan: docker compose -p konsep-05 up -d --build   → dasbor http://localhost:18050
+name: konsep-05
+
+x-app-env: &app-env
+  MONGO_URL: mongodb://${MONGO_APP_USER:-app}:${MONGO_APP_PASSWORD:-ganti-sandi-app}@mongo:27017/ruangbersih?authSource=ruangbersih
+  MONGO_DB: ruangbersih
+  TZ: ${TZ:-Asia/Jakarta}
+
+services:
+  mongo:
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-ganti-sandi-root}
+      MONGO_INITDB_DATABASE: ruangbersih
+      MONGO_APP_USER: ${MONGO_APP_USER:-app}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-ganti-sandi-app}
+    volumes:
+      - mongo-data:/data/db
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:18051:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ./api
+    environment:
+      <<: *app-env
+      PORT: "8080"
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:18050}
+      SSE_INTERVAL_MS: "5000"
+    volumes:
+      - ./web:/app/web:ro
+      - ../shared:/app/shared:ro
+    ports:
+      - "18050:8080"
+    depends_on:
+      mongo: { condition: service_healthy }
+    restart: unless-stopped
+
+  simulator:
+    build: ./simulator
+    environment:
+      <<: *app-env
+      SIM_INTERVAL_MS: "5000"
+    depends_on:
+      mongo: { condition: service_healthy }
+    restart: unless-stopped
+
+volumes:
+  mongo-data:

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruang & ESD · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 07: suhu, kelembapan, partikel, tekanan ruang, dan kontrol ESD di area produksi.">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Ruang produksi & ESD</h1>
+      <p class="finding"><b>Semua ruang memenuhi syarat, kecuali satu ionizer di Perakitan TV dengan tegangan offset 38 V.</b> Kelembapan ruang SMT sempat turun ke 42 %RH pagi ini, masih di atas batas bawah 40 %RH.</p>
+    </div>
+    <div class="actions">
+      <select aria-label="Pilih lantai"><option>Gedung produksi, lantai 1</option><option>Gedung produksi, lantai 2</option></select>
+    </div>
+  </div>
+
+  <div class="grid g-12">
+    <section class="panel c8">
+      <div class="panel-h"><h2>Denah sensor</h2><span class="sub">pilih titik untuk melihat nilainya</span>
+        <div class="right legend" id="lg"></div></div>
+      <div class="panel-b">
+        <div class="plan" id="plan">
+          <div class="zone" style="left:2%;top:4%;width:36%;height:44%"><b>Ruang SMT</b>suhu 23,8 °C · 48 %RH</div>
+          <div class="zone" style="left:40%;top:4%;width:34%;height:44%"><b>Perakitan TV</b>suhu 25,1 °C · 55 %RH</div>
+          <div class="zone" style="left:76%;top:4%;width:22%;height:44%"><b>Uji akhir (QC)</b>suhu 24,4 °C · 52 %RH</div>
+          <div class="zone" style="left:2%;top:52%;width:46%;height:44%"><b>Perakitan kulkas</b>suhu 26,0 °C · 61 %RH</div>
+          <div class="zone" style="left:50%;top:52%;width:20%;height:44%"><b>Airlock & ruang ganti</b>tekanan +12 Pa</div>
+          <div class="zone" style="left:72%;top:52%;width:26%;height:44%"><b>Gudang komponen ESD</b>suhu 24,9 °C · 50 %RH</div>
+        </div>
+      </div>
+    </section>
+    <aside class="panel c4">
+      <div class="panel-h"><h2 id="pt">ION-TV-03 · ionizer</h2></div>
+      <div class="panel-b stack">
+        <div id="ps"></div>
+        <div class="kpis" style="border:1px solid var(--line);border-radius:4px">
+          <div class="kpi"><div class="l">Tegangan offset</div><div class="v num" style="color:var(--warn-ink)">38<span class="u">V</span></div><div class="d">batas ±35 V</div></div>
+          <div class="kpi"><div class="l">Waktu luruh</div><div class="v num">4,2<span class="u">dtk</span></div><div class="d">batas 5 dtk</div></div>
+        </div>
+        <p class="small muted">Lokasi: meja perakitan TV nomor 7. Hasil uji rutin dengan pelat bermuatan (CPM) tercatat otomatis setiap 4 jam.</p>
+        <button class="btn" type="button">Jadwalkan pembersihan emitor</button>
+      </div>
+    </aside>
+
+    <section class="panel c7">
+      <div class="panel-h"><h2>Kelembapan ruang SMT, 24 jam</h2><span class="sub">%RH, rata-rata 4 sensor</span></div>
+      <div class="panel-b"><div id="rh" data-label="Kelembapan ruang SMT 24 jam"></div></div>
+    </section>
+    <section class="panel c5">
+      <div class="panel-h"><h2>Syarat per ruang</h2></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>Ruang</th><th class="n">Partikel ≥ 0,5 µm per m³</th><th class="n">Beda tekanan (Pa)</th><th class="n">Lulus uji gelang ESD</th><th>Status</th></tr></thead>
+          <tbody id="rt"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 07 dari 10 · denah dan semua angka adalah data contoh; denah asli dari gambar layout pabrik klien</footer>
+<script src="assets/app.js"></script>
+<script>
+  lg.innerHTML = `${st("ok")} ${st("warn")} ${st("off")}`;
+  ps.innerHTML = st("warn", "Peringatan: offset melewati batas");
+  const pins = [[10, 22, "ok", "TH1"], [28, 34, "ok", "TH2"], [20, 40, "ok", "PC1"], [50, 20, "ok", "TH3"], [66, 36, "warn", "IO3"], [58, 40, "ok", "IO1"],
+    [86, 24, "ok", "TH4"], [14, 72, "ok", "TH5"], [36, 84, "ok", "TH6"], [60, 70, "ok", "DP1"], [84, 74, "ok", "TH7"], [92, 88, "off", "TH8"]];
+  plan.insertAdjacentHTML("beforeend", pins.map(([x, y, s, id]) =>
+    `<button class="pin ${s}" style="left:${x}%;top:${y}%" type="button" aria-label="Sensor ${id}, ${LABEL[s]}">${id.slice(0, 2)}</button>`).join(""));
+  const x = times(96, 15);
+  lineChart(rh, { x, series: [{ name: "RH", color: "var(--s1)", data: gen(96, { base: 47, amp: 3.4, noise: 1, seed: 9 }) }], unit: "%RH", min: 30, max: 70, dec: 0, h: 220,
+    bands: [{ y: 60, label: "maks 60", color: "var(--warn)" }, { y: 40, label: "min 40", color: "var(--warn)" }] });
+  const R = [["Ruang SMT", "18.400", "+15", "100 %", "ok"], ["Perakitan TV", "-", "-", "98,6 %", "warn"], ["Uji akhir (QC)", "-", "-", "100 %", "ok"], ["Perakitan kulkas", "-", "-", "-", "ok"], ["Gudang komponen ESD", "-", "+5", "-", "off"]];
+  rt.innerHTML = R.map((r) => `<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td><td class="n">${r[3]}</td><td>${r[4] === "ok" ? st("ok") : r[4] === "warn" ? st("warn", "Ionizer") : st("off", "1 sensor offline")}</td></tr>`).join("");
+</script>
+</body>
+</html>

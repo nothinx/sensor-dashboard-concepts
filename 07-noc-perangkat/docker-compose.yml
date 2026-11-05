@@ -1,0 +1,68 @@
+name: konsep-07
+
+# Urutan start: backfill-gen (riwayat 24 jam + jangkar) -> backfill (promtool) -> prometheus.
+services:
+  backfill-gen:
+    image: python:3.12-alpine
+    command: ["python", "/app/exporter.py", "--backfill", "/bf/backfill.om"]
+    volumes:
+      - ./simulator:/app:ro
+      - backfill:/bf
+
+  backfill:
+    image: prom/prometheus:v2.53.2
+    entrypoint: ["/bin/sh", "/etc/prometheus/backfill.sh"]
+    volumes:
+      - ./db:/etc/prometheus:ro
+      - backfill:/bf:ro
+      - prom-data:/prometheus
+    depends_on:
+      backfill-gen:
+        condition: service_completed_successfully
+
+  exporter:
+    image: python:3.12-alpine
+    command: ["python", "-u", "/app/exporter.py"]
+    restart: unless-stopped
+    volumes:
+      - ./simulator:/app:ro
+      - backfill:/bf:ro
+    ports:
+      - "127.0.0.1:${EXPORTER_PORT:-18072}:9100"
+    depends_on:
+      backfill-gen:
+        condition: service_completed_successfully
+
+  prometheus:
+    image: prom/prometheus:v2.53.2
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${RETENSI:-15d}
+    volumes:
+      - ./db:/etc/prometheus:ro
+      - prom-data:/prometheus
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-18071}:9090"
+    depends_on:
+      backfill:
+        condition: service_completed_successfully
+      exporter:
+        condition: service_started
+
+  web:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ../shared:/srv/shared:ro
+      - ./api/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${WEB_PORT:-18070}:80"
+    depends_on:
+      - prometheus
+
+volumes:
+  prom-data:
+  backfill:

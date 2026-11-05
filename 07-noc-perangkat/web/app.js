@@ -1,0 +1,296 @@
+// Dasbor NOC: menarik data dari Prometheus lewat proxy nginx /prom/api/v1 (PromQL HTTP API).
+// Dibuka tanpa server (file://) atau Prometheus mati: memakai data contoh bawaan + pita penjelasan.
+const API = "/prom/api/v1";
+const STALE = 300; // detik, sama dengan aturan alert SensorTidakMengirim
+const REFRESH = 15000; // sama dengan scrape_interval
+const URUT_GW = ["GW-L1", "GW-L2", "GW-PR", "GW-UT", "GW-GD", "LoRa"];
+let model = null;
+let tampilSemua = false;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const jam = (epoch) => hhmm(new Date(epoch * 1000));
+
+function durasi(sec) {
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return `${sec} dtk`;
+  const m = Math.floor(sec / 60);
+  if (m < 60) return `${m} mnt`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} jam ${m % 60} mnt`;
+  return `${Math.floor(h / 24)} hari ${h % 24} jam`;
+}
+
+async function ambil(url) {
+  const r = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!r.ok) throw new Error(`HTTP ${r.status} dari ${url.split("?")[0]}`);
+  const j = await r.json();
+  if (j.status !== "success") throw new Error(j.error || "jawaban Prometheus tidak valid");
+  return j.data;
+}
+const q = async (expr) => (await ambil(`${API}/query?query=${encodeURIComponent(expr)}`)).result;
+
+async function muatProm() {
+  const end = Math.floor(Date.now() / 1000);
+  const [gwinfo, up, upt, info, seen, batt, crc, latest, al, range] = await Promise.all([
+    q("noc_gateway_info"), q("noc_gateway_up"), q("noc_gateway_uptime_seconds"), q("noc_sensor_info"),
+    q("time() - noc_sensor_last_seen_timestamp_seconds"), q("noc_sensor_battery_percent"),
+    q("rate(noc_sensor_crc_errors_total[5m])"), q("noc_firmware_latest_info"),
+    ambil(`${API}/alerts`).then((d) => d.alerts),
+    // max by(gateway) menyatukan seri backfill dan seri live yang labelnya bisa berbeda
+    ambil(`${API}/query_range?query=${encodeURIComponent("sum(max by (gateway) (noc_gateway_sensors_online))")}&start=${end - 86400}&end=${end}&step=300`).then((d) => d.result),
+  ]);
+  const peta = (res, key) => Object.fromEntries(res.map((r) => [r.metric[key], +r.value[1]]));
+  const upM = peta(up, "gateway"), uptM = peta(upt, "gateway"), seenM = peta(seen, "sensor"), battM = peta(batt, "sensor"), crcM = peta(crc, "sensor");
+  const sensors = info.map(({ metric: m }) => ({
+    id: m.sensor, gw: m.gateway, jenis: m.type, lokasi: m.location, fw: m.firmware,
+    age: seenM[m.sensor] ?? Infinity, baterai: battM[m.sensor], crc: crcM[m.sensor] ?? 0,
+  }));
+  const gateways = gwinfo.map(({ metric: m }) => ({ id: m.gateway, area: m.area, proto: m.protocol, up: upM[m.gateway] === 1, uptime: uptM[m.gateway] ?? 0 }));
+  const seri = range[0]?.values ?? [];
+  return {
+    t: end, gateways, sensors, alerts: al, latest: latest[0]?.metric.version ?? "-",
+    hist: { x: seri.map(([t]) => new Date(t * 1000)), y: seri.map(([, v]) => +v) },
+  };
+}
+
+// Data contoh untuk mode tanpa API; skenarionya sama dengan simulator/exporter.py.
+function contoh() {
+  const t = Math.floor(Date.now() / 1000), r = rng(7);
+  const G = [["GW-L1", "SMT Line 1", "Modbus RTU", 64, 41 * 86400], ["GW-L2", "SMT Line 2", "Modbus RTU", 71, 11 * 3600],
+    ["GW-PR", "Perakitan TV & kulkas", "Modbus RTU", 88, 41 * 86400], ["GW-UT", "Kompresor & utilitas", "Modbus TCP", 52, 41 * 86400],
+    ["GW-GD", "Gudang", "Modbus TCP", 17, 0], ["LoRa", "Nirkabel seluruh pabrik", "LoRaWAN", 126, 41 * 86400]];
+  const J = { TH: "Suhu & kelembapan", TC: "Termokopel", VB: "Getaran", PM: "Power meter", DS: "Sensor pintu" };
+  const sensors = [];
+  for (const [id, area, , n] of G) for (let i = 0; i < n; i++) {
+    const kode = id === "LoRa" ? "LR" : id.slice(3), tipe = ["TH", "TC", "VB", "PM", "DS"][i % 5], lora = id === "LoRa";
+    sensors.push({ id: `${tipe}-${kode}-${pad(i + 1)}`, gw: id, jenis: J[tipe], lokasi: `${area}, titik ${i + 1}`, fw: "2.4.1",
+      age: r() * (lora ? 60 : 5), baterai: lora ? 24 + r() * 76 : undefined, crc: 0 });
+  }
+  sensors.filter((s) => s.gw === "GW-GD").forEach((s, i) => { s.age = 30000 + i; });
+  Object.assign(sensors.filter((s) => s.gw === "GW-PR")[5], { id: "VB-CV-TV", jenis: "Getaran", age: 7200, crc: 0.2 });
+  const lr = sensors.filter((s) => s.gw === "LoRa");
+  Object.assign(lr[0], { id: "TH-PK-14", baterai: 3, age: 2700 });
+  [8, 11, 13, 14, 16, 17, 18, 19].forEach((b, i) => { lr[i + 1].baterai = b; });
+  [3, 5, 8, 20].forEach((i) => { lr[i].fw = "2.3.8"; });
+  const x = Array.from({ length: 289 }, (_, i) => new Date((t - (288 - i) * 300) * 1000));
+  const y = x.map((d) => {
+    const ago = t - d / 1000;
+    let v = 418;
+    if (ago < 30000) v -= 17;
+    if (ago < 7200) v -= 1;
+    if (ago < 2700) v -= 1;
+    if (ago > 39600 && ago < 40200) v -= 71;
+    return v;
+  });
+  const sejak = (s) => new Date((t - s) * 1000).toISOString();
+  const alerts = [
+    { labels: { alertname: "GatewayPutus", severity: "kritis", gateway: "GW-GD" }, annotations: { ringkasan: "Gateway GW-GD tidak terhubung ke kolektor" }, state: "firing", activeAt: sejak(29880) },
+    { labels: { alertname: "SensorTidakMengirim", severity: "kritis", sensor: "VB-CV-TV" }, annotations: { ringkasan: "Sensor VB-CV-TV tidak mengirim data lebih dari 5 menit" }, state: "firing", activeAt: sejak(6840) },
+    { labels: { alertname: "GalatCRCBeruntun", severity: "peringatan", sensor: "VB-CV-TV" }, annotations: { ringkasan: "Galat CRC Modbus beruntun pada VB-CV-TV" }, state: "firing", activeAt: sejak(6900) },
+    { labels: { alertname: "SensorTidakMengirim", severity: "kritis", sensor: "TH-PK-14" }, annotations: { ringkasan: "Sensor TH-PK-14 tidak mengirim data lebih dari 5 menit" }, state: "firing", activeAt: sejak(2340) },
+  ];
+  return {
+    t, sensors, alerts, latest: "2.4.1", hist: { x, y },
+    gateways: G.map(([id, area, proto, , up0]) => ({ id, area, proto, up: id !== "GW-GD", uptime: up0 })),
+  };
+}
+
+function penyebab(s, gw) {
+  if (gw && !gw.up) return `Gateway ${s.gw} putus jaringan`;
+  if (s.crc > 0) return "Kabel RS485 bermasalah: galat CRC beruntun";
+  if (s.baterai != null && s.baterai < 5) return `Baterai habis (${fmt(s.baterai, 0)} %)`;
+  return "Belum diketahui; periksa sensor di lokasi";
+}
+
+function sel(age, t) {
+  const sejak = t - age;
+  return `<span class="beat dead" aria-hidden="true"></span><span class="age" data-sejak="${sejak}">${durasi(age)} lalu</span> <span class="muted mono small">pukul ${jam(sejak)}</span>`;
+}
+
+function render(m) {
+  const gwM = Object.fromEntries(m.gateways.map((g) => [g.id, g]));
+  m.gateways.sort((a, b) => (URUT_GW.indexOf(a.id) + 99) % 99 - (URUT_GW.indexOf(b.id) + 99) % 99);
+  const off = m.sensors.filter((s) => s.age >= STALE).sort((a, b) => b.age - a.age);
+  const down = m.gateways.filter((g) => !g.up);
+  const lora = m.sensors.filter((s) => s.baterai != null);
+  const low = lora.filter((s) => s.baterai < 20).sort((a, b) => a.baterai - b.baterai);
+  const usang = m.sensors.filter((s) => s.fw !== m.latest);
+
+  // temuan
+  const gDown = down.map((g) => ({ g, n: off.filter((s) => s.gw === g.id), sejak: m.t - Math.max(...off.filter((s) => s.gw === g.id).map((s) => s.age), 0) }));
+  const utama = gDown.sort((a, b) => b.n.length - a.n.length)[0];
+  if (!off.length) {
+    $("temuan").innerHTML = `<b>Semua ${m.sensors.length} sensor mengirim data.</b> Tidak ada tindakan pemulihan yang diperlukan.`;
+  } else {
+    let t = `<b>Ada ${off.length} sensor yang tidak mengirim data.</b>`;
+    if (utama && utama.n.length) {
+      t += ` ${utama.n.length === off.length ? "Semuanya" : `Sebanyak ${utama.n.length} di antaranya`} berada di belakang ${utama.g.id} yang putus sejak pukul ${jam(utama.sejak)}; pulihkan gateway itu lebih dulu.`;
+    }
+    $("temuan").innerHTML = t;
+  }
+  const fokus = $("fokus");
+  fokus.disabled = !off.length;
+  fokus.textContent = utama && utama.n.length ? `Tampilkan ${utama.n.length} sensor ${utama.g.id}` : "Tampilkan sensor offline";
+
+  // KPI
+  $("k-off").textContent = off.length;
+  $("k-off-d").textContent = `dari ${m.sensors.length} sensor`;
+  $("k-gw").innerHTML = `${m.gateways.length - down.length}<span class="u">dari ${m.gateways.length}</span>`;
+  $("k-gw-d").textContent = down.length ? `${down.map((g) => g.id).join(", ")} putus` : "semua terhubung";
+  $("k-bat").textContent = low.length;
+  $("k-fw").textContent = usang.length;
+  $("k-fw-d").textContent = `versi terbaru ${m.latest}`;
+  $("nav-off").textContent = off.length || "";
+
+  topologi(m, gwM);
+
+  // tabel offline: sensor di belakang gateway putus dijadikan satu grup
+  let rows = "";
+  for (const { g, n, sejak } of gDown) {
+    if (!n.length) continue;
+    rows += `<tr class="group"><td colspan="4"><b>${n.length} sensor di belakang ${g.id}</b> <span class="muted">${esc(g.area)}</span>
+      <button class="btn link" type="button" data-toggle aria-expanded="${tampilSemua}">${tampilSemua ? "Sembunyikan" : "Tampilkan"}</button></td>
+      <td>${sel(m.t - sejak, m.t)}</td><td>Gateway ${g.id} putus jaringan</td></tr>`;
+    rows += n.map((s) => baris(s, gwM, m.t, !tampilSemua)).join("");
+  }
+  rows += off.filter((s) => gwM[s.gw]?.up).map((s) => baris(s, gwM, m.t, false)).join("");
+  $("t-off").innerHTML = rows || `<tr><td colspan="6" class="empty">Semua sensor mengirim data dalam 5 menit terakhir.</td></tr>`;
+
+  // gateway
+  $("t-gw").innerHTML = m.gateways.map((g) => {
+    const ss = m.sensors.filter((s) => s.gw === g.id), on = ss.filter((s) => s.age < STALE).length;
+    const sejak = m.t - Math.max(...ss.map((s) => s.age));
+    return `<tr><td class="id">${g.id}<div class="muted small">${esc(g.proto)}</div></td><td class="n">${on}/${ss.length}</td>
+      <td class="n">${g.up ? durasi(g.uptime) : "-"}</td><td>${g.up ? st("ok", "Terhubung") : st("crit", `Putus sejak ${jam(sejak)}`)}</td></tr>`;
+  }).join("");
+
+  // riwayat
+  const { x, y } = m.hist;
+  if (y.length > 1) {
+    const lo = Math.floor((Math.min(...y) - 20) / 40) * 40;
+    const turun = y.map((v, i) => ({ i, d: i ? y[i - 1] - v : 0 })).filter((o) => o.d >= 10).sort((a, b) => b.d - a.d).slice(0, 2);
+    lineChart($("c-online"), {
+      x, series: [{ name: "Online", color: "var(--s1)", data: y }], unit: "sensor", dec: 0, h: 300,
+      min: lo, max: lo + Math.ceil((Math.max(...y) + 40 - lo) / 160) * 160, // 4 langkah kelipatan 40
+      marks: turun.map((o) => ({ i: o.i, label: `turun ${o.d}` })),
+    });
+  } else {
+    $("c-online").innerHTML = `<p class="empty">Riwayat belum tersedia. Prometheus baru menyala; grafik terisi setelah beberapa menit.</p>`;
+  }
+
+  // alert
+  const al = [...m.alerts].sort((a, b) => (a.state === "firing" ? 0 : 1) - (b.state === "firing" ? 0 : 1) || (a.labels.severity === "kritis" ? 0 : 1) - (b.labels.severity === "kritis" ? 0 : 1));
+  $("nav-alert").textContent = al.length || "";
+  $("l-alert").innerHTML = al.length ? `<ul class="alerts">${al.slice(0, 6).map((a) => `<li>
+      <div>${st(a.labels.severity === "kritis" ? "crit" : "warn", a.labels.severity === "kritis" ? "Kritis" : "Peringatan")}</div>
+      <div>${esc(a.annotations.ringkasan || a.labels.alertname)}</div>
+      <div class="meta mono">${a.state === "firing" ? "aktif" : "menunggu"} sejak pukul ${hhmm(new Date(a.activeAt))} · ${esc(a.labels.alertname)}</div></li>`).join("")}</ul>
+      ${al.length > 6 ? `<p class="muted small" style="margin-top:12px">Ada ${al.length - 6} alert lain; lihat di UI Prometheus.</p>` : ""}`
+    : `<p class="empty">Tidak ada alert aktif.</p>`;
+
+  // baterai
+  const bat = [...lora].sort((a, b) => a.baterai - b.baterai).slice(0, 9);
+  $("bat-sub").textContent = `9 terendah dari ${lora.length} sensor nirkabel`;
+  $("l-bat").innerHTML = bat.map((s) => `<div class="hbar"><span class="mono">${s.id}</span>
+    <div class="track"><div class="fill" style="width:${Math.max(2, s.baterai)}%;background:${s.baterai < 10 ? "var(--crit)" : s.baterai < 20 ? "var(--warn)" : "var(--s1)"}"></div></div>
+    <span class="val mono">${fmt(s.baterai, 0)} %</span></div>`).join("");
+
+  // firmware
+  $("fw-sub").textContent = `versi terbaru ${m.latest}`;
+  $("l-fw").innerHTML = usang.length
+    ? `<table><thead><tr><th>Sensor</th><th>Versi terpasang</th><th>Gateway</th><th>Lokasi</th></tr></thead><tbody>
+      ${usang.map((s) => `<tr><td class="id">${s.id}</td><td class="mono">${esc(s.fw)}</td><td class="mono">${s.gw}</td><td>${esc(s.lokasi)}</td></tr>`).join("")}</tbody></table>`
+    : `<p class="empty">Semua ${m.sensors.length} sensor sudah memakai firmware ${m.latest}.</p>`;
+}
+
+function baris(s, gwM, t, hidden) {
+  return `<tr class="${hidden ? "hidden" : ""}" data-gw="${s.gw}"><td class="id">${s.id}</td><td>${esc(s.jenis)}</td><td>${esc(s.lokasi)}</td>
+    <td class="mono">${s.gw}</td><td>${sel(s.age, t)}</td><td>${penyebab(s, gwM[s.gw])}</td></tr>`;
+}
+
+function topologi(m, gwM) {
+  const el = $("topo"), W = el.clientWidth || 1200;
+  const SQ = 9, GAP = 3, step = SQ + GAP, colW = 132, gwX = 188, gwW = 210, sx0 = gwX + gwW + 32;
+  const perRow = Math.max(10, Math.floor((W - sx0) / step));
+  let y = 0;
+  const rows = m.gateways.map((g) => {
+    const ss = m.sensors.filter((s) => s.gw === g.id), nRow = Math.ceil(ss.length / perRow), h = Math.max(52, nRow * step + 16);
+    const row = { g, ss, y, h, nRow };
+    y += h + 12;
+    return row;
+  });
+  const H = y - 12, cy = H / 2;
+  let svg = `<rect class="node" x="0" y="${cy - 34}" width="${colW}" height="68" rx="8"/>
+    <text class="gw-id" x="12" y="${cy - 10}">Kolektor</text><text x="12" y="${cy + 8}">Prometheus</text><text x="12" y="${cy + 24}">scrape 15 dtk</text>`;
+  for (const r of rows) {
+    const gy = r.y + r.h / 2, down = !r.g.up, on = r.ss.filter((s) => s.age < STALE).length;
+    svg += `<path class="link${down ? " down" : ""}" d="M${colW},${cy} C${colW + 40},${cy} ${gwX - 40},${gy} ${gwX},${gy}"/>
+      <rect class="node${down ? " down" : ""}" x="${gwX}" y="${r.y}" width="${gwW}" height="${r.h}" rx="8"/>
+      <text class="gw-id" x="${gwX + 12}" y="${gy - 4}">${r.g.id}</text><text x="${gwX + 12}" y="${gy + 12}">${esc(r.g.proto)}</text>
+      <text x="${gwX + gwW - 12}" y="${gy - 4}" text-anchor="end"${down ? ' style="fill:var(--crit-ink)"' : ""}>${on}/${r.ss.length}</text>
+      ${down ? `<text x="${gwX + gwW - 12}" y="${gy + 12}" text-anchor="end" style="fill:var(--crit-ink)">putus</text>` : ""}
+      <path class="link${down ? " down" : ""}" d="M${gwX + gwW},${gy} H${sx0 - 8}"/>`;
+    const top = gy - (r.nRow * step - GAP) / 2;
+    r.ss.forEach((s, i) => {
+      const x = sx0 + (i % perRow) * step, yy = top + Math.floor(i / perRow) * step;
+      const cls = s.age >= STALE ? "s-off" : s.baterai != null && s.baterai < 20 ? "s-low" : "s-on", o = cls === "s-low" ? 0.75 : 0;
+      const ket = s.age >= STALE ? `tidak mengirim data sejak ${durasi(s.age)} lalu` : `data ${durasi(s.age)} lalu`;
+      svg += `<rect class="${cls}" x="${x + o}" y="${yy + o}" width="${SQ - 2 * o}" height="${SQ - 2 * o}" rx="1.5"><title>${s.id} · ${esc(s.jenis)} · ${esc(s.lokasi)} · ${ket}${s.baterai != null ? ` · baterai ${fmt(s.baterai, 0)} %` : ""}</title></rect>`;
+    });
+  }
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Topologi ${m.gateways.length} gateway dan ${m.sensors.length} sensor">${svg}</svg>`;
+}
+
+function banner(html) {
+  const b = $("banner");
+  b.hidden = !html;
+  b.innerHTML = html || "";
+}
+
+function detak(ok) {
+  const b = $("beat");
+  b.className = `beat ${ok ? "" : "idle"}`;
+  if (ok) { void b.offsetWidth; b.classList.add("pulse"); }
+}
+
+async function muat() {
+  if (TANPA_API) {
+    model = contoh();
+    banner(`Mode data contoh: halaman dibuka sebagai file sehingga API tidak terhubung. Jalankan <code>docker compose -p konsep-07 up -d</code> lalu buka <code>http://localhost:18070</code>.`);
+    $("sumber").textContent = "Data contoh bawaan";
+    $("sinkron").textContent = "Tidak tersambung ke Prometheus";
+    detak(false);
+  } else {
+    try {
+      model = await muatProm();
+      banner("");
+      $("sinkron").textContent = `Sinkron pukul ${hhmm(new Date())}.${pad(new Date().getSeconds())}`;
+      detak(true);
+    } catch (e) {
+      if (!model) model = contoh();
+      banner(`Mode data contoh: Prometheus tidak menjawab (${esc(e.message)}). Periksa <code>docker compose -p konsep-07 ps</code>; dasbor mencoba lagi tiap 15 detik.`);
+      $("sinkron").textContent = "Gagal sinkron, mencoba lagi";
+      detak(false);
+    }
+  }
+  render(model);
+}
+
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-toggle]")) {
+    tampilSemua = !tampilSemua;
+    render(model);
+  } else if (e.target.id === "fokus") {
+    tampilSemua = true;
+    render(model);
+    $("offline").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+});
+// jam "terakhir mengirim data" berjalan tiap detik tanpa menunggu scrape berikutnya
+setInterval(() => {
+  const now = Date.now() / 1000;
+  document.querySelectorAll(".age[data-sejak]").forEach((el) => { el.textContent = `${durasi(now - +el.dataset.sejak)} lalu`; });
+}, 1000);
+muat();
+if (!TANPA_API) setInterval(muat, REFRESH);

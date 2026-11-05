@@ -1,0 +1,16 @@
+{
+  "name": "konsep-13-genset-ups",
+  "private": true,
+  "type": "module",
+  "description": "Lambda + alat lokal untuk Pemantauan Genset & UPS Cabang",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "api": "node local/adapter.mjs",
+    "simulator": "node local/simulator.mjs",
+    "uji": "node uji.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.1099.0",
+    "@aws-sdk/lib-dynamodb": "3.1099.0"
+  }
+}

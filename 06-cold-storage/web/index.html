@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gudang & Cold Storage · Pemantauan</title>
+<meta name="description" content="Dasbor gudang: suhu cold storage pasta solder, freezer, lemari kering komponen MSD, dan pintu terbuka.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Red+Hat+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <span class="logo-slot">[LOGO KLIEN]</span>
+  <span class="product">Gudang & Cold Storage</span>
+  <div class="bar-meta">
+    <span class="sample">Data contoh</span>
+    <span id="koneksi" class="koneksi" role="status">Menghubungkan…</span>
+  </div>
+</header>
+<div id="pita" class="pita" hidden></div>
+
+<main>
+  <section class="head">
+    <h1>Penyimpanan material</h1>
+    <p id="temuan" class="temuan" aria-live="polite">Memuat kondisi ruang…</p>
+  </section>
+
+  <section aria-labelledby="dingin-judul">
+    <h2 id="dingin-judul" class="sec">Ruang dingin & freezer</h2>
+    <div id="dingin" class="kartu-grid besar" aria-busy="true"></div>
+  </section>
+
+  <section aria-labelledby="dc-judul">
+    <h2 id="dc-judul" class="sec">Lemari kering komponen peka kelembapan (MSD) <span class="sub">batas kurang dari 5 %RH</span></h2>
+    <div id="lemari" class="kartu-grid kecil" aria-busy="true"></div>
+  </section>
+
+  <div class="duo">
+    <section class="panel" aria-labelledby="grafik-judul">
+      <div class="panel-h"><h2 id="grafik-judul">Riwayat 24 jam</h2><span id="grafik-sub" class="sub"></span></div>
+      <div id="grafik" class="grafik"></div>
+    </section>
+    <section class="panel" aria-labelledby="gudang-judul">
+      <div class="panel-h"><h2 id="gudang-judul">Gudang umum</h2><span class="sub">barang jadi dan kemasan</span></div>
+      <div id="gudang" class="gudang"></div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup proyek 06 · semua angka adalah data contoh · ambang adalah contoh, sesuaikan dengan lembar data material klien</footer>
+
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="../../shared/charts.js"></script>
+<script src="contoh.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

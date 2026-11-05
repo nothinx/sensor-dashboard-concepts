@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laporan · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 10: kepatuhan per area per hari dan pembuatan laporan berkala.">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .cmp td.n { font-size: 13px; }
+  .cmp td.lo { background: var(--warn-bg); color: var(--warn-ink); font-weight: 600; }
+  .cmp td.vlo { background: var(--crit-bg); color: var(--crit-ink); font-weight: 600; }
+  .form { display: grid; gap: 12px; }
+  .form label { display: grid; gap: 4px; font-size: 13px; color: var(--ink-2); }
+  .form select, .form input { width: 100%; }
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Laporan</h1>
+      <p class="finding"><b>Minggu ini 6 dari 8 area memenuhi syarat selama sedikitnya 99 % waktu.</b> SMT Line 2 (96,9 %) dan Kompresor & utilitas (98,0 %) perlu dijelaskan dalam laporan mingguan.</p>
+    </div>
+  </div>
+
+  <div class="grid g-12">
+    <section class="panel c8">
+      <div class="panel-h"><h2>Persentase waktu memenuhi syarat per area, 7 hari</h2><span class="sub">% waktu semua sensor area dalam batas; disorot bila di bawah 99 %</span></div>
+      <div class="panel-b table-wrap">
+        <table class="cmp">
+          <thead><tr><th>Area</th><th class="n">Kam 30/10</th><th class="n">Jum 31/10</th><th class="n">Sab 1/11</th><th class="n">Min 2/11</th><th class="n">Sen 3/11</th><th class="n">Sel 4/11</th><th class="n">Rab 5/11</th><th class="n">7 hari</th></tr></thead>
+          <tbody id="cmp"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="panel c4">
+      <div class="panel-h"><h2>Buat laporan</h2></div>
+      <form class="panel-b form" onsubmit="return false">
+        <label>Jenis laporan<select><option>Kepatuhan lingkungan mingguan</option><option>Ringkasan alarm</option><option>Energi bulanan</option><option>Data mentah sensor (CSV)</option></select></label>
+        <label>Area<select><option>Semua area</option><option>SMT Line 1</option><option>SMT Line 2</option></select></label>
+        <div class="row" style="flex-wrap:nowrap">
+          <label style="flex:1">Dari<input type="date" value="2026-10-30"></label>
+          <label style="flex:1">Sampai<input type="date" value="2026-11-05"></label>
+        </div>
+        <label>Format<select><option>PDF</option><option>Excel (.xlsx)</option><option>CSV</option></select></label>
+        <button class="btn primary" type="submit" style="justify-content:center">Buat laporan PDF</button>
+      </form>
+    </aside>
+
+    <section class="panel c12">
+      <div class="panel-h"><h2>Laporan terbaru</h2><span class="sub">4 dari 52</span><a class="right small" href="#">Lihat semua 52</a></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>Laporan</th><th>Periode</th><th>Dibuat</th><th>Oleh</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Kepatuhan lingkungan mingguan</td><td class="num">30/10 sampai 5/11</td><td class="num">5 Nov 14.31</td><td>Supervisor QC</td><td><span class="st off" role="status">Sedang dibuat, 60 %</span></td><td></td></tr>
+            <tr><td>Energi bulanan Oktober</td><td class="num">1/10 sampai 31/10</td><td class="num">1 Nov 07.00</td><td class="muted">terjadwal</td><td><span id="r2"></span></td><td class="n"><button class="btn" type="button">Unduh PDF</button></td></tr>
+            <tr><td>Data mentah SMT Line 2 (CSV)</td><td class="num">1/10 sampai 31/10</td><td class="num">1 Nov 07.02</td><td class="muted">terjadwal</td><td><span id="r3"></span><div class="small muted" style="margin-top:2px">Data melebihi batas 1 juta baris. Bagi per minggu atau pilih interval 1 menit.</div></td><td class="n"><button class="btn" type="button">Ubah dan ulangi</button></td></tr>
+            <tr><td>Kepatuhan lingkungan mingguan</td><td class="num">23/10 sampai 29/10</td><td class="num">29 Okt 17.00</td><td>Supervisor QC</td><td><span id="r4"></span></td><td class="n"><button class="btn" type="button">Unduh PDF</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 10 dari 10 · semua angka dan nama peran adalah data contoh</footer>
+<script src="assets/app.js"></script>
+<script>
+  r2.innerHTML = st("ok", "Selesai"); r3.innerHTML = st("crit", "Gagal"); r4.innerHTML = st("ok", "Selesai");
+  const A = [
+    ["SMT Line 1", [100, 99.6, 100, 100, 99.3, 100, 100]],
+    ["SMT Line 2", [100, 100, 100, 99.8, 100, 99.1, 79.2]],
+    ["Perakitan TV", [100, 100, 100, 100, 100, 100, 100]],
+    ["Perakitan kulkas", [99.7, 100, 100, 100, 100, 100, 100]],
+    ["Kompresor & utilitas", [100, 99.4, 99.0, 100, 96.5, 99.2, 91.7]],
+    ["Gudang komponen", [100, 100, 100, 100, 100, 100, 100]],
+    ["Cold storage B", [100, 100, 100, 98.3, 100, 100, 99.4]],
+    ["Ruang server", [100, 100, 100, 100, 100, 100, 100]],
+  ];
+  const f = (v) => v.toFixed(1).replace(".", ",");
+  cmp.innerHTML = A.map(([n, d]) => {
+    const avg = d.reduce((a, b) => a + b) / d.length;
+    return `<tr><td>${n}</td>${d.map((v) => `<td class="n ${v < 95 ? "vlo" : v < 99 ? "lo" : ""}">${f(v)}</td>`).join("")}<td class="n" style="font-weight:600">${f(avg)}</td></tr>`;
+  }).join("");
+</script>
+</body>
+</html>

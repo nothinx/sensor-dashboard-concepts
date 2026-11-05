@@ -1,0 +1,40 @@
+# Proyek 04 · Perawatan Prediktif Getaran
+# Jalankan: docker compose -p konsep-04 up -d --build   → dasbor http://localhost:18040
+name: konsep-04
+
+services:
+  simulator:
+    build: .
+    command: ["python", "simulator/simulator.py"]
+    environment:
+      DATA_DIR: /data
+      UKUR_MENIT: ${UKUR_MENIT:-10}
+      RIWAYAT_HARI: ${RIWAYAT_HARI:-30}
+    volumes:
+      - getaran-data:/data
+    restart: unless-stopped
+
+  api:
+    build: .
+    environment:
+      DATA_DIR: /data
+      SHARED_DIR: /shared
+      GRAPHIQL: ${GRAPHIQL:-1}
+      OFFLINE_MENIT: ${OFFLINE_MENIT:-30}
+    volumes:
+      - getaran-data:/data
+      - ../shared:/shared:ro
+      - ./web:/app/web:ro
+    ports:
+      - "${PORT_DASBOR:-18040}:8000"
+    depends_on:
+      - simulator
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/kesehatan')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  getaran-data:

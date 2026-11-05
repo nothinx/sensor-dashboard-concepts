@@ -1,0 +1,14 @@
+{
+  "name": "konsep/ipal-api",
+  "description": "REST API pemantauan IPAL (mockup proyek 10)",
+  "type": "project",
+  "require": {
+    "php": "^8.3",
+    "slim/slim": "^4.14",
+    "slim/psr7": "^1.7"
+  },
+  "config": {
+    "platform": { "php": "8.3.0" },
+    "optimize-autoloader": true
+  }
+}

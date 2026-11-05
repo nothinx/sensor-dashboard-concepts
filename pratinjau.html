@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pratinjau Dasbor Pemantauan Sensor</title>
+<meta name="description" content="Galeri pratinjau 15 konsep dasbor pemantauan sensor dengan data dummy, tanpa perlu menjalankan backend.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · design · galeri pratinjau · dial E1/R1/M1 · tanda tangan: nomor proyek mono · Instrument Sans karena netral dan hangat, tidak bersaing dengan 10 dasbor */
+:root {
+  color-scheme: light;
+  --bg: #fafafa; --card: #ffffff; --line: rgba(23, 23, 23, 0.1); --ink: #171717; --ink-2: #525252; --ink-3: #6b6b6b;
+  --focus: #1d4ed8;
+  --sans: "Instrument Sans", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme: dark; --bg: #141415; --card: #19191b; --line: rgba(237, 237, 237, 0.1); --ink: #ededed; --ink-2: #a1a1a6; --ink-3: #8f8f95; --focus: #93b4f5; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: clip; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--sans); min-height: 100dvh; }
+main { max-width: 1440px; margin: 0 auto; padding: 48px 32px 64px; }
+h1 { font-weight: 500; font-size: 32px; line-height: 1.15; margin: 0; text-wrap: balance; }
+.lead { color: var(--ink-2); max-width: 68ch; margin: 12px 0 0; }
+.note { color: var(--ink-3); font-size: 13px; margin: 8px 0 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: 24px; margin-top: 40px; list-style: none; padding: 0; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.card a { display: block; color: inherit; text-decoration: none; border-radius: 12px; }
+.card a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.card img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-bottom: 1px solid var(--line); transition: opacity 160ms cubic-bezier(0.22, 1, 0.36, 1); }
+.card a:hover img { opacity: 0.88; }
+.body { padding: 16px 20px 20px; }
+.row { display: flex; align-items: baseline; gap: 8px; }
+.no { font: 400 12px var(--mono); color: var(--ink-3); }
+h2 { font-size: 16px; font-weight: 500; margin: 0; }
+.for { color: var(--ink-2); font-size: 14px; margin: 4px 0 12px; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; font-size: 13px; }
+dt { color: var(--ink-3); } dd { margin: 0; }
+footer { color: var(--ink-3); font-size: 13px; margin-top: 48px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pratinjau 15 konsep dasbor pemantauan sensor</h1>
+  <p class="lead">Setiap kartu membuka dasbor dengan data dummy bawaan, tanpa perlu menjalankan database atau API. Untuk versi yang terhubung ke backend, jalankan Docker di folder proyeknya (lihat README).</p>
+  <p class="note">Semua angka adalah data contoh. Logo dan warna merek masih placeholder.</p>
+  <ul class="grid" id="grid"></ul>
+  <footer>Pratinjau untuk klien · 15 proyek mockup · pratinjau terbaik dibuka di layar desktop 1920 × 1080</footer>
+</main>
+<script>
+  const P = [
+    ["01", "01-pusat-pabrik", "Pusat Pemantauan Pabrik", "Supervisor shift memantau 10 area dari ruang kontrol", "PostgreSQL + TimescaleDB", "REST + WebSocket"],
+    ["02", "02-oven-reflow", "Monitor Oven Reflow SMT", "Insinyur proses menjaga profil suhu sesuai resep", "InfluxDB 2", "REST polling 5 detik"],
+    ["03", "03-energi-listrik", "Pemantauan Energi Listrik", "Manajer fasilitas menjaga beban di bawah kontrak PLN", "SQLite", "REST + ETag"],
+    ["04", "04-getaran-prediktif", "Perawatan Prediktif Getaran", "Teknisi perawatan memilih mesin yang perlu diperiksa", "DuckDB + Parquet", "GraphQL"],
+    ["05", "05-ruang-bersih-esd", "Ruang Bersih & ESD", "Petugas QC memastikan ruang memenuhi syarat", "MongoDB", "REST + Server-Sent Events"],
+    ["06", "06-cold-storage", "Gudang & Cold Storage", "Petugas gudang bereaksi cepat saat pintu terbuka", "Redis", "MQTT lewat WebSocket"],
+    ["07", "07-noc-perangkat", "NOC Perangkat & Gateway", "Teknisi IT/OT memulihkan sensor yang hilang", "Prometheus", "PromQL HTTP API"],
+    ["08", "08-laporan-kepatuhan", "Laporan Kepatuhan Mutu", "Manajer mutu menyiapkan bukti audit", "PostgreSQL + jejak audit", "REST + OpenAPI"],
+    ["09", "09-ac-pintar", "Armada AC Pintar", "Tim purnajual mendeteksi AC yang perlu servis", "PostgreSQL", "PostgREST"],
+    ["10", "10-ipal-lingkungan", "IPAL & Emisi Lingkungan", "Petugas HSE menjaga air limbah di bawah baku mutu", "MariaDB", "REST + webhook"],
+    ["11", "11-firebase-teknisi", "Tugas Teknisi Lapangan", "Teknisi menerima dan menutup tugas dari HP", "Firebase Firestore (cloud)", "listener real-time onSnapshot"],
+    ["12", "12-supabase-mitra", "Portal Mitra Servis", "Mitra servis mengelola tiket sesuai SLA", "Supabase Postgres (cloud)", "supabase-js + Realtime, login per mitra"],
+    ["13", "13-aws-genset-ups", "Genset & UPS Cabang", "Tim fasilitas menjaga cabang tetap menyala", "AWS DynamoDB (cloud)", "API Gateway + Lambda"],
+    ["14", "14-azure-uji-kulkas", "Uji Akhir Lini Kulkas", "Kepala lini memastikan kulkas lulus uji", "Azure Cosmos DB (cloud)", "REST + long polling, change feed"],
+    ["15", "15-atlas-jejak-mutu", "Jejak Mutu per Nomor Seri", "Insinyur mutu melacak satu unit dari lini sampai kemas", "MongoDB Atlas (cloud)", "REST + Atlas Search"],
+  ];
+  grid.innerHTML = P.map(([no, dir, nama, untuk, db, api]) => `
+    <li class="card"><a href="${dir}/web/index.html?pratinjau">
+      <img src="pratinjau/${no}.jpg" alt="Tangkapan layar dasbor ${nama}" width="960" height="540" loading="lazy">
+      <div class="body">
+        <div class="row"><span class="no">${no}</span><h2>${nama}</h2></div>
+        <p class="for">${untuk}</p>
+        <dl><dt>Database</dt><dd>${db}</dd><dt>Data ditarik</dt><dd>${api}</dd></dl>
+      </div></a></li>`).join("");
+</script>
+</body>
+</html>

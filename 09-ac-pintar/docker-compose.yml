@@ -1,0 +1,56 @@
+name: konsep-09
+
+# Armada AC Pintar: PostgreSQL (data + simulator SQL) -> PostgREST (API otomatis) -> nginx (dasbor + proxy /api)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: armada
+      POSTGRES_USER: ${POSTGRES_USER:-armada_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?isi POSTGRES_PASSWORD di .env}
+      AUTHENTICATOR_PASSWORD: ${AUTHENTICATOR_PASSWORD:?isi AUTHENTICATOR_PASSWORD di .env}
+      TZ: Asia/Jakarta
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d:ro
+      - data:/var/lib/postgresql/data
+    ports: ["127.0.0.1:18091:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d armada"]
+      interval: 5s
+      retries: 20
+
+  api:
+    image: postgrest/postgrest:v12.2.3
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${AUTHENTICATOR_PASSWORD}@db:5432/armada
+      PGRST_DB_SCHEMAS: api
+      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_DB_MAX_ROWS: 2000            # batas baris per permintaan
+      PGRST_OPENAPI_SERVER_PROXY_URI: http://localhost:18090/api
+    ports: ["127.0.0.1:18092:3000"]
+
+  simulator:
+    image: postgres:16-alpine           # cukup psql; logika simulator ada di db/03-simulator.sql
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      PGHOST: db
+      PGDATABASE: armada
+      PGUSER: ${POSTGRES_USER:-armada_admin}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      TICK_DETIK: ${TICK_DETIK:-30}
+    command: >
+      sh -c "psql -qtc 'select sim.backfill()' &&
+             while true; do psql -qtc 'select sim.tick()' >/dev/null; sleep $${TICK_DETIK}; done"
+
+  web:
+    image: nginx:1.27-alpine
+    depends_on: [api]
+    volumes:
+      - ./web:/srv/web:ro
+      - ../shared:/srv/shared:ro
+      - ./web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports: ["127.0.0.1:18090:80"]
+
+volumes:
+  data:

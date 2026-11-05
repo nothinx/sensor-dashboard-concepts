@@ -1,0 +1,8 @@
+{
+  "database": "ujiakhir",
+  "containers": [
+    { "id": "pengujian", "partitionKey": "/lini", "defaultTtl": 7776000, "catatan": "satu dokumen per percobaan uji satu unit; TTL 90 hari" },
+    { "id": "alarm", "partitionKey": "/lini", "defaultTtl": 2592000, "catatan": "ditulis oleh fungsi change feed; TTL 30 hari" },
+    { "id": "leases", "partitionKey": "/id", "defaultTtl": -1, "catatan": "posisi baca change feed (setara lease container Azure Functions)" }
+  ]
+}

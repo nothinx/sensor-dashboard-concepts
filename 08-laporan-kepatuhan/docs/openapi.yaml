@@ -1,0 +1,448 @@
+openapi: 3.1.0
+info:
+  title: API Laporan Kepatuhan Mutu
+  description: Mockup proyek 08 klien. Semua data adalah data contoh dari
+    simulator.
+  version: 1.0.0
+paths:
+  /healthz:
+    get:
+      tags:
+      - sistem
+      summary: Healthz
+      operationId: healthz_healthz_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/area:
+    get:
+      tags:
+      - referensi
+      summary: Daftar Area
+      operationId: daftar_area_api_v1_area_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/kepatuhan:
+    get:
+      tags:
+      - kepatuhan
+      summary: Kepatuhan
+      description: Persen waktu semua sensor area dalam batas, per area per hari.
+      operationId: kepatuhan_api_v1_kepatuhan_get
+      parameters:
+      - name: sampai
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Sampai
+      - name: hari
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 31
+          minimum: 1
+          default: 7
+          title: Hari
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/laporan:
+    get:
+      tags:
+      - laporan
+      summary: Daftar Laporan
+      operationId: daftar_laporan_api_v1_laporan_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 10
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HalamanLaporan'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - laporan
+      summary: Buat Laporan
+      operationId: buat_laporan_api_v1_laporan_post
+      parameters:
+      - name: x-aktor
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Nama penyusun untuk jejak audit
+          title: X-Aktor
+        description: Nama penyusun untuk jejak audit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LaporanBaru'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laporan'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/laporan/{lid}:
+    get:
+      tags:
+      - laporan
+      summary: Status Laporan
+      operationId: status_laporan_api_v1_laporan__lid__get
+      parameters:
+      - name: lid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Lid
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laporan'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/laporan/{lid}/berkas:
+    get:
+      tags:
+      - laporan
+      summary: Unduh
+      operationId: unduh_api_v1_laporan__lid__berkas_get
+      parameters:
+      - name: lid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Lid
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/pdf: {}
+            text/csv: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/audit:
+    get:
+      tags:
+      - audit
+      summary: Daftar Audit
+      operationId: daftar_audit_api_v1_audit_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HalamanAudit'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Audit:
+      properties:
+        id:
+          type: integer
+          title: Id
+        waktu:
+          type: string
+          format: date-time
+          title: Waktu
+        aktor:
+          type: string
+          title: Aktor
+        aksi:
+          type: string
+          title: Aksi
+        tabel:
+          type: string
+          title: Tabel
+        rekaman:
+          type: string
+          title: Rekaman
+        perubahan:
+          additionalProperties: true
+          type: object
+          title: Perubahan
+      type: object
+      required:
+      - id
+      - waktu
+      - aktor
+      - aksi
+      - tabel
+      - rekaman
+      - perubahan
+      title: Audit
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HalamanAudit:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/Audit'
+          type: array
+          title: Data
+        cursor_berikut:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor Berikut
+      type: object
+      required:
+      - data
+      - cursor_berikut
+      title: HalamanAudit
+    HalamanLaporan:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/Laporan'
+          type: array
+          title: Data
+        cursor_berikut:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor Berikut
+      type: object
+      required:
+      - data
+      - cursor_berikut
+      title: HalamanLaporan
+    Laporan:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        nomor:
+          type: string
+          title: Nomor
+        jenis:
+          type: string
+          title: Jenis
+        area:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Area
+        dari:
+          type: string
+          format: date
+          title: Dari
+        sampai:
+          type: string
+          format: date
+          title: Sampai
+        format:
+          type: string
+          title: Format
+        status:
+          type: string
+          enum:
+          - antri
+          - proses
+          - selesai
+          - gagal
+          title: Status
+        progres:
+          type: integer
+          title: Progres
+        pesan_galat:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Pesan Galat
+        dibuat_oleh:
+          type: string
+          title: Dibuat Oleh
+        dibuat_pada:
+          type: string
+          format: date-time
+          title: Dibuat Pada
+        selesai_pada:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Selesai Pada
+        url_berkas:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url Berkas
+      type: object
+      required:
+      - id
+      - nomor
+      - jenis
+      - area
+      - dari
+      - sampai
+      - format
+      - status
+      - progres
+      - pesan_galat
+      - dibuat_oleh
+      - dibuat_pada
+      - selesai_pada
+      - url_berkas
+      title: Laporan
+    LaporanBaru:
+      properties:
+        jenis:
+          type: string
+          enum:
+          - kepatuhan
+          - jejak_audit
+          title: Jenis
+          description: kepatuhan = persen waktu dalam syarat per area per hari
+        area:
+          anyOf:
+          - type: string
+            pattern: ^[A-Z0-9-]{2,16}$
+          - type: 'null'
+          title: Area
+          description: kode area; kosong = semua area
+        dari:
+          type: string
+          format: date
+          title: Dari
+        sampai:
+          type: string
+          format: date
+          title: Sampai
+        format:
+          type: string
+          enum:
+          - csv
+          - pdf
+          title: Format
+      type: object
+      required:
+      - jenis
+      - dari
+      - sampai
+      - format
+      title: LaporanBaru
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError

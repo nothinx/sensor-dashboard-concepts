@@ -1,0 +1,45 @@
+# Proyek 14 · Uji Akhir Lini Kulkas (Azure Cosmos DB, diuji dengan emulator lokal).
+# Jalankan: cp .env.example .env && docker compose -p konsep-14 up -d --build  → http://localhost:18140
+name: konsep-14
+services:
+  cosmos:
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
+    # vnext: emulator ringan berbasis Linux, gateway HTTP di 8081, Data Explorer di 1234
+    command: ["--protocol", "http"]
+    ports:
+      - "127.0.0.1:18141:8081"
+      - "127.0.0.1:18142:1234"
+    mem_limit: 2g
+    restart: unless-stopped
+
+  api:
+    build: { context: ., dockerfile: app.Dockerfile }
+    image: konsep-14-app:dev
+    command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment: &cosmosenv
+      COSMOS_MODE: ${COSMOS_MODE:-emulator}
+      COSMOS_ENDPOINT: ${COSMOS_ENDPOINT:-http://cosmos:8081}
+      COSMOS_KEY: ${COSMOS_KEY:?isi .env, salin dari .env.example}
+      ASAL_DASBOR: http://localhost:18140
+    volumes:
+      - ./web:/srv/web:ro
+      - ../shared:/srv/shared:ro
+    ports: ["18140:8000"]
+    depends_on: [cosmos]
+    restart: unless-stopped
+
+  fungsi:
+    image: konsep-14-app:dev
+    command: ["python", "fungsi/host_lokal.py"]
+    environment: *cosmosenv
+    depends_on: [cosmos, api]
+    restart: unless-stopped
+
+  simulator:
+    image: konsep-14-app:dev
+    command: ["python", "simulator/sim.py"]
+    environment:
+      <<: *cosmosenv
+      SIM_INTERVAL_S: ${SIM_INTERVAL_S:-30}
+    depends_on: [cosmos, api]
+    restart: unless-stopped

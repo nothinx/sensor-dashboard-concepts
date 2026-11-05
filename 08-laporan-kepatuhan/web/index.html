@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laporan Kepatuhan Mutu</title>
+<meta name="description" content="Mockup proyek 08: lembar kepatuhan lingkungan produksi, penerbitan laporan, dan jejak audit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <span class="logo-slot">[LOGO KLIEN]</span>
+  <span class="prod">Laporan Kepatuhan Mutu</span>
+  <span class="sample">Data contoh</span>
+  <span class="conn" id="conn">Menghubungkan ke API…</span>
+</header>
+
+<div class="banner" id="banner" role="status" hidden></div>
+
+<div class="layout">
+  <article class="sheet" aria-labelledby="judul">
+    <table class="doc-meta">
+      <tr><th scope="row">Nomor dokumen</th><td class="mono" id="m-nomor">Draf; nomor terbit saat lembar ini diterbitkan</td><th scope="row">Revisi</th><td class="mono">0</td></tr>
+      <tr><th scope="row">Periode</th><td id="m-periode">…</td><th scope="row">Ambang</th><td id="m-ambang">…</td></tr>
+    </table>
+
+    <div class="sheet-head">
+      <div>
+        <h1 id="judul">Kepatuhan lingkungan produksi</h1>
+        <p class="finding" id="temuan">Memuat data kepatuhan…</p>
+      </div>
+      <button class="btn" type="button" id="cetak">Cetak lembar</button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="cmp" aria-describedby="cara-hitung">
+        <thead id="cmp-h"></thead>
+        <tbody id="cmp-b"><tr><td class="empty">Memuat…</td></tr></tbody>
+      </table>
+    </div>
+    <p class="note" id="cara-hitung">Angka adalah persen waktu ketika semua sensor area berada dalam batas, dibagi waktu terpantau.
+      Sel berwarna dengan garis kiri berada di bawah ambang. Kolom hari ini masih berjalan.</p>
+
+    <div class="sign">
+      <div class="stamp" aria-label="Cap pemeriksaan">
+        <span class="stamp-t">Diperiksa oleh</span>
+        <span class="stamp-r">Manajer Mutu</span>
+        <span class="stamp-n">[REAL DATA: nama dan paraf]</span>
+        <span class="stamp-d mono" id="stamp-no">No. dokumen: belum terbit</span>
+      </div>
+      <dl class="disusun">
+        <dt>Disusun oleh</dt><dd>Sistem pemantauan sensor</dd>
+        <dt>Sumber data</dt><dd>Basis data kepatuhan (PostgreSQL)</dd>
+        <dt>Dicetak</dt><dd id="dicetak">-</dd>
+      </dl>
+    </div>
+  </article>
+
+  <aside class="rail">
+    <section class="card" aria-labelledby="h-form">
+      <h2 id="h-form">Terbitkan laporan</h2>
+      <form id="form" class="form" novalidate>
+        <label>Jenis laporan
+          <select name="jenis"><option value="kepatuhan">Kepatuhan lingkungan harian</option><option value="jejak_audit">Ekspor jejak audit</option></select>
+        </label>
+        <label>Area
+          <select name="area" id="f-area"><option value="">Semua area</option></select>
+        </label>
+        <div class="row2">
+          <label>Dari<input type="date" name="dari" required></label>
+          <label>Sampai<input type="date" name="sampai" required></label>
+        </div>
+        <fieldset>
+          <legend>Format</legend>
+          <label class="radio"><input type="radio" name="format" value="pdf" checked> PDF</label>
+          <label class="radio"><input type="radio" name="format" value="csv"> CSV</label>
+        </fieldset>
+        <label>Nama penyusun
+          <input type="text" name="aktor" value="Supervisor QC" maxlength="60" required autocomplete="name">
+        </label>
+        <p class="form-err" id="form-err" role="alert" hidden></p>
+        <button class="btn primary" type="submit" id="kirim">Terbitkan laporan PDF</button>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="h-lap">
+      <h2 id="h-lap">Laporan terbaru</h2>
+      <ul class="list" id="l-lap"><li class="empty">Memuat…</li></ul>
+      <button class="btn link" type="button" id="lebih" hidden>Muat laporan lebih lama</button>
+    </section>
+
+    <section class="card" aria-labelledby="h-audit">
+      <h2 id="h-audit">Jejak audit</h2>
+      <p class="sub">Catatan tidak bisa diubah atau dihapus.</p>
+      <ol class="audit" id="l-audit"><li class="empty">Memuat…</li></ol>
+    </section>
+  </aside>
+</div>
+<footer class="pg">Mockup proyek 08 · semua angka adalah data contoh · API: <span class="mono">/api/v1</span>, spesifikasi di <span class="mono">/docs</span></footer>
+<script src="../../shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

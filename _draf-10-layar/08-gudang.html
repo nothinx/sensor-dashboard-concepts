@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gudang & cold storage · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 08: suhu cold storage pasta solder, dry cabinet komponen MSD, dan kondisi gudang.">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Gudang & cold storage</h1>
+      <p class="finding"><b>Pintu cold storage B terbuka 9 menit; suhu naik ke 6,1 °C.</b> Suhu masih di bawah batas pasta solder 10 °C; tutup pintu sebelum pukul 14.41 agar tidak melewati batas.</p>
+    </div>
+    <div class="actions"><button class="btn primary" type="button">Kirim pesan ke petugas gudang</button></div>
+  </div>
+
+  <div class="grid g-12">
+    <section class="panel c8">
+      <div class="panel-h"><h2>Cold storage B, 24 jam</h2><span class="sub">°C, penyimpanan pasta solder dan lem SMT (2 sampai 10 °C)</span></div>
+      <div class="panel-b"><div id="cs" data-label="Suhu cold storage B 24 jam"></div>
+        <p class="small muted" style="margin-top:6px">Garis tegak menandai pintu dibuka. Lonjakan pukul 09.30 terjadi saat penerimaan barang selama 6 menit.</p></div>
+    </section>
+    <section class="panel c4">
+      <div class="panel-h"><h2>Ruang dingin</h2></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>Ruang</th><th class="n">Suhu °C</th><th>Pintu</th><th>Status</th></tr></thead>
+          <tbody id="cr"></tbody>
+        </table>
+      </div>
+      <div class="panel-h" style="border-top:1px solid var(--line);padding-top:12px"><h2>Gudang umum</h2></div>
+      <div class="panel-b">
+        <div class="kpis" style="border:1px solid var(--line);border-radius:4px">
+          <div class="kpi"><div class="l">Suhu</div><div class="v num">29,4<span class="u">°C</span></div></div>
+          <div class="kpi"><div class="l">Kelembapan</div><div class="v num">63<span class="u">%RH</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel c12">
+      <div class="panel-h"><h2>Lemari kering (dry cabinet) komponen peka kelembapan (MSD)</h2><span class="sub">batas kelembapan &lt; 5 %RH (IPC/JEDEC J-STD-033)</span><a class="right small" href="#">Lihat semua 14 kabinet</a></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>Kabinet</th><th>Lokasi</th><th class="n">Kelembapan %RH</th><th class="n">Suhu °C</th><th class="n">Pintu dibuka hari ini (kali)</th><th class="n">Waktu pulih ke &lt; 5 %RH</th><th>Isi utama</th><th>Status</th></tr></thead>
+          <tbody id="dc"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 08 dari 10 · semua angka adalah data contoh</footer>
+<script src="assets/app.js"></script>
+<script>
+  const x = times(96, 15);
+  const d = gen(96, { base: 4.2, amp: 0.3, noise: 0.25, seed: 4, period: 24 });
+  [[76, 2.4], [77, 1.2], [95, 1.9]].forEach(([i, a]) => d[i] = +(d[i] + a).toFixed(1));
+  d[95] = 6.1;
+  lineChart(cs, { x, series: [{ name: "CS-B", color: "var(--s1)", data: d }], unit: "°C", min: 0, max: 12, h: 260,
+    bands: [{ y: 10, label: "maks 10", color: "var(--crit)" }, { y: 2, label: "min 2", color: "var(--warn)" }],
+    marks: [{ i: 76, label: "pintu 09.30" }, { i: 94, label: "pintu 14.23" }] });
+  cr.innerHTML = [["Cold storage A", "4,0", "Tertutup", "ok"], ["Cold storage B", "6,1", "Terbuka 9 mnt", "warn"], ["Freezer lem epoksi", "-18,6", "Tertutup", "ok"]]
+    .map((r) => `<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td>${r[2]}</td><td>${r[3] === "ok" ? st("ok") : st("warn", "Pintu terbuka")}</td></tr>`).join("");
+  dc.innerHTML = [
+    ["DC-01", "Gudang komponen, rak A", "2,1", "24,8", "6", "4 mnt", "IC BGA, MCU", "ok"],
+    ["DC-02", "Gudang komponen, rak A", "2,4", "24,9", "4", "5 mnt", "LED driver", "ok"],
+    ["DC-05", "Ruang SMT, sisi Line 1", "4,6", "23,9", "19", "11 mnt", "Reel sisa produksi", "warn"],
+    ["DC-06", "Ruang SMT, sisi Line 2", "2,9", "23,8", "11", "6 mnt", "Reel sisa produksi", "ok"],
+    ["DC-09", "Gudang komponen, rak C", "-", "-", "-", "-", "Panel LCD driver", "off"],
+  ].map((r) => `<tr><td class="num">${r[0]}</td><td>${r[1]}</td>${r.slice(2, 6).map((v) => `<td class="n">${v}</td>`).join("")}<td>${r[6]}</td>
+    <td>${r[7] === "ok" ? st("ok") : r[7] === "warn" ? st("warn", "Dekat batas, sering dibuka") : st("off", "Offline sejak 06.10")}</td></tr>`).join("");
+</script>
+</body>
+</html>

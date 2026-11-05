@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energi listrik · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 05: pemakaian energi listrik per jam, per area, dan kualitas daya per panel.">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Energi listrik</h1>
+      <p class="finding"><b>Beban puncak hari ini 1.512 kW pukul 13.05, sisa 88 kW dari batas kontrak.</b> Puncak terjadi saat oven Line 2 dan kompresor K-02 menyala bersamaan.</p>
+    </div>
+    <div class="actions">
+      <input type="date" value="2026-11-05" aria-label="Tanggal">
+      <button class="btn" type="button">Unduh CSV</button>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="kpis">
+      <div class="kpi"><div class="l">Sisa kapasitas sampai batas kontrak</div><div class="v big num">88<span class="u">kW</span></div><div class="d">puncak 1.512 dari 1.600 kW</div></div>
+      <div class="kpi"><div class="l">Energi hari ini</div><div class="v num">14.870<span class="u">kWh</span></div><div class="d">00.00 sampai 14.30</div></div>
+      <div class="kpi"><div class="l">Faktor daya rata-rata</div><div class="v num">0,91</div><div class="d">PLN mengenakan denda bila di bawah 0,85</div></div>
+      <div class="kpi"><div class="l">Energi per unit produk</div><div class="v num">2,3<span class="u">kWh/unit</span></div><div class="d">rata-rata 7 hari 2,4</div></div>
+      <div class="kpi"><div class="l">Biaya hari ini</div><div class="v" style="font-size:18px">[REAL DATA: tarif LWBP/WBP]</div></div>
+    </div>
+  </section>
+
+  <div class="grid g-12" style="margin-top:16px">
+    <section class="panel c8">
+      <div class="panel-h"><h2>Energi per jam, hari ini</h2><span class="sub">kWh; batang oranye menandai jam beban puncak (13.00)</span></div>
+      <div class="panel-b"><div id="hourly" data-label="Energi per jam hari ini"></div></div>
+    </section>
+    <section class="panel c4">
+      <div class="panel-h"><h2>Pemakaian per area, hari ini</h2><span class="sub">kWh</span></div>
+      <div class="panel-b" id="areas"></div>
+    </section>
+    <section class="panel c12">
+      <div class="panel-h"><h2>Kualitas daya per panel</h2><span class="sub">pembacaan meter daya, 14.32</span></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>Panel</th><th class="n">V R-N</th><th class="n">V S-N</th><th class="n">V T-N</th><th class="n">I R</th><th class="n">I S</th><th class="n">I T</th><th class="n">Ketidakseimbangan arus</th><th class="n">PF</th><th class="n">THD-I</th><th class="n">Daya kW</th><th>Status</th></tr></thead>
+          <tbody id="pq"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 05 dari 10 · semua angka adalah data contoh; tarif diisi dari kontrak PLN klien</footer>
+<script src="assets/app.js"></script>
+<script>
+  const hrs = Array.from({ length: 15 }, (_, i) => new Date(2026, 10, 5, i));
+  barChart(hourly, { x: hrs, data: [720, 690, 680, 700, 740, 860, 1010, 1180, 1290, 1340, 1360, 1310, 1240, 1495, 1330], unit: "kWh", h: 240,
+    hiIdx: [13], fmtX: (d) => `${String(d.getHours()).padStart(2, "0")}.00` });
+  const ar = [["Oven reflow (2 lini)", 4210], ["Kompresor & utilitas", 3380], ["HVAC produksi", 2950], ["Perakitan TV", 1640], ["Perakitan kulkas", 1420], ["Gudang & cold storage", 870], ["Kantor & lain-lain", 400]];
+  areas.innerHTML = ar.map(([n, v]) => `<div class="hbar" style="grid-template-columns:150px 1fr 70px"><span>${n}</span><div class="track"><div class="fill" style="width:${(v / 4210) * 100}%"></div></div><span class="val num">${v.toLocaleString("id-ID")}</span></div>`).join("");
+  const P = [
+    ["MDP utama", 229, 231, 228, 1084, 1060, 1102, "3,8 %", "0,92", "6,1 %", "1.284", "ok"],
+    ["SDP SMT", 228, 230, 229, 412, 398, 405, "3,4 %", "0,95", "4,8 %", "482", "ok"],
+    ["SDP Kompresor", 226, 229, 227, 318, 262, 301, "18,2 %", "0,82", "9,7 %", "211", "warn"],
+    ["SDP Perakitan", 230, 231, 230, 148, 151, 146, "3,3 %", "0,93", "11,4 %", "192", "ok"],
+    ["SDP Gudang", 231, 232, 231, 66, 64, 70, "8,6 %", "0,89", "5,2 %", "86", "ok"],
+  ];
+  pq.innerHTML = P.map((r) => `<tr><td>${r[0]}</td>${r.slice(1, 11).map((v, i) => {
+    const bad = r[11] === "warn" && (i === 6 || i === 7);
+    return `<td class="n" style="${bad ? "color:var(--warn-ink);font-weight:600" : ""}">${v}</td>`;
+  }).join("")}<td>${r[11] === "ok" ? st("ok") : st("warn", "PF rendah, fasa S")}</td></tr>`).join("");
+</script>
+</body>
+</html>

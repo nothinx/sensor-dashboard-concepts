@@ -1,0 +1,22 @@
+{
+  "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
+  "functions": { "source": "functions", "runtime": "nodejs20" },
+  "hosting": {
+    "public": "public",
+    "ignore": ["**/.*"],
+    "predeploy": ["node alat/bangun.mjs"],
+    "headers": [
+      { "source": "sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ]
+  },
+  "emulators": {
+    "singleProjectMode": true,
+    "hosting": { "host": "0.0.0.0", "port": 18110 },
+    "firestore": { "host": "0.0.0.0", "port": 18111, "websocketPort": 18117 },
+    "auth": { "host": "0.0.0.0", "port": 18112 },
+    "functions": { "host": "0.0.0.0", "port": 18113 },
+    "ui": { "enabled": true, "host": "0.0.0.0", "port": 18114 },
+    "hub": { "host": "0.0.0.0", "port": 18115 },
+    "logging": { "host": "0.0.0.0", "port": 18116 }
+  }
+}

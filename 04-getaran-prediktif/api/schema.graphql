@@ -1,0 +1,101 @@
+"""Batas zona ISO 10816-1 untuk kelas mesin ini, mm/s RMS"""
+type BatasZona {
+  ab: Float!
+  bc: Float!
+  cd: Float!
+}
+
+"""Date (isoformat)"""
+scalar Date
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+type Mesin {
+  id: ID!
+  nama: String!
+  area: String!
+  kelasIso: String!
+  dayaKw: Float!
+  rpm: Float!
+  bantalan: String!
+  jamOperasi: Int!
+  rmsTerkiniMmS: Float
+  suhuBantalanC: Float
+  diukurPada: DateTime
+  zona: String
+  status: Status!
+  perubahan30HariMmS: Float
+  batasZona: BatasZona!
+
+  """RMS rata-rata harian, terlama dulu"""
+  tren(hari: Int! = 30): [TitikTren!]!
+
+  """Spektrum terakhir"""
+  spektrum: Spektrum
+  perintahKerja: [PerintahKerja!]!
+}
+
+type Mutation {
+  """Catat perintah kerja baru (status DIBUKA)"""
+  buatPerintahKerja(input: PerintahKerjaInput!): PerintahKerja!
+}
+
+type PerintahKerja {
+  id: ID!
+  mesinId: String!
+  judul: String!
+  prioritas: Prioritas!
+  status: String!
+  dibuatPada: DateTime!
+}
+
+input PerintahKerjaInput {
+  mesinId: ID!
+  judul: String!
+  prioritas: Prioritas! = SEDANG
+}
+
+enum Prioritas {
+  RENDAH
+  SEDANG
+  TINGGI
+}
+
+type Query {
+  """Semua mesin, yang paling perlu tindakan di atas"""
+  daftarMesin(area: String = null): [Mesin!]!
+  mesin(id: ID!): Mesin
+  ringkasan: Ringkasan!
+}
+
+type Ringkasan {
+  jumlahMesin: Int!
+  perluTindakan: Int!
+  offline: Int!
+}
+
+"""
+Spektrum FFT kecepatan getaran; amplitudo[i] berada pada frekuensi i × resolusiHz
+"""
+type Spektrum {
+  diukurPada: DateTime!
+  resolusiHz: Float!
+  frekuensiPutarHz: Float!
+  bpfoHz: Float!
+  amplitudoMmS: [Float!]!
+}
+
+"""Status kondisi mesin hasil evaluasi zona dan umur data"""
+enum Status {
+  NORMAL
+  PERINGATAN
+  KRITIS
+  OFFLINE
+}
+
+type TitikTren {
+  tanggal: Date!
+  rmsMmS: Float!
+  suhuMaksC: Float!
+}

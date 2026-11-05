@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lini SMT & reflow · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 04: kondisi oven reflow dan lini SMT per zona.">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Lini SMT & oven reflow</h1>
+      <p class="finding"><b>Line 2 menyimpang dari resep: zona 6 bersuhu 252,4 °C (setpoint 245 °C).</b> Line 1 sesuai resep di kesepuluh zona.</p>
+    </div>
+    <div class="actions">
+      <div class="seg" role="group" aria-label="Pilih lini"><button type="button" aria-pressed="false">Line 1</button><button type="button" aria-pressed="true">Line 2</button></div>
+      <a class="btn primary" href="03-detail-sensor.html">Buka sensor zona 6</a>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="kpis">
+      <div class="kpi"><div class="l">Zona di luar toleransi ±3 °C</div><div class="v big num" style="color:var(--crit-ink)">1<span class="u">dari 10</span></div></div>
+      <div class="kpi"><div class="l">Resep aktif</div><div class="v" style="font-size:20px">[REAL DATA: nama resep]</div></div>
+      <div class="kpi"><div class="l">Kecepatan konveyor</div><div class="v num">0,75<span class="u">m/mnt</span></div><div class="d">resep 0,90 m/mnt</div></div>
+      <div class="kpi"><div class="l">O₂ dalam oven (N₂)</div><div class="v num">820<span class="u">ppm</span></div><div class="d">batas 1.000 ppm</div></div>
+      <div class="kpi"><div class="l">PCB diproses, shift ini</div><div class="v num">1.946</div></div>
+    </div>
+  </section>
+
+  <div class="grid g-12" style="margin-top:16px">
+    <section class="panel c7">
+      <div class="panel-h"><h2>Suhu per zona: aktual dibanding setpoint</h2><span class="sub">°C, Line 2, sekarang</span></div>
+      <div class="panel-b"><div class="legend"><span><i style="background:var(--s1)"></i>Aktual</span><span><i style="background:var(--ink-3)"></i>Setpoint (putus-putus)</span></div><div id="zones" data-label="Suhu per zona Line 2"></div></div>
+    </section>
+    <section class="panel c5">
+      <div class="panel-h"><h2>Profil termal PCB terakhir</h2><span class="sub">diukur dengan papan uji berprobe, 14.05</span></div>
+      <div class="panel-b"><div id="profile" data-label="Profil termal PCB"></div>
+        <div class="dl" style="margin-top:8px"><dt>Waktu di atas likuidus 217 °C</dt><dd class="num">74 dtk <span class="muted">(target 45 sampai 90)</span></dd><dt>Suhu puncak papan</dt><dd class="num">249 °C <span class="muted">(target 235 sampai 250)</span></dd></div></div>
+    </section>
+    <section class="panel c12">
+      <div class="panel-h"><h2>Tabel zona Line 2</h2></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>Zona</th><th>Fungsi</th><th class="n">Setpoint °C</th><th class="n">Aktual °C</th><th class="n">Selisih</th><th class="n">Keluaran pemanas</th><th class="n">Putaran kipas (rpm)</th><th>Status</th></tr></thead>
+          <tbody id="zt"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 04 dari 10 · semua angka adalah data contoh; nama resep diisi dari sistem klien</footer>
+<script src="assets/app.js"></script>
+<script>
+  const sp = [120, 150, 165, 175, 185, 245, 255, 250, 120, 80];
+  const act = [120.4, 149.6, 165.8, 174.1, 186.0, 252.4, 254.2, 249.1, 118.7, 81.3];
+  const fn = ["Pemanasan awal", "Pemanasan awal", "Soak", "Soak", "Soak", "Reflow", "Reflow", "Reflow", "Pendinginan", "Pendinginan"];
+  const out = [42, 38, 35, 33, 37, 100, 71, 64, 0, 0];
+  // aktual (garis) + setpoint (putus-putus) per zona
+  (function () {
+    const el = zones, W = el.clientWidth, H = 240, L = 44, R = 12, T = 10, B = 24, lo = 50, hi = 275;
+    const sx = (i) => L + (i / 9) * (W - L - R), sy = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+    let g = "";
+    for (let v = 50; v <= 275; v += 75) g += `<line x1="${L}" x2="${W - R}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--grid)"/><text x="${L - 6}" y="${sy(v) + 4}" text-anchor="end">${v}</text>`;
+    sp.forEach((_, i) => g += `<text x="${sx(i)}" y="${H - 6}" text-anchor="middle">Z${i + 1}</text>`);
+    g += `<path d="${sp.map((v, i) => `${i ? "L" : "M"}${sx(i)},${sy(v)}`).join("")}" fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+    g += `<path d="${act.map((v, i) => `${i ? "L" : "M"}${sx(i)},${sy(v)}`).join("")}" fill="none" stroke="var(--s1)" stroke-width="2"/>`;
+    act.forEach((v, i) => g += `<circle cx="${sx(i)}" cy="${sy(v)}" r="${i === 5 ? 6 : 4}" fill="${i === 5 ? "var(--crit)" : "var(--s1)"}" stroke="var(--surface)" stroke-width="2"><title>Z${i + 1}: ${fmt(v)} °C (setpoint ${fmt(sp[i])})</title></circle>`);
+    g += `<text x="${sx(5) + 10}" y="${sy(252.4) - 8}" style="fill:var(--crit-ink);font-weight:600">Z6 +7,4 °C</text>`;
+    el.classList.add("chart");
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Suhu per zona">${g}</svg>`;
+  })();
+  const pt = Array.from({ length: 60 }, (_, i) => new Date(2026, 10, 5, 14, 5, i * 5));
+  const prof = Array.from({ length: 60 }, (_, i) => {
+    const t = i * 5;
+    if (t < 90) return 30 + t * 1.6;
+    if (t < 180) return 174 + (t - 90) * 0.25;
+    if (t < 230) return 196 + (t - 180) * 1.06;
+    if (t < 250) return 249 - (t - 230) * 0.2;
+    return Math.max(60, 245 - (t - 250) * 2.6);
+  });
+  lineChart(profile, { x: pt, series: [{ name: "Papan", color: "var(--s1)", data: prof }], unit: "°C", min: 0, max: 280, dec: 0, h: 200,
+    fmtX: (d) => `${(d - pt[0]) / 1000} dtk`, bands: [{ y: 217, label: "likuidus 217", color: "var(--warn)" }] });
+  zt.innerHTML = sp.map((v, i) => {
+    const dlt = act[i] - v, bad = Math.abs(dlt) > 3;
+    return `<tr><td class="num">Z${i + 1}</td><td>${fn[i]}</td><td class="n">${fmt(v)}</td><td class="n">${fmt(act[i])}</td>
+      <td class="n" style="${bad ? "color:var(--crit-ink);font-weight:600" : ""}">${dlt > 0 ? "+" : ""}${fmt(dlt)}</td><td class="n">${out[i]} %</td>
+      <td class="n">${fmt([1450, 1450, 1500, 1500, 1500, 1800, 1800, 1800, 2100, 2100][i], 0)}</td><td>${bad ? st("crit", "Di luar toleransi") : st("ok", "Sesuai")}</td></tr>`;
+  }).join("");
+</script>
+</body>
+</html>

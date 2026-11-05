@@ -1,0 +1,15 @@
+.env
+!.env.example
+__pycache__/
+*.pyc
+*.log
+node_modules/
+.venv/
+.temp/
+.branches/
+.shot/
+.DS_Store
+Thumbs.db
+
+.vercel
+.env.local

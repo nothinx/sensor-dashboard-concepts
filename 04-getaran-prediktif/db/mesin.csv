@@ -1,0 +1,8 @@
+id,nama,area,kelas_iso,daya_kw,rpm,bantalan,faktor_bpfo,jam_operasi_awal,rms_dasar,suhu_dasar,degradasi
+K-02,Kompresor udara K-02,Kompresor & utilitas,II,55,1488,6309 (contoh),3.58,18420,3.1,63,2.2
+P-01,Pompa air pendingin P-01,Kompresor & utilitas,II,30,2950,6308 (contoh),3.07,22100,2.1,46,0.3
+K-01,Kompresor udara K-01,Kompresor & utilitas,II,55,1488,6309 (contoh),3.58,21870,1.8,54,0.1
+BL-L2,Blower oven Line 2,SMT Line 2,I,7.5,2880,6205 (contoh),3.05,9650,1.6,62,0.0
+BL-L1,Blower oven Line 1,SMT Line 1,I,7.5,2880,6205 (contoh),3.05,9880,1.5,60,0.0
+AHU-1,AHU produksi 1,HVAC produksi,II,18.5,1460,6310 (contoh),3.06,30210,1.0,39,0.0
+CV-TV,Konveyor perakitan TV,Perakitan TV,I,5.5,1420,6206 (contoh),3.05,12004,0.9,41,0.0

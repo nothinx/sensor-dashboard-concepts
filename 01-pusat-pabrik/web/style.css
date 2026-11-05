@@ -1,0 +1,133 @@
+/* Hallmark · design · layar dinding ruang kontrol (web desktop 1920×1080, tanpa scroll) · dial E1/R1/M1
+   gaya: HMI ISA-101 gelap, abu-abu netral, warna HANYA untuk alarm · tanda tangan: jam shift + titik status hidup
+   momen: kisi pita status 24 jam per area · font: Barlow Condensed (padat, terbaca dari jauh) + JetBrains Mono (angka) */
+:root {
+  color-scheme: dark;
+  --font-sans: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --bg: #141415;
+  --surface: #19191b;
+  --raised: #232325;
+  --line: #2b2b2e;
+  --ink: #ededed;
+  --ink-2: #b4b4b9;
+  --ink-3: #8e8e94;
+  --cell: #3a3a3e;
+  --grid: #2b2b2e;
+  --s1: #c9c9ce; --s2: #8e8e94; --s3: #6b6b70;
+  /* status: normal tetap abu (ISA-101), warna khusus alarm */
+  --good: #8e8e94; --good-bg: #232325; --good-ink: #b4b4b9;
+  --warn: #e0a526; --warn-bg: #3a2d0e; --warn-ink: #f4cd63;
+  --serious: #e0a526; --serious-bg: #3a2d0e; --serious-ink: #f4cd63;
+  --crit: #e5484d; --crit-bg: #421a1c; --crit-ink: #ffa3a5;
+  --off-bg: #232325; --off-ink: #b4b4b9;
+  --on-crit: #fff5f5;
+  --focus: #f4cd63;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: clip; }
+body {
+  background: var(--bg); color: var(--ink); font: 400 17px/1.35 var(--font-sans);
+  min-height: 100dvh; display: grid; grid-template-rows: auto auto 1fr auto;
+}
+/* baris tetap supaya pita yang tersembunyi tidak menggeser kisi utama */
+.bar { grid-row: 1; } .banner { grid-row: 2; } main { grid-row: 3; } footer { grid-row: 4; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+h1, h2 { margin: 0; font-weight: 500; text-wrap: balance; }
+h1 { font-size: 28px; line-height: 1.15; }
+h2 { font-size: 19px; }
+p, ol, dl, dd { margin: 0; padding: 0; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* bilah atas */
+.bar { display: flex; align-items: center; gap: 20px; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.logo { padding: 4px 12px; border: 1px dashed var(--ink-3); border-radius: 4px; font: 500 12px var(--font-mono); color: var(--ink-3); }
+.product { font-size: 22px; font-weight: 600; white-space: nowrap; }
+.shift { margin-left: auto; display: flex; align-items: baseline; gap: 16px; white-space: nowrap; color: var(--ink-2); font-size: 18px; }
+.clock { font-size: 28px; color: var(--ink); }
+.conn { display: flex; align-items: center; gap: 8px; color: var(--ink-2); white-space: nowrap; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink-3); }
+.dot.live { background: var(--ink); border-color: var(--ink); animation: beat 2s ease-in-out infinite; }
+.dot.dead { border-color: var(--crit); }
+@keyframes beat { 50% { opacity: .35; } }
+.sample { padding: 2px 10px; border-radius: 4px; background: var(--warn-bg); color: var(--warn-ink); font-size: 15px; font-weight: 500; white-space: nowrap; }
+.banner { margin: 12px 20px 0; padding: 8px 12px; border: 1px solid var(--warn); border-radius: 4px; background: var(--warn-bg); color: var(--warn-ink); }
+
+/* kisi utama: muat 1920×1080 tanpa scroll */
+main {
+  display: grid; gap: 12px; padding: 12px 20px; min-height: 0;
+  grid-template-columns: 1fr 1fr 460px;
+  grid-template-rows: auto 1fr 248px;
+  grid-template-areas: "top top alarms" "strips strips alarms" "power temp alarms";
+}
+.top { grid-area: top; display: flex; align-items: center; gap: 24px; }
+.top .finding { flex: 1; min-width: 0; }
+.top .finding p { color: var(--ink-2); margin-top: 4px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 0; min-height: 0; padding: 12px 16px; }
+.ph { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+.ph .sub { color: var(--ink-3); font-size: 15px; }
+.legend { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+
+.kpis { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(150px, auto); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.kpis > div { padding: 8px 16px; border-left: 1px solid var(--line); }
+.kpis > div:first-child { border-left: 0; }
+.kpis dt { color: var(--ink-2); font-size: 15px; }
+.kpis dd { font: 500 28px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kpis dd.big { font-size: 40px; }
+.kpis dd.crit { color: var(--crit-ink); }
+.kpis .u { font: 400 15px var(--font-sans); color: var(--ink-3); margin-left: 4px; }
+
+/* momen: kisi pita status */
+.strips-p { grid-area: strips; display: flex; flex-direction: column; }
+.axis, .srow { display: grid; grid-template-columns: 210px 1fr 168px; gap: 12px; align-items: center; }
+.axis { font: 13px var(--font-mono); color: var(--ink-3); }
+.axis .t { display: flex; justify-content: space-between; }
+.strips { flex: 1; display: grid; grid-auto-rows: 1fr; min-height: 0; }
+.srow { border-top: 1px solid var(--line); }
+.srow .nm { font-size: 19px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cells { display: grid; grid-template-columns: repeat(96, 1fr); gap: 2px; height: 28px; }
+.cells i { background: var(--cell); border-radius: 1px; }
+.cells i.l1 { background: var(--warn); }
+.cells i.l2 { background: var(--crit); }
+.cells i.off { background: repeating-linear-gradient(135deg, var(--bg) 0 3px, var(--ink-3) 3px 4px); }
+.cells i.now { outline: 1px solid var(--ink-2); outline-offset: 1px; }
+
+/* alarm */
+.alarms-p { grid-area: alarms; display: flex; flex-direction: column; }
+.alarm-list { list-style: none; overflow: auto; flex: 1; }
+.alarm-list li { padding: 12px 0; border-top: 1px solid var(--line); display: grid; gap: 4px; }
+.alarm-list .meta { display: flex; gap: 12px; align-items: center; color: var(--ink-3); font: 14px var(--font-mono); }
+.alarm-list .what { font-size: 20px; font-weight: 500; }
+.alarm-list .val { color: var(--ink-2); }
+.alarm-list .val b { font: 500 18px var(--font-mono); color: var(--ink); }
+.btn {
+  justify-self: start; min-height: 36px; padding: 0 16px; border: 1px solid var(--ink-3); border-radius: 4px; background: var(--raised);
+  color: var(--ink); font: 500 16px var(--font-sans); cursor: pointer;
+}
+.btn:hover { background: var(--line); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.acked { color: var(--ink-3); font-size: 15px; }
+.empty { padding: 24px 0; color: var(--ink-2); }
+
+.power-p { grid-area: power; } .temp-p { grid-area: temp; }
+.chart text { font-size: 12px; }
+
+footer { padding: 0 20px 8px; color: var(--ink-3); font-size: 14px; }
+.st { font-size: 15px; padding: 2px 8px 2px 4px; }
+
+/* layar lebih kecil: susun ke bawah, boleh scroll vertikal */
+@media (max-width: 1500px), (max-height: 960px) {
+  main { grid-template-columns: 1fr 1fr; grid-template-rows: auto; grid-template-areas: "top top" "strips strips" "alarms alarms" "power temp"; }
+  .top { flex-wrap: wrap; }
+  .strips { grid-auto-rows: 44px; }
+  .alarm-list { overflow: visible; }
+}
+@media (max-width: 1100px) {
+  main { grid-template-columns: 1fr; grid-template-areas: "top" "strips" "alarms" "power" "temp"; }
+  .kpis { grid-auto-flow: row; }
+  .kpis > div { border-left: 0; border-top: 1px solid var(--line); }
+  .axis, .srow { grid-template-columns: 150px 1fr 120px; }
+  .shift span:not(.clock) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .dot.live { animation: none; } * { transition: none !important; } }

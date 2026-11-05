@@ -1,0 +1,37 @@
+name: konsep-13
+
+# Genset & UPS Cabang, versi emulator AWS:
+# simulator (pesan ala IoT Core) -> Lambda ingest -> DynamoDB Local <- Lambda API (via adaptor HTTP) <- nginx (dasbor)
+x-app: &app
+  build: ./app
+  env_file: .env
+  environment:
+    TZ: Asia/Jakarta
+
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:2.6.1
+    # ponytail: -inMemory, data hilang saat container berhenti; simulator mengisi ulang riwayat 24 jam saat start
+    command: ["-jar", "DynamoDBLocal.jar", "-inMemory", "-sharedDb"]
+    ports: ["127.0.0.1:18131:8000"]
+
+  simulator:
+    <<: *app
+    command: ["node", "local/simulator.mjs"]
+    depends_on: [dynamodb]
+    restart: on-failure
+
+  api:
+    <<: *app
+    command: ["node", "local/adapter.mjs"]
+    depends_on: [dynamodb]
+    ports: ["127.0.0.1:18132:3000"]
+
+  web:
+    image: nginx:1.27-alpine
+    depends_on: [api]
+    volumes:
+      - ./web:/srv/web:ro
+      - ../shared:/srv/shared:ro
+      - ./web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports: ["127.0.0.1:18130:80"]

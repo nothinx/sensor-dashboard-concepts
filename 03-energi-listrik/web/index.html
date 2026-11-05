@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pemantauan Energi Listrik</title>
+<meta name="description" content="Mockup proyek 03: beban listrik pabrik terhadap batas kontrak, energi per jam, pemakaian per area, dan kualitas daya per panel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600&family=Archivo:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../../shared/charts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="mast">
+  <span class="logo-slot">[LOGO KLIEN]</span>
+  <div class="mast-title">
+    <span class="product">Pemantauan Energi Listrik</span>
+    <span class="muted" id="tanggal">Memuat tanggal</span>
+  </div>
+  <div class="mast-meta">
+    <span class="koneksi" id="koneksi" role="status">Menghubungkan ke API</span>
+    <span class="sample" title="Semua angka di layar ini adalah contoh untuk mockup">Data contoh</span>
+  </div>
+</header>
+
+<div class="banner" id="banner" hidden></div>
+
+<main id="isi" aria-busy="true">
+  <section class="hero" aria-labelledby="judul-sisa">
+    <div class="hero-angka">
+      <h1 id="judul-sisa">Sisa kapasitas sampai batas kontrak</h1>
+      <p class="raksasa"><span class="nilai" id="sisa">&nbsp;</span><span class="satuan">kW</span></p>
+      <p class="temuan" id="temuan">Memuat data beban hari ini.</p>
+      <dl class="rincian">
+        <dt>Puncak hari ini</dt><dd id="puncak">&nbsp;</dd>
+        <dt>Batas kontrak</dt><dd id="batas">&nbsp;</dd>
+        <dt>Penyumbang terbesar saat puncak</dt><dd id="penyumbang">&nbsp;</dd>
+      </dl>
+    </div>
+    <figure class="hero-grafik">
+      <figcaption><span>Beban pabrik, 24 jam</span><span class="muted">kW, rata-rata 15 menit, panel utama</span></figcaption>
+      <div id="grafik-beban" data-label="Beban pabrik 24 jam terhadap batas kontrak"></div>
+    </figure>
+  </section>
+
+  <section class="kpis" aria-label="Angka hari ini">
+    <div class="kpi"><span class="l">Beban saat ini</span><span class="v" id="k-beban">&nbsp;</span><span class="d" id="k-beban-ts">&nbsp;</span></div>
+    <div class="kpi"><span class="l">Energi hari ini</span><span class="v" id="k-energi">&nbsp;</span><span class="d" id="k-energi-d">&nbsp;</span></div>
+    <div class="kpi"><span class="l">Faktor daya rata-rata</span><span class="v" id="k-pf">&nbsp;</span><span class="d">PLN mengenakan denda bila di bawah 0,85</span></div>
+    <div class="kpi"><span class="l">Biaya hari ini</span><span class="v ph">[REAL DATA: tarif LWBP/WBP]</span><span class="d">dihitung setelah tarif kontrak diisi</span></div>
+  </section>
+
+  <div class="duo">
+    <section class="blok" aria-labelledby="h-jam">
+      <header class="blok-h"><h2 id="h-jam">Energi per jam, hari ini</h2><span class="muted">kWh; batang gelap menandai jam beban puncak</span></header>
+      <div id="grafik-jam" data-label="Energi per jam hari ini"></div>
+    </section>
+    <section class="blok" aria-labelledby="h-area">
+      <header class="blok-h"><h2 id="h-area">Pemakaian per area, hari ini</h2><span class="muted">kWh dan bagian dari total</span></header>
+      <ol class="area" id="area"></ol>
+    </section>
+  </div>
+
+  <section class="blok" aria-labelledby="h-panel">
+    <header class="blok-h"><h2 id="h-panel">Kualitas daya per panel</h2><span class="muted" id="panel-ts">pembacaan sesaat</span></header>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Panel</th><th class="n">V R-N</th><th class="n">V S-N</th><th class="n">V T-N</th>
+          <th class="n">I R</th><th class="n">I S</th><th class="n">I T</th>
+          <th class="n">Ketidakseimbangan arus</th><th class="n">PF</th><th class="n">THD-I</th><th class="n">Daya kW</th><th>Status</th>
+        </tr></thead>
+        <tbody id="panel"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer class="pg">Mockup proyek 03 · semua angka adalah data contoh · data ditarik lewat REST dengan ETag setiap 60 detik</footer>
+
+<script src="../../shared/charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# Riwayat perubahan
+
+Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/). Semua tanggal dalam WIB.
+
+## 5 November 2026
+
+### Ditambahkan
+- Draf awal 10 layar satu sistem dasbor (kemudian diarsipkan ke `_draf-10-layar/`).
+- Sepuluh konsep dasbor terpisah (01 sampai 10), masing-masing dengan website, database, cara menarik data, simulator
+  sensor, dan dokumentasi sendiri.
+- Pustaka bersama `shared/charts.js` dan `shared/charts.css`: grafik SVG, chip status, format angka dan waktu
+  Indonesia.
+- Lima konsep berbasis database cloud (11 sampai 15): Firebase, Supabase, AWS DynamoDB, Azure Cosmos DB, MongoDB
+  Atlas, diuji dengan emulator resmi.
+- Mode `?pratinjau` dan galeri `pratinjau.html` untuk melihat ke-15 dasbor dengan data dummy tanpa instalasi.
+- Data dummy lengkap untuk daftar laporan dan jejak audit di konsep 08.
+- Dokumentasi lintas proyek di `docs/`: panduan, arsitektur, catatan proyek, kebutuhan data klien.
+- Alat `shared/alat/kumpulkan_real_data.py` untuk menyusun daftar kebutuhan data klien.
+- Repositori GitHub dan pratinjau online di Vercel (https://sensor-dashboard-concepts.vercel.app).
+
+### Diubah
+- Teks UI dan dokumentasi diselaraskan dengan EYD V: pukul `14.32`, koma desimal, titik ribuan, kalimat tidak
+  diawali angka.
+- README ke-15 konsep diseragamkan ke satu templat dan diposisikan sebagai pratinjau, bukan sistem produksi.
+- Nama klien dihapus dari isi repo: teks memakai "klien", nama proyek compose dan ID teknis memakai awalan
+  `konsep-` (sebelumnya nama klien). Volume Docker lama berawalan nama klien tidak dipakai lagi.
+- Dasbor dengan `?pratinjau` tidak lagi mencoba menghubungi API (bendera `TANPA_API` di `shared/charts.js`),
+  supaya situs statis tidak memicu permintaan gagal atau izin jaringan lokal di peramban.
+
+### Dihapus
+- Salinan referensi `shared/_ref-app.*` (identik dengan arsip draf) dan folder tangkapan layar uji `.shot/`.

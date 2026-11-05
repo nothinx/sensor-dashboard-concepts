@@ -1,0 +1,6 @@
+{
+  "name": "ruang-bersih-simulator",
+  "private": true,
+  "type": "module",
+  "dependencies": { "mongodb": "6.12.0" }
+}

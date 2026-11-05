@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ringkasan · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 01: ringkasan status seluruh area pabrik dan alarm aktif.">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Ringkasan pabrik</h1>
+      <p class="finding"><b>Ada 3 alarm aktif di 2 area.</b> Oven reflow Line 2 zona 6 melewati batas kritis sejak pukul 13.58, dan pintu cold storage B terbuka selama 9 menit.</p>
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="02-alarm.html">Tangani 3 alarm</a>
+    </div>
+  </div>
+
+  <section class="panel" aria-label="Angka utama">
+    <div class="kpis">
+      <div class="kpi"><div class="l">Alarm aktif</div><div class="v big num" style="color:var(--crit-ink)">3</div><div class="d">1 kritis, 2 peringatan</div></div>
+      <div class="kpi"><div class="l">Sensor online</div><div class="v num">412<span class="u">/ 418</span></div><div class="d">6 offline; lihat layar Perangkat sensor</div></div>
+      <div class="kpi"><div class="l">Beban listrik saat ini</div><div class="v num">1.284<span class="u">kW</span></div><div class="d">Batas kontrak 1.600 kW</div></div>
+      <div class="kpi"><div class="l">Suhu ruang produksi</div><div class="v num">24,6<span class="u">°C</span></div><div class="d">Rentang target 22 sampai 26 °C</div></div>
+      <div class="kpi"><div class="l">Kelembapan ruang SMT</div><div class="v num">48<span class="u">%RH</span></div><div class="d">Rentang target 40 sampai 60 %RH</div></div>
+    </div>
+  </section>
+
+  <div class="grid g-12" style="margin-top:16px">
+    <section class="panel c8">
+      <div class="panel-h"><h2>Status per area, 24 jam terakhir</h2><span class="sub">setiap kotak mewakili 15 menit</span>
+        <div class="right legend"></div></div>
+      <div class="panel-b">
+        <div class="axis-h"><span></span><div class="t"><span>kemarin 14.30</span><span>20.30</span><span>02.30</span><span>08.30</span><span>sekarang</span></div><span></span></div>
+        <div id="strips"></div>
+      </div>
+    </section>
+
+    <section class="panel c4">
+      <div class="panel-h"><h2>Alarm aktif</h2><span class="sub">terbaru di atas</span></div>
+      <div class="panel-b stack">
+        <article class="stack" style="padding-bottom:12px;border-bottom:1px solid var(--line)">
+          <div class="row"><span id="a1"></span><span class="muted num small">13.58 · 34 mnt</span></div>
+          <div><b style="font-weight:500">Oven reflow Line 2, zona 6</b><br><span class="num">252,4 °C</span> <span class="muted">batas kritis 250 °C</span></div>
+          <div class="row"><a class="btn" href="04-lini-smt.html">Buka profil oven</a><button class="btn" type="button">Akui</button></div>
+        </article>
+        <article class="stack" style="padding-bottom:12px;border-bottom:1px solid var(--line)">
+          <div class="row"><span id="a2"></span><span class="muted num small">14.23 · 9 mnt</span></div>
+          <div><b style="font-weight:500">Cold storage B, pintu</b><br><span class="muted">Terbuka 9 menit, batas 5 menit. Suhu naik ke</span> <span class="num">6,1 °C</span></div>
+          <div class="row"><a class="btn" href="08-gudang.html">Lihat gudang</a><button class="btn" type="button">Akui</button></div>
+        </article>
+        <article class="stack">
+          <div class="row"><span id="a3"></span><span class="muted num small">11.40 · 2 jam 52 mnt</span></div>
+          <div><b style="font-weight:500">Kompresor udara K-02, getaran</b><br><span class="num">5,3 mm/s</span> <span class="muted">zona C (ISO 10816), cenderung naik selama 3 hari</span></div>
+          <div class="row"><a class="btn" href="06-getaran.html">Lihat getaran</a><button class="btn" type="button">Akui</button></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel c6">
+      <div class="panel-h"><h2>Beban listrik pabrik, 24 jam</h2><span class="sub">kW, rata-rata 15 menit</span></div>
+      <div class="panel-b"><div id="power" data-label="Beban listrik 24 jam"></div></div>
+    </section>
+    <section class="panel c6">
+      <div class="panel-h"><h2>Suhu ruang produksi, 24 jam</h2><span class="sub">°C, rata-rata 9 sensor</span></div>
+      <div class="panel-b"><div id="temp" data-label="Suhu ruang produksi 24 jam"></div></div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 01 dari 10 · semua angka adalah data contoh</footer>
+<script src="assets/app.js"></script>
+<script>
+  document.querySelector(".legend").innerHTML =
+    `${st("ok")} ${st("warn")} ${st("crit")} ${st("off")}`;
+  a1.innerHTML = st("crit"); a2.innerHTML = st("warn"); a3.innerHTML = st("warn");
+  strips.innerHTML = [
+    strip("SMT Line 1", [[38, 3, "w"]], st("ok")),
+    strip("SMT Line 2", [[86, 4, "w"], [90, 6, "c"]], st("crit")),
+    strip("Perakitan TV", [], st("ok")),
+    strip("Perakitan kulkas", [[20, 2, "w"]], st("ok")),
+    strip("Kompresor & utilitas", [[50, 6, "w"], [84, 12, "w"]], st("warn")),
+    strip("Gudang komponen", [[8, 16, "x"]], st("ok")),
+    strip("Cold storage B", [[60, 2, "w"], [95, 1, "w"]], st("warn")),
+    strip("Uji akhir (QC)", [[70, 2, "w"]], st("ok")),
+    strip("Panel listrik utama", [], st("ok")),
+    strip("Ruang server", [], st("ok")),
+  ].join("");
+  const x = times(96, 15);
+  lineChart(power, { x, series: [{ name: "Beban", color: "var(--s1)", data: gen(96, { base: 1050, amp: 260, noise: 60, seed: 3 }) }],
+    unit: "kW", min: 0, max: 1800, dec: 0, bands: [{ y: 1600, label: "batas kontrak 1.600 kW", color: "var(--crit)" }] });
+  lineChart(temp, { x, series: [{ name: "Suhu", color: "var(--s1)", data: gen(96, { base: 24.3, amp: 0.9, noise: 0.3, seed: 7 }) }],
+    unit: "°C", min: 20, max: 28, bands: [{ y: 26, label: "maks 26 °C", color: "var(--warn)" }, { y: 22, label: "min 22 °C", color: "var(--warn)" }] });
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perangkat sensor · Pemantauan Sensor Pabrik</title>
+<meta name="description" content="Mockup 09: kesehatan perangkat sensor dan gateway: offline, baterai, sinyal.">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<main>
+  <div class="head">
+    <div>
+      <h1>Perangkat sensor</h1>
+      <p class="finding"><b>Ada 6 sensor yang tidak mengirim data.</b> Empat di antaranya terhubung lewat gateway GW-GD (gudang) yang putus jaringan sejak pukul 06.10; perbaiki gateway itu lebih dulu.</p>
+    </div>
+    <div class="actions">
+      <input type="search" placeholder="Cari ID atau lokasi sensor" aria-label="Cari sensor" style="width:260px">
+      <button class="btn" type="button">Tambah sensor</button>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="kpis">
+      <div class="kpi"><div class="l">Sensor offline</div><div class="v big num" style="color:var(--crit-ink)">6<span class="u">dari 418</span></div></div>
+      <div class="kpi"><div class="l">Gateway online</div><div class="v num">5<span class="u">dari 6</span></div></div>
+      <div class="kpi"><div class="l">Baterai di bawah 20 %</div><div class="v num">9</div><div class="d">sensor nirkabel LoRa</div></div>
+      <div class="kpi"><div class="l">Kalibrasi jatuh tempo dalam 30 hari</div><div class="v" style="font-size:16px">[REAL DATA: jadwal kalibrasi]</div></div>
+    </div>
+  </section>
+
+  <div class="grid g-12" style="margin-top:16px">
+    <section class="panel c8">
+      <div class="panel-h"><h2>Sensor offline</h2><span class="sub">diurutkan dari yang paling lama</span></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Jenis</th><th>Lokasi</th><th>Gateway</th><th>Terakhir mengirim data</th><th>Dugaan penyebab</th><th></th></tr></thead>
+          <tbody id="off"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="panel c4">
+      <div class="panel-h"><h2>Gateway</h2></div>
+      <div class="panel-b table-wrap">
+        <table>
+          <thead><tr><th>Gateway</th><th class="n">Sensor</th><th class="n">Uptime</th><th>Status</th></tr></thead>
+          <tbody id="gw"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="panel c8">
+      <div class="panel-h"><h2>Baterai sensor nirkabel</h2><span class="sub">9 terendah dari 126 sensor</span><a class="right small" href="#">Lihat semua 126</a></div>
+      <div class="panel-b" id="bat"></div>
+    </section>
+    <section class="panel c4">
+      <div class="panel-h"><h2>Firmware perlu diperbarui</h2></div>
+      <div class="panel-b empty">
+        <p><b style="font-weight:500">Semua 418 sensor sudah memakai firmware terbaru.</b></p>
+        <p class="small muted" style="margin-top:4px">Pemeriksaan terakhir 14.00. Daftar ini terisi otomatis bila ada versi baru.</p>
+        <button class="btn" type="button" style="margin-top:12px">Periksa sekarang</button>
+      </div>
+    </section>
+  </div>
+</main>
+<footer class="pg">Mockup 09 dari 10 · semua angka adalah data contoh</footer>
+<script src="assets/app.js"></script>
+<script>
+  off.innerHTML = [
+    ["TH-GD-08", "Suhu & kelembapan", "Gudang komponen ESD", "GW-GD", "06.10", "Gateway GW-GD putus jaringan"],
+    ["TH-GD-11", "Suhu & kelembapan", "Gudang umum, rak F", "GW-GD", "06.10", "Gateway GW-GD putus jaringan"],
+    ["DC-09", "Dry cabinet RH", "Gudang komponen, rak C", "GW-GD", "06.10", "Gateway GW-GD putus jaringan"],
+    ["DS-GD-02", "Sensor pintu", "Gudang umum, pintu loading 2", "GW-GD", "06.10", "Gateway GW-GD putus jaringan"],
+    ["VB-CV-TV", "Getaran", "Konveyor perakitan TV", "GW-PR", "12.31", "Kabel RS485 terputus (galat CRC berturut-turut)"],
+    ["TH-PK-14", "Suhu & kelembapan", "Perakitan kulkas, sisi timur", "LoRa", "13.47", "Baterai habis (3 %)"],
+  ].map((r) => `<tr><td class="num">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="num">${r[3]}</td><td class="num">${r[4]}</td><td>${r[5]}</td>
+    <td class="n"><button class="btn" type="button">Detail</button></td></tr>`).join("");
+  gw.innerHTML = [["GW-L1", 64, "41 hari", "ok"], ["GW-L2", 71, "11 jam", "ok"], ["GW-PR", 88, "41 hari", "ok"], ["GW-UT", 52, "41 hari", "ok"], ["GW-GD", 17, "-", "off"], ["LoRa", 126, "41 hari", "ok"]]
+    .map((r) => `<tr><td class="num">${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td><td>${r[3] === "ok" ? st("ok", "Online") : st("crit", "Putus sejak 06.10")}</td></tr>`).join("");
+  bat.innerHTML = [["TH-PK-14", 3], ["TH-PK-09", 8], ["DS-CSB-01", 11], ["TH-QC-02", 13], ["TH-PK-03", 14], ["TH-TV-12", 16], ["TH-GD-01", 17], ["DS-GD-04", 18], ["TH-TV-05", 19]]
+    .map(([n, v]) => `<div class="hbar" style="grid-template-columns:110px 1fr 60px"><span class="num">${n}</span><div class="track" style="background:var(--grid);border-radius:3px"><div class="fill" style="width:${v}%;background:${v < 10 ? "var(--crit)" : "var(--warn)"}"></div></div><span class="val num">${v} %</span></div>`).join("");
+</script>
+</body>
+</html>

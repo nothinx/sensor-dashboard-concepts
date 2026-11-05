@@ -1,0 +1,58 @@
+name: konsep-08
+
+x-db-url: &db-url postgresql://${DB_USER:-mutu}:${DB_PASSWORD:?isi DB_PASSWORD di .env (salin dari .env.example)}@db:5432/${DB_NAME:-mutu}
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mutu}
+      POSTGRES_USER: ${DB_USER:-mutu}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?isi DB_PASSWORD di .env}
+      TZ: Asia/Jakarta
+      PGTZ: Asia/Jakarta
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:${DB_PORT:-18081}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-mutu} -d ${DB_NAME:-mutu}"]
+      interval: 3s
+      retries: 30
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: *db-url
+      AMBANG_PERSEN: ${AMBANG_PERSEN:-99}
+      TZ: Asia/Jakarta
+      WEB_DIR: /srv/web
+      SHARED_DIR: /srv/shared
+    volumes:
+      - ./web:/srv/web:ro
+      - ../shared:/srv/shared:ro
+    ports:
+      - "${WEB_PORT:-18080}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  simulator:
+    build: ./api
+    restart: unless-stopped
+    command: ["python", "-u", "/sim/simulator.py"]
+    environment:
+      DATABASE_URL: *db-url
+      TICK_DETIK: ${TICK_DETIK:-10}
+      TZ: Asia/Jakarta
+    volumes:
+      - ./simulator:/sim:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pg-data:
