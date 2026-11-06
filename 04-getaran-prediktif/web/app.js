@@ -67,60 +67,66 @@ function contohDetail(id) {
 }
 
 // ---------- tampilan ----------
-const STATUS_ST = { NORMAL: ["ok", "Normal"], PERINGATAN: ["warn", "Peringatan"], KRITIS: ["crit", "Kritis"], OFFLINE: ["off", "Offline"] };
+const STATUS_ST = { NORMAL: ["ok", "Normal"], PERINGATAN: ["warn", "Peringatan"], KRITIS: ["crit", "Kritis"], OFFLINE: ["off", "Terputus"] };
+const SAT = (u) => `&thinsp;<small>${u}</small>`;
 const stempel = (z) => `<span class="stempel z-${z || "x"}" aria-label="${z ? "Zona " + z : "Tanpa data"}">${z || "-"}</span>`;
 const tgl = (iso) => new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 
 function renderDaftar(d) {
   const r = d.ringkasan;
-  $("ringkas").textContent = `${r.jumlahMesin} mesin · ${r.perluTindakan} perlu tindakan · ${r.offline} offline`;
+  $("ringkas").textContent = `${r.jumlahMesin} mesin, ${r.perluTindakan} perlu tindakan, ${r.offline} terputus`;
   if (!pilihan || !d.daftarMesin.some((m) => m.id === pilihan)) pilihan = d.daftarMesin[0].id;
   $("daftar").innerHTML = d.daftarMesin.map((m) => `<li><a href="#${encodeURIComponent(m.id)}" data-id="${m.id}"${m.id === pilihan ? ' aria-current="true"' : ""}>
       ${stempel(m.status === "OFFLINE" ? null : m.zona)}<span class="nm">${m.nama}<span class="ar">${m.area}</span></span>
-      <span class="rms">${m.status === "OFFLINE" ? "offline" : fmt(m.rmsTerkiniMmS, 1)}</span></a></li>`).join("");
+      ${m.status === "OFFLINE" ? `<span class="rms putus">terputus</span>` : `<span class="rms">${fmt(m.rmsTerkiniMmS, 1)}</span>`}</a></li>`).join("");
   $("daftar").setAttribute("aria-busy", "false");
 }
 
 function temuan(m) {
-  if (m.status === "OFFLINE") return `<b>Sensor tidak mengirim data sejak pukul ${hhmm(new Date(m.diukurPada))}.</b> Periksa kabel sensor atau gateway sebelum menilai kondisi mesin.`;
+  if (m.status === "OFFLINE") return `<b>Sensor terputus sejak pukul ${hhmm(new Date(m.diukurPada))}.</b> Periksa kabel sensor dan gateway, lalu nilai kondisi mesin setelah data masuk lagi.`;
   const t = m.tren, s = m.spektrum;
   const awal = t.length ? t[0].rmsMmS : null;
   let sebab = "";
   if (s) {
     const iMax = s.amplitudoMmS.indexOf(Math.max(...s.amplitudoMmS));
     const f = iMax * s.resolusiHz, dekat = (x) => Math.abs(f - x) <= s.resolusiHz * 1.5;
-    if ([1, 2, 3].some((k) => dekat(k * s.bpfoHz))) sebab = ` Puncak spektrum tertinggi berada pada frekuensi cacat lintasan luar bearing (BPFO ${fmt(s.bpfoHz, 1)} Hz).`;
-    else if (dekat(s.frekuensiPutarHz)) sebab = ` Puncak spektrum tertinggi berada pada 1× putaran (${fmt(s.frekuensiPutarHz, 1)} Hz), ciri ketidakseimbangan.`;
+    if ([1, 2, 3].some((k) => dekat(k * s.bpfoHz))) sebab = ` Puncak tertinggi spektrum ada di frekuensi cacat lintasan luar bearing (BPFO ${fmt(s.bpfoHz, 1)}&nbsp;Hz).`;
+    else if (dekat(s.frekuensiPutarHz)) sebab = ` Puncak tertinggi spektrum ada di 1× putaran (${fmt(s.frekuensiPutarHz, 1)}&nbsp;Hz), tanda rotor tidak seimbang.`;
   }
-  if (m.status === "NORMAL") return `<b>Getaran stabil di zona ${m.zona}; tidak perlu tindakan.</b> Perubahan 30 hari ${fmt(m.perubahan30HariMmS ?? 0, 2)} mm/s.`;
-  return `<b>Getaran naik dari ${fmt(awal, 1)} menjadi ${fmt(m.rmsTerkiniMmS, 1)} mm/s dalam 30 hari.</b>${sebab} Jadwalkan pemeriksaan sebelum getaran masuk zona D (${fmt(m.batasZona.cd, 1)} mm/s).`;
+  if (m.status === "NORMAL") {
+    const u = m.perubahan30HariMmS ?? 0;
+    const arah = Math.abs(u) < 0.05 ? "tidak berubah" : `${u > 0 ? "naik" : "turun"} ${fmt(Math.abs(u), 1)}&nbsp;mm/s`;
+    return `<b>Getaran stabil di zona ${m.zona}, belum perlu tindakan.</b> Dalam 30 hari getaran ${arah}.`;
+  }
+  return `<b>Getaran naik dari ${fmt(awal, 1)} menjadi ${fmt(m.rmsTerkiniMmS, 1)}&nbsp;mm/s dalam 30 hari.</b>${sebab} Jadwalkan pemeriksaan sebelum getaran masuk zona D (${fmt(m.batasZona.cd, 1)}&nbsp;mm/s).`;
 }
 
 function renderDetail(m) {
   detail = m;
-  $("jejak").textContent = `${m.area} / ${m.id}`;
+  $("jejak").innerHTML = `${m.area} / <span class="kode">${m.id}</span>`;
   $("nama").textContent = m.nama;
   const zAktif = m.status === "OFFLINE" ? null : m.zona;
   $("stempel").outerHTML = `<span class="stempel besar z-${zAktif || "x"}" id="stempel" aria-hidden="true"><i>zona</i><b>${zAktif || "-"}</b><i>ISO 10816-1</i></span>`;
-  $("kop-mesin").textContent = `${m.id}, ${fmt(m.rpm, 0)} rpm`;
+  $("kop-mesin").innerHTML = `<span class="kode">${m.id}</span>, ${fmt(m.rpm, 0)}&nbsp;rpm`;
   $("temuan").innerHTML = temuan(m);
   const [k, label] = STATUS_ST[m.status];
-  $("k-rms").innerHTML = m.rmsTerkiniMmS == null ? "-" : `${fmt(m.rmsTerkiniMmS, 1)}<small>mm/s</small>`;
-  $("k-rms-d").innerHTML = `${st(k, label)} <span>diukur ${hhmm(new Date(m.diukurPada))}</span>`;
+  $("k-rms").innerHTML = m.rmsTerkiniMmS == null ? "-" : `${fmt(m.rmsTerkiniMmS, 1)}${SAT("mm/s")}`;
+  $("k-rms-d").innerHTML = `${st(k, label)} <span>diukur pukul ${hhmm(new Date(m.diukurPada))}</span>`;
   $("k-zona").innerHTML = !m.zona ? "-" : zAktif ? `${stempel(m.zona)}<span class="zt">kelas ${m.kelasIso}</span>` : `<span class="zt">terakhir zona ${m.zona}, kelas ${m.kelasIso}</span>`;
-  $("k-zona-d").textContent = `B/C ${fmt(m.batasZona.bc, 1)} · C/D ${fmt(m.batasZona.cd, 1)} mm/s`;
+  $("k-zona").classList.add("zona");
+  $("k-zona-d").innerHTML = `C mulai ${fmt(m.batasZona.bc, 1)}, D mulai ${fmt(m.batasZona.cd, 1)}&nbsp;mm/s`;
   const u = m.perubahan30HariMmS;
-  $("k-ubah").innerHTML = u == null ? "-" : `${u > 0 ? "+" : ""}${fmt(u, 1)}<small>mm/s</small>`;
+  $("k-ubah").innerHTML = u == null ? "-" : `${u > 0 ? "+" : u < 0 ? "\u2212" : ""}${fmt(Math.abs(u), 1)}${SAT("mm/s")}`;
   $("k-ubah").classList.toggle("naik", u != null && u >= 0.5);
-  $("k-suhu").innerHTML = m.suhuBantalanC == null ? "-" : `${fmt(m.suhuBantalanC, 0)}<small>°C</small>`;
+  $("k-suhu").innerHTML = m.suhuBantalanC == null ? "-" : `${fmt(m.suhuBantalanC, 0)}${SAT("°C")}`;
   $("k-suhu-d").textContent = `bearing ${m.bantalan}`;
-  $("k-jam").textContent = fmt(m.jamOperasi, 0);
+  $("k-jam").innerHTML = `${fmt(m.jamOperasi, 0)}${SAT("jam")}`;
 
   spektrum($("spektrum"), m.spektrum);
   const t = m.tren;
   if (t.length > 1) {
     lineChart($("tren"), {
-      x: t.map((p) => new Date(p.tanggal + "T12:00:00+07:00")), h: 190, unit: "mm/s", dec: 1, min: 0,
+      x: t.map((p) => new Date(p.tanggal + "T12:00:00+07:00")), h: 220, unit: "mm/s", dec: 1, min: 0,
       max: Math.ceil(Math.max(m.batasZona.cd * 1.1, ...t.map((p) => p.rmsMmS))),
       fmtX: (d) => `${d.getDate()}/${d.getMonth() + 1}`,
       series: [{ name: "RMS", color: "var(--s1)", data: t.map((p) => p.rmsMmS) }],
@@ -129,21 +135,21 @@ function renderDetail(m) {
     });
   } else $("tren").innerHTML = `<p class="kosong">Belum ada riwayat pengukuran untuk mesin ini.</p>`;
 
-  $("pk-d").textContent = m.perintahKerja.length ? `${m.perintahKerja.length} tercatat` : "belum ada";
+  $("pk-d").textContent = m.perintahKerja.length ? `${m.perintahKerja.length} tercatat` : "";
   $("pk-list").innerHTML = m.perintahKerja.length ? m.perintahKerja.map((p) => `<li>
       <span class="pk-id">${p.id}</span><span class="pk-j">${p.judul}</span>
-      <span class="pk-m">${p.prioritas.toLowerCase()} · ${p.status.toLowerCase()} · ${tgl(p.dibuatPada)}</span></li>`).join("")
-    : `<li class="kosong">Belum ada perintah kerja untuk mesin ini.</li>`;
-  $("identitas").innerHTML = `<dt>Putaran</dt><dd>${fmt(m.rpm, 0)} rpm (${fmt(m.rpm / 60, 1)} Hz)</dd>
-    <dt>Daya motor</dt><dd>${fmt(m.dayaKw, 1)} kW, kelas ISO ${m.kelasIso}</dd><dt>Bearing</dt><dd>${m.bantalan}</dd>`;
+      <span class="pk-m">Prioritas ${p.prioritas.toLowerCase()}, ${p.status.toLowerCase()}, dibuat ${tgl(p.dibuatPada)}</span></li>`).join("")
+    : `<li class="kosong">Belum ada perintah kerja untuk mesin ini. Buat dari tombol di atas bila temuan perlu ditindaklanjuti.</li>`;
+  $("identitas").innerHTML = `<dt>Putaran</dt><dd>${fmt(m.rpm, 0)}&nbsp;rpm (${fmt(m.rpm / 60, 1)}&nbsp;Hz)</dd>
+    <dt>Daya motor</dt><dd>${fmt(m.dayaKw, 1, false)}&nbsp;kW, kelas ISO ${m.kelasIso}</dd><dt>Bearing</dt><dd>${m.bantalan}</dd>`;
   $("pk-judul").value = `Periksa bearing ${m.nama}`;
   $("isi").setAttribute("aria-busy", "false");
 }
 
 // Spektrum: batang tipis netral, garis cacat diberi aksen + penanda 1×, 2×, BPFO dan harmoniknya
 function spektrum(el, s) {
-  if (!s) { el.innerHTML = `<p class="kosong">Tidak ada spektrum: sensor tidak mengirim data.</p>`; $("spek-legend").innerHTML = ""; return; }
-  $("spek-d").textContent = `mm/s per garis ${fmt(s.resolusiHz, 0)} Hz, diukur ${hhmm(new Date(s.diukurPada))}`;
+  if (!s) { el.innerHTML = `<p class="kosong">Belum ada spektrum karena sensor terputus. Spektrum muncul lagi setelah pengukuran berikutnya.</p>`; $("spek-legend").innerHTML = ""; return; }
+  $("spek-d").innerHTML = `mm/s RMS, resolusi ${fmt(s.resolusiHz, 0)}&nbsp;Hz, diukur pukul ${hhmm(new Date(s.diukurPada))}`;
   const W = el.clientWidth || 900, H = W < 600 ? 220 : 256, L = 48, R = 16, T = 34, B = 26;
   const a = s.amplitudoMmS, n = a.length, fMax = n * s.resolusiHz;
   const hi = Math.ceil(Math.max(...a) * 1.15 * 2) / 2;
@@ -167,13 +173,13 @@ function spektrum(el, s) {
   });
   el.classList.add("chart");
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${el.dataset.label}">${g}</svg><div class="tip"></div>`;
-  $("spek-legend").innerHTML = `<span><i class="sw akt"></i>garis cacat bearing (BPFO dan harmonik)</span><span><i class="sw"></i>garis lain</span>`;
+  $("spek-legend").innerHTML = `<span><i class="sw akt"></i>Frekuensi cacat bearing (BPFO dan harmoniknya)</span><span><i class="sw"></i>Frekuensi lain</span>`;
   const svg = el.querySelector("svg"), tip = el.querySelector(".tip");
   svg.addEventListener("mousemove", (e) => {
     const r = svg.getBoundingClientRect();
     const i = Math.round(((((e.clientX - r.left) / r.width) * W - L) / (W - L - R)) * fMax / s.resolusiHz);
     if (i < 0 || i >= n) return (tip.style.opacity = 0);
-    tip.innerHTML = `${fmt(i * s.resolusiHz, 0)} Hz<br>${fmt(a[i], 2)} mm/s`;
+    tip.innerHTML = `${fmt(i * s.resolusiHz, 0)}&nbsp;Hz<br>${fmt(a[i], 2)}&nbsp;mm/s`;
     tip.style.left = (sx(i * s.resolusiHz) / W) * r.width + "px";
     tip.style.top = (sy(a[i]) / H) * r.height + "px";
     tip.style.opacity = 1;
@@ -203,10 +209,10 @@ async function muat() {
     renderDaftar(await gql(Q_DAFTAR));
     renderDetail((await gql(Q_DETAIL, { id: pilihan })).mesin);
     $("banner").hidden = true;
-    koneksi(`Terhubung · diperbarui ${hhmm(new Date())}`, "ok");
+    koneksi(`Terhubung, diperbarui pukul ${hhmm(new Date())}`, "ok");
   } catch (e) {
     const sebab = e instanceof TypeError ? "Server API tidak bisa dihubungi." : e.message;
-    if (detail) return koneksi(`Gagal memperbarui pukul ${hhmm(new Date())}; menampilkan data terakhir`, "putus");
+    if (detail) return koneksi(`Gagal memperbarui pukul ${hhmm(new Date())}. Layar menampilkan data terakhir.`, "putus");
     keModeContoh(sebab);
   }
 }
@@ -215,13 +221,13 @@ addEventListener("hashchange", () => {
   pilihan = decodeURIComponent(location.hash.slice(1));
   document.querySelectorAll("#daftar a").forEach((a) => a.toggleAttribute("aria-current", a.dataset.id === pilihan));
   if (modeContoh) return renderDetail(contohDetail(pilihan));
-  gql(Q_DETAIL, { id: pilihan }).then((d) => renderDetail(d.mesin)).catch((e) => koneksi(`Gagal memuat ${pilihan}: ${e.message}`, "putus"));
+  gql(Q_DETAIL, { id: pilihan }).then((d) => renderDetail(d.mesin)).catch((e) => koneksi(`Data ${pilihan} gagal dimuat. ${e.message}`, "putus"));
 });
 
 $("tombol-pk").addEventListener("click", () => {
   const f = $("form-pk");
   f.hidden = !f.hidden;
-  $("pk-pesan").textContent = modeContoh ? "Mode data contoh: perintah kerja tidak bisa disimpan tanpa API." : "";
+  $("pk-pesan").textContent = modeContoh ? "Perintah kerja tidak bisa disimpan di mode data contoh. Jalankan API untuk menyimpan." : "";
   f.querySelector("[type=submit]").disabled = modeContoh;
   if (!f.hidden) $("pk-judul").focus();
 });
@@ -230,14 +236,14 @@ $("form-pk").addEventListener("submit", async (e) => {
   e.preventDefault();
   if (modeContoh) return;
   const pesan = $("pk-pesan");
-  pesan.textContent = "Menyimpan perintah kerja";
+  pesan.textContent = "Menyimpan perintah kerja…";
   try {
     const d = await gql(M_PK, { input: { mesinId: pilihan, judul: $("pk-judul").value, prioritas: $("pk-prioritas").value } });
-    pesan.textContent = `Tersimpan sebagai ${d.buatPerintahKerja.id}.`;
+    pesan.textContent = `Perintah kerja tersimpan sebagai ${d.buatPerintahKerja.id}.`;
     $("form-pk").hidden = true;
     renderDetail((await gql(Q_DETAIL, { id: pilihan })).mesin);
   } catch (err) {
-    pesan.textContent = `Gagal menyimpan: ${err.message} Periksa isian lalu coba lagi.`;
+    pesan.textContent = `Perintah kerja belum tersimpan. ${err.message} Periksa isian, lalu simpan lagi.`;
   }
 });
 

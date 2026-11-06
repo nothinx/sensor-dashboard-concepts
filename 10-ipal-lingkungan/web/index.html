@@ -6,7 +6,8 @@
 <title>IPAL & Emisi Lingkungan</title>
 <meta name="description" content="Mockup proyek 10: pemantauan air limbah IPAL terhadap baku mutu dan status pelaporan.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Geist+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Public+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../../shared/charts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -14,13 +15,13 @@
 <header class="top">
   <span class="logo-slot">[LOGO KLIEN]</span>
   <span class="product">IPAL & Emisi Lingkungan</span>
-  <nav class="tabs" aria-label="Bagian">
+  <nav class="tabs" aria-label="Bagian halaman">
     <a href="#ringkas" aria-current="page">Air limbah</a>
     <a href="#kejadian">Kejadian</a>
     <a href="#pelaporan">Pelaporan</a>
   </nav>
   <div class="top-meta">
-    <span class="sample" data-pratinjau hidden>Pratinjau, data contoh</span>
+    <span class="sample" data-pratinjau hidden>Pratinjau dengan data contoh</span>
     <span id="sumber" class="sumber" role="status">Memuat data…</span>
   </div>
 </header>
@@ -28,7 +29,7 @@
 
 <main id="ringkas">
   <section class="head">
-    <p class="izin">Pemantauan air limbah · izin pembuangan [REAL DATA: nomor izin dan badan air penerima]</p>
+    <p class="izin">Izin pembuangan air limbah [REAL DATA: nomor izin dan badan air penerima]</p>
     <h1>Outlet IPAL hari ini</h1>
     <p class="finding" id="temuan">Memuat kondisi outlet…</p>
   </section>
@@ -40,14 +41,14 @@
     <section class="panel utama" aria-labelledby="judulGrafik">
       <div class="panel-h">
         <div class="judul">
-          <h2 id="judulGrafik">Outlet S4 terhadap baku mutu, 24 jam</h2>
-          <p class="sub" id="subGrafik">rata-rata 10 menit</p>
+          <h2 id="judulGrafik">Outlet S4 dalam 24 jam terakhir</h2>
+          <p class="sub" id="subGrafik">Rata-rata per 10 menit</p>
         </div>
         <div class="kini" id="kini"></div>
-        <div class="seg" role="group" aria-label="Pilih parameter" id="pilihParam"></div>
       </div>
-      <div id="grafik" data-label="Parameter outlet 24 jam terhadap baku mutu"></div>
-      <p class="bm-note">Garis putus-putus merah adalah baku mutu contoh; area berarsir berada di atas batas. [REAL DATA: baku mutu sesuai izin pembuangan air limbah]</p>
+      <div class="alat"><div class="seg" role="group" aria-label="Pilih parameter" id="pilihParam"></div></div>
+      <div id="grafik" data-label="Parameter outlet 24 jam terakhir terhadap baku mutu"></div>
+      <p class="bm-note">Garis merah putus-putus menandai baku mutu contoh. Area berarsir berada di luar batas. [REAL DATA: baku mutu sesuai izin pembuangan air limbah]</p>
     </section>
 
     <aside class="kolom">
@@ -58,21 +59,21 @@
       <section class="panel" id="pelaporan" aria-labelledby="jp">
         <div class="panel-h"><h2 id="jp">Pengiriman ke sistem pelaporan</h2></div>
         <div class="kirim" id="kirim"></div>
-        <p class="bm-note">Penerima di mockup adalah tiruan lokal. [REAL DATA: spesifikasi sistem pelaporan lingkungan]</p>
+        <p class="bm-note">Di mockup ini penerimanya tiruan lokal. [REAL DATA: spesifikasi sistem pelaporan lingkungan]</p>
       </section>
     </aside>
 
     <section class="panel lebar" aria-labelledby="jm">
-      <div class="panel-h"><h2 id="jm">Nilai terakhir per titik sampling</h2><p class="sub">status baku mutu hanya berlaku di outlet S4</p></div>
+      <div class="panel-h"><div class="judul"><h2 id="jm">Nilai terakhir per titik sampling</h2><p class="sub">Status baku mutu hanya berlaku di outlet S4.</p></div></div>
       <div class="tbl-wrap"><table class="tbl" id="matriks"></table></div>
     </section>
-    <section class="panel lab" aria-labelledby="jl">
-      <div class="panel-h"><h2 id="jl">Uji laboratorium outlet</h2><p class="sub">pembanding sensor online</p></div>
+    <section class="panel lebar" aria-labelledby="jl">
+      <div class="panel-h"><div class="judul"><h2 id="jl">Uji laboratorium outlet</h2><p class="sub">Pembanding untuk sensor di outlet S4.</p></div></div>
       <div class="tbl-wrap"><table class="tbl" id="lab"></table></div>
     </section>
   </div>
 </main>
-<footer class="pg">Mockup proyek 10 · baku mutu dan format pelaporan menunggu dokumen izin klien</footer>
+<footer class="pg">Mockup proyek 10. Baku mutu dan format pelaporan menunggu dokumen izin dari klien.</footer>
 <script src="../../shared/charts.js"></script>
 <script src="app.js"></script>
 </body>

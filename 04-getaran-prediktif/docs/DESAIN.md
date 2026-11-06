@@ -18,12 +18,14 @@ buktinya" dengan menyebut frekuensi puncak spektrum.
 
 ## Tata letak
 
-- Shell aplikasi: sidebar 352 px (latar paling gelap) + konten fluid selebar layar.
-- Sidebar adalah navigasi sekaligus daftar prioritas: stempel zona, nama dan area, nilai RMS mono.
+- Shell aplikasi: sidebar 368 px (latar paling gelap) + konten fluid selebar layar.
+- Sidebar adalah navigasi sekaligus daftar prioritas: stempel zona, nama dan area, nilai RMS (sans tabular,
+  kepala kolom "RMS, mm/s"); mesin terputus menulis "terputus" kecil, bukan nilai.
   Baris aktif memakai satu langkah permukaan dan sorot garis atas 1 px, tanpa pil berwarna.
-- Kepala konten: stempel besar 120 px ("zona", huruf 52 px, "ISO 10816-1"), nama mesin, temuan, satu aksi primer "Buat perintah kerja"
+- Kepala konten: stempel besar 120 px ("zona", huruf 49 px, "ISO 10816-1"), nama mesin, temuan, satu aksi primer "Buat perintah kerja"
   (tombol putih pudar dengan teks gelap, sesuai tema gelap).
-- Strip KPI dalam satu kontainer; getaran terkini paling besar (48 px), saudara 30 px.
+- Strip KPI dalam satu kontainer; getaran terkini paling besar (39 px), saudara 25 px; baris nilai setinggi 48 px
+  supaya label, nilai, dan keterangan sejajar di kelima kolom.
 - Spektrum penuh lebar sebagai grafik terbesar. Di bawahnya 7 : 5: tren 30 hari (garis, beda jenis
   dari spektrum) dan panel perintah kerja + identitas mesin.
 
@@ -44,16 +46,20 @@ buktinya" dengan menyebut frekuensi puncak spektrum.
 | `--kisi` | `rgba(237,237,237,.025)` | kisi 12 px di latar spektrum |
 | `--ganda` | bayangan dalam 1 + 4 + 5 px | bingkai bergaris ganda panel dan KPI |
 | `--warn` / `--crit` | `#e2b340` / `#e5484d` | stempel zona C / D, garis batas zona di tren |
+| `--fs-1` ... `--fs-7` | 13 / 16 / 20 / 25 / 31 / 39 / 49 px | rasio 1,25 dari 16: label, isi, judul panel, KPI saudara, h1, KPI jawaban, huruf stempel |
+| `--sp-1` ... `--sp-7` | 4 / 8 / 12 / 16 / 24 / 32 / 48 px | semua jarak |
+| `--radius` | 2 px | satu sudut untuk tombol, chip, formulir, tooltip |
+| `--chart-font` / `--chart-fs` / `--tip-fs` / `--st-fs` | sans / 13 px | sumbu, tooltip, chip status grafik |
 
 Latar tetap abu-abu graphite netral, bukan biru; nuansa "gambar teknik" dibawa oleh stempel, huruf mono,
-dan garis putus-putus penanda frekuensi.
+lajur gambar bermono, dan garis putus-putus penanda frekuensi.
 
 ## Huruf
 
 | Peran | Huruf | Alasan |
 |---|---|---|
-| Antarmuka, angka KPI | Space Grotesk 400/500/600 | geometris teknis, angka tabular rapi |
-| Kode mesin, frekuensi, sumbu, nilai RMS di sidebar | Space Mono 400/700 | terasa seperti lembar ukur dan label gambar teknik |
+| Antarmuka, semua angka (KPI, sumbu, RMS, frekuensi) | Red Hat Text 400/500/600 | x-height lega, dirancang untuk ukuran teks kecil, nol polos, `tabular-nums` rapi |
+| Kode mesin (K-02), ID perintah kerja, huruf stempel, lajur 1-8 dan A-D | Atkinson Hyperlegible Mono 500/600 | nol bergaris dan Il1 berbeda jelas: kode tak salah baca; terasa seperti huruf gambar teknik |
 
 ## State
 
@@ -63,14 +69,14 @@ dan garis putus-putus penanda frekuensi.
 | Spektrum | - | "Tidak ada spektrum: sensor tidak mengirim data." | grafik + legenda |
 | Tren | - | "Belum ada riwayat pengukuran untuk mesin ini." | grafik garis dengan batas zona C dan D |
 | Perintah kerja | "Menyimpan perintah kerja" | "Belum ada perintah kerja"; galat validasi ditampilkan dengan langkah perbaikan | daftar |
-| Mesin offline | - | stempel putus-putus "-", kalimat temuan menyebut jam data terakhir dan langkah memeriksa kabel atau gateway | - |
+| Mesin terputus | - | stempel putus-putus "-", kalimat temuan menyebut jam data terakhir dan langkah memeriksa kabel atau gateway | - |
 | Mode data contoh | - | tombol simpan dinonaktifkan dan diberi alasan | - |
 
 ## Pemeriksaan
 
-- `sloplint web/index.html`: 0 FAIL (1 WARN: panel gelap mewarisi warna teks dari `body`, disengaja).
+- `sloplint web`: 0 FAIL, 0 WARN (1 REFLEX di `shared/charts.css`, padding `.tip`, di luar batas proyek).
 - Kontras: meta `--ink-3` 4,82:1 sampai 5,88:1; label aksen 10,1:1; chip peringatan 9,9:1; teks tombol primer 15,7:1.
-- Dirender di 1920×1080: mesin dengan zona C, mesin offline, dan mode data contoh.
+- Dirender di 1920×1080, 1440×900, 390×844: mesin zona C, mesin terputus, mode pratinjau.
 
 ## Keputusan putaran 2
 
@@ -83,3 +89,16 @@ dan garis putus-putus penanda frekuensi.
 | Sidebar "Urutan periksa" bernomor 01 sampai 07, nama 15 px, RMS mono 16 px tebal, stempel 40 px | daftar mesin sebelumnya terlalu kecil |
 | Skala tipe: isi 15 px, label 13 sampai 14 px, h1 40 px, `--chart-fs` 13 px (11 px di HP) | patokan 1920×1080 |
 | Di bawah 760 px: sidebar di atas, KPI dua kolom, label spektrum berselang tinggi, sumbu Hz per 100 | tanpa geser samping |
+
+## Keputusan putaran 3
+
+| Keputusan | Alasan |
+|---|---|
+| Space Grotesk + Space Mono diganti Red Hat Text + Atkinson Hyperlegible Mono | Space Grotesk sempit dan berangka unik di 13 px; Space Mono dipakai di mana-mana (sumbu, kop, identitas, RMS). Atkinson Next sempat diuji, ditolak karena nol bergaris muncul di kalimat ("30 hari") |
+| Mono hanya untuk kode mesin, ID perintah kerja, stempel, dan lajur gambar | brief putaran 3: mono bukan kostum; angka memakai sans tabular |
+| Satu skala tipe `--fs-1` sampai `--fs-7` di `:root`; tidak ada ukuran px lepas | ukuran sebelumnya 11, 12, 13, 14, 15, 16, 18, 30, 36, 40, 48, 52 px tersebar |
+| KPI jawaban 48 → 39 px, saudara 30 → 25 px, satuan 16 px abu dengan spasi tipis | `ui.md` §9: tak ada angka ≥ 48 px; satuan diredam |
+| Huruf kecil tanpa tracking negatif; tracking -0,01em hanya h1 31 px, -0,02em KPI 39 px | kata menempel di teks kecil |
+| Jarak hanya dari `--sp-*`; panel dan KPI berpadding 24 px, jarak antarblok 24 px | ritme sebelumnya 20/24 bercampur |
+| "Offline" → "terputus" di daftar, chip, ringkasan, dan temuan | satu istilah Indonesia per konsep |
+| Kop lembar ukur jadi satu kolom di HP; spektrum kosong diberi tinggi tetap | isi kop melayang dan lajur A-D tergencet |

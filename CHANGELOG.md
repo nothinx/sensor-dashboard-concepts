@@ -2,6 +2,23 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/). Semua tanggal dalam WIB.
 
+## 6 November 2026
+
+### Diubah (putaran 3: keterbacaan, bahasa, kerapian)
+- Ke-15 situs dikerjakan ulang mengikuti `shared/BRIEF-PUTARAN-3.md`: font diganti bila kurang nyaman dibaca, satu
+  skala tipe per situs (token `--fs-*` di `:root`), font mono hanya untuk kode/ID, angka sans tabular dengan
+  satuan diredam, jarak `--sp-*` kelipatan 4, radius dan garis diseragamkan. Keputusan per situs dicatat di
+  `NN-*/docs/DESAIN.md`.
+- Bahasa seluruh teks UI dirapikan (EYD V, satu istilah per konsep): mis. "hisap" jadi "isap", "galat" jadi
+  "kode gangguan", "Offline" jadi "Terputus", "mnt/dtk" ditulis lengkap, persen rapat ("100%").
+- `shared/charts.js`: label sumbu Y memakai langkah bulat, label waktu jatuh di jam bulat, tooltip persen rapat,
+  chip "Offline" jadi "Terputus". `shared/charts.css`: font, ukuran grafik, tooltip, dan chip bisa diatur per situs.
+- Gambar kartu galeri `pratinjau/` diperbarui.
+
+### Diperbaiki
+- Data contoh 03 kini saling cocok (puncak, grafik, total per area). 11: tab tugas hilang di bingkai HP dan
+  temuan "terlama" yang salah tugas. 14: kelas `.bawah` dobel yang merusak Lini 2.
+
 ## 5 November 2026
 
 ### Ditambahkan

@@ -5,7 +5,7 @@
 <title>Laporan Kepatuhan Mutu</title>
 <meta name="description" content="Mockup proyek 08: lembar kepatuhan lingkungan produksi, penerbitan laporan, dan jejak audit.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500&family=Public+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../../shared/charts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -14,7 +14,7 @@
   <span class="logo-slot">[LOGO KLIEN]</span>
   <span class="prod">Laporan Kepatuhan Mutu</span>
   <span class="sample" data-pratinjau hidden>Data contoh</span>
-  <span class="conn" id="conn">Menghubungkan ke API…</span>
+  <span class="conn" id="conn">Menyambungkan ke API…</span>
 </header>
 
 <div class="banner" id="banner" role="status" hidden></div>
@@ -22,7 +22,7 @@
 <div class="layout">
   <article class="sheet" aria-labelledby="judul">
     <table class="doc-meta">
-      <tr><th scope="row">Nomor dokumen</th><td class="mono" id="m-nomor">Draf; nomor terbit saat lembar ini diterbitkan</td><th scope="row">Revisi</th><td class="mono">0</td></tr>
+      <tr><th scope="row">Nomor dokumen</th><td class="draf" id="m-nomor">Draf, nomor diberikan saat terbit</td><th scope="row">Revisi</th><td>0</td></tr>
       <tr><th scope="row">Periode</th><td id="m-periode">…</td><th scope="row">Ambang</th><td id="m-ambang">…</td></tr>
     </table>
 
@@ -40,15 +40,15 @@
         <tbody id="cmp-b"><tr><td class="empty">Memuat…</td></tr></tbody>
       </table>
     </div>
-    <p class="note" id="cara-hitung">Angka adalah persen waktu ketika semua sensor area berada dalam batas, dibagi waktu terpantau.
-      Sel berwarna dengan garis kiri berada di bawah ambang. Kolom hari ini masih berjalan.</p>
+    <p class="note" id="cara-hitung">Tiap angka adalah persentase waktu terpantau ketika semua sensor di area itu berada dalam batas.
+      Sel berlatar warna dengan garis kiri berada di bawah ambang. Kolom hari ini masih berjalan.</p>
 
     <div class="sign">
       <div class="stamp" aria-label="Cap pemeriksaan">
         <span class="stamp-t">Diperiksa oleh</span>
         <span class="stamp-r">Manajer Mutu</span>
         <span class="stamp-n">[REAL DATA: nama dan paraf]</span>
-        <span class="stamp-d mono" id="stamp-no">No. dokumen: belum terbit</span>
+        <span class="stamp-d" id="stamp-no">Nomor dokumen belum terbit</span>
       </div>
       <dl class="disusun">
         <dt>Disusun oleh</dt><dd>Sistem pemantauan sensor</dd>
@@ -59,7 +59,7 @@
   </article>
 
   <aside class="rail" aria-label="Map arsip laporan">
-    <p class="folder-tab"><span>Map arsip</span> <span class="mono">QA/LK 2026</span></p>
+    <p class="folder-tab"><span>Map arsip</span> <span class="id">QA/LK 2026</span></p>
     <section class="card" aria-labelledby="h-form">
       <h2 id="h-form">Terbitkan laporan</h2>
       <form id="form" class="form" novalidate>
@@ -70,8 +70,8 @@
           <select name="area" id="f-area"><option value="">Semua area</option></select>
         </label>
         <div class="row2">
-          <label>Dari<input type="date" name="dari" required></label>
-          <label>Sampai<input type="date" name="sampai" required></label>
+          <label>Tanggal mulai<input type="date" name="dari" required></label>
+          <label>Tanggal akhir<input type="date" name="sampai" required></label>
         </div>
         <fieldset>
           <legend>Format</legend>
@@ -94,12 +94,12 @@
 
     <section class="card" aria-labelledby="h-audit">
       <h2 id="h-audit">Jejak audit</h2>
-      <p class="sub">Catatan tidak bisa diubah atau dihapus.</p>
+      <p class="sub">Catatan di sini tidak bisa diubah atau dihapus.</p>
       <ol class="audit" id="l-audit"><li class="empty">Memuat…</li></ol>
     </section>
   </aside>
 </div>
-<footer class="pg">Mockup proyek 08 · API: <span class="mono">/api/v1</span>, spesifikasi di <span class="mono">/docs</span></footer>
+<footer class="pg">Purwarupa proyek 08. API di <code>/api/v1</code>, spesifikasi di <code>/docs</code>.</footer>
 <script src="../../shared/charts.js"></script>
 <script src="app.js"></script>
 </body>

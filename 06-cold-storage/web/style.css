@@ -1,8 +1,8 @@
 /* Hallmark · design · dasbor gudang, ramah tablet di dinding gudang dan desktop · dial E2/R1/M1
    arah: sigap, sederhana; dunia ruang pendingin dan label rak
    momen: pita suhu per ruang seperti termometer · tanda tangan: hitung mundur pintu terbuka
-   font: Figtree (antarmuka, ramah dan jelas dari jarak) + Red Hat Mono (angka tabular)
-   permukaan: label pintu bertepi tebal 2 px, sudut siku; tirai plastik saat pintu terbuka
+   font: Public Sans 400/500/600 saja (x-height lega, angka tabular rapi, warisan papan informasi publik)
+   permukaan: label pintu bertepi 2 px, sudut siku; tirai plastik saat pintu terbuka
    palet: ramp "ink" netral sejuk, satu aksen biru es tua, status tetap; target sentuh ≥ 48 px */
 
 :root {
@@ -10,7 +10,7 @@
   --bg: #f5f7fa;
   --surface: #fcfdfe;
   --raised: #eceff4;
-  --line: rgba(17, 24, 39, 0.09);
+  --line: rgba(17, 24, 39, 0.1);
   --line-strong: rgba(17, 24, 39, 0.2);
   --ink: #111827;
   --ink-2: #4b5565;
@@ -28,125 +28,154 @@
   --hover: #f3f6fa;
   --tirai: rgba(10, 90, 143, 0.16);
   --tirai-2: rgba(10, 90, 143, 0.32);
-  --chart-fs: 14px;
   --focus: #0a5a8f;
-  --font-sans: "Figtree", system-ui, sans-serif;
-  --font-mono: "Red Hat Mono", ui-monospace, monospace;
+  --font-sans: "Public Sans", system-ui, sans-serif;
+  --font-mono: var(--font-sans);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* satu skala tipe, tujuh langkah; 80 adalah angka suhu yang harus terbaca dari 2 m */
+  --t-1: 13px; --t-2: 15px; --t-3: 17px; --t-4: 20px; --t-5: 28px; --t-6: 40px; --t-7: 80px;
+  /* spasi kelipatan 4 */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 40px;
+  --garis: 2px;            /* tepi label: kartu, panel, termometer, batang RH */
+  --pad-besar: var(--sp-5);
+  --pad-kecil: var(--sp-4);
+
+  --chart-font: var(--font-sans);
+  --chart-fs: var(--t-1);
+  --tip-fs: var(--t-1);
+  --st-fs: var(--t-1);
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; overflow-x: clip; }
-body { background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--font-sans); min-height: 100dvh; }
-h1, h2 { margin: 0; font-weight: 600; text-wrap: balance; }
-h1 { font-size: 40px; line-height: 1.1; letter-spacing: -0.01em; }
-h2 { font-size: 16px; }
-p { margin: 0; }
-.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+body { background: var(--bg); color: var(--ink); font: 400 var(--t-2)/1.5 var(--font-sans); min-height: 100dvh;
+  font-variant-numeric: tabular-nums lining-nums; -webkit-font-smoothing: antialiased; }
+h1, h2 { margin: 0; font-weight: 600; line-height: 1.2; text-wrap: balance; }
+h1 { font-size: var(--t-5); letter-spacing: -0.01em; }
+h2 { font-size: var(--t-4); }
+p { margin: 0; text-wrap: pretty; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.st { border-radius: 0; }
 
-.bar { display: flex; align-items: center; gap: 16px; height: 64px; padding: 0 32px; background: var(--surface); border-bottom: 1px solid var(--line); }
-.logo-slot { display: grid; place-items: center; height: 36px; padding: 0 12px; border: 1px dashed var(--line-strong); font: 500 12px var(--font-mono); color: var(--ink-3); }
-.product { font-weight: 600; font-size: 17px; }
-.bar-meta { margin-left: auto; display: flex; align-items: center; gap: 16px; }
-.sample { padding: 4px 8px; background: var(--warn-bg); color: var(--warn-ink); font-size: 13px; font-weight: 500; }
-.koneksi { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
-.koneksi::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--line-strong); }
+/* ---------- bilah atas */
+.bar { display: flex; align-items: center; gap: var(--sp-4); height: 64px; padding: 0 var(--sp-6); background: var(--surface); border-bottom: 1px solid var(--line); }
+.logo-slot { display: grid; place-items: center; height: 36px; padding: 0 var(--sp-3); border: 1px dashed var(--line-strong); font-size: var(--t-1); font-weight: 500; color: var(--ink-3); }
+.product { font-size: var(--t-3); font-weight: 600; }
+.bar-meta { margin-left: auto; display: flex; align-items: center; gap: var(--sp-4); }
+.sample { padding: var(--sp-1) var(--sp-2); background: var(--warn-bg); color: var(--warn-ink); font-size: var(--t-1); font-weight: 500; }
+.koneksi { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--t-1); color: var(--ink-2); }
+.koneksi::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
 .koneksi.hidup::before { background: var(--good); }
 .koneksi.putus::before { background: var(--warn); }
-.pita { padding: 12px 32px; background: var(--warn-bg); color: var(--warn-ink); font-size: 14px; border-bottom: 1px solid var(--line); }
+.pita { padding: var(--sp-3) var(--sp-6); background: var(--warn-bg); color: var(--warn-ink); font-size: var(--t-2); border-bottom: 1px solid var(--line); }
 
-main { padding: 24px 32px 32px; display: grid; gap: 32px; }
-.temuan { margin-top: 8px; font-size: 20px; color: var(--ink-2); max-width: 90ch; }
+/* ---------- halaman */
+main { padding: var(--sp-6) var(--sp-6) var(--sp-7); display: grid; gap: var(--sp-7); }
+.head { display: grid; gap: var(--sp-2); }
+.temuan { font-size: var(--t-4); line-height: 1.45; color: var(--ink-2); max-width: 65ch; }
 .temuan b { color: var(--ink); font-weight: 600; }
-.sec { font-size: 20px; margin-bottom: 16px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.sub { color: var(--ink-3); font-size: 14px; font-weight: 400; }
+.sec { display: flex; align-items: baseline; gap: var(--sp-2) var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+.sub { color: var(--ink-3); font-size: var(--t-2); font-weight: 400; }
 
-/* kartu ruang = label pintu ruang pendingin: tepi tebal siku, kode ruang terbalik, angka suhu dari 2 m */
-.kartu-grid { display: grid; gap: 16px; }
-.kartu-grid.besar { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
-.kartu-grid.kecil { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-.kartu { position: relative; display: flex; flex-direction: column; gap: 8px; min-height: 48px; padding: 20px 24px; text-align: left; overflow: hidden;
-  background: var(--surface); border: 2px solid var(--ink); border-radius: 0; color: inherit; font: inherit; cursor: pointer;
+/* ---------- kartu ruang = label pintu ruang pendingin: tepi siku, kode ruang terbalik, angka suhu dari 2 m */
+.kartu-grid { display: grid; gap: var(--sp-4); }
+.kartu-grid.besar { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--sp-5); }
+.kartu-grid.kecil { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.kartu { --pad: var(--pad-besar); --nilai: var(--t-7);
+  position: relative; display: flex; flex-direction: column; min-height: 48px; padding: var(--pad); text-align: left; overflow: hidden;
+  background: var(--surface); border: var(--garis) solid var(--ink); border-radius: 0; color: inherit; font: inherit; cursor: pointer;
   transition: border-color 150ms var(--ease), background-color 150ms var(--ease); }
+.kecil .kartu { --pad: var(--pad-kecil); --nilai: var(--t-6); }
 .kartu:hover { background: var(--hover); }
 .kartu:active { background: var(--raised); }
 .kartu[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--accent); }
 .kartu[data-status="warn"] { border-color: var(--warn-ink); }
 .kartu[data-status="crit"] { border-color: var(--crit); }
 .kartu[data-status="off"] { border-style: dashed; border-color: var(--ink-3); }
-/* tirai plastik pintu: strip tembus pandang, hanya tampil saat pintu terbuka */
-.tirai { display: none; height: 28px; margin: -20px -24px 4px;
-  background: repeating-linear-gradient(90deg, var(--tirai) 0 22px, var(--tirai-2) 22px 24px, transparent 24px 26px); border-bottom: 2px solid var(--warn); }
+
+/* tirai plastik pintu: strip di tepi atas, menimpa padding supaya isi kartu tetap sejajar dengan tetangganya */
+.tirai { display: none; position: absolute; top: 0; left: 0; right: 0; height: 12px;
+  background: repeating-linear-gradient(90deg, var(--tirai) 0 22px, var(--tirai-2) 22px 24px, transparent 24px 26px); border-bottom: var(--garis) solid var(--warn); }
 .kartu[data-pintu="buka"] .tirai { display: block; }
 .kartu[data-pintu="buka"][data-status="crit"] .tirai { border-bottom-color: var(--crit); }
-.k-atas { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.k-kode { padding: 4px 12px; background: var(--ink); color: var(--surface); font: 500 18px/1.2 var(--font-mono); letter-spacing: 0.02em; }
-.k-nama { font-size: 22px; font-weight: 600; line-height: 1.2; margin-top: 4px; }
-.kecil .k-kode { font-size: 15px; padding: 2px 8px; }
-.kecil .k-nama { font-size: 16px; }
-.k-isi { font-size: 15px; color: var(--ink-3); }
-/* angka besar memakai Figtree tabular: koma mono terlalu renggang di 80 px */
-.k-nilai { font-family: var(--font-sans); font-variant-numeric: tabular-nums; font-size: 80px; font-weight: 600; line-height: 1; margin-top: 8px; letter-spacing: -0.03em; }
-.kecil .k-nilai { font-size: 40px; margin-top: 4px; }
-.k-nilai .u { font: 500 24px var(--font-sans); color: var(--ink-3); margin-left: 8px; letter-spacing: 0; }
-.kecil .k-nilai .u { font-size: 16px; }
-.kartu[data-status="off"] .k-nilai { font: 400 18px var(--font-sans); color: var(--ink-3); }
 
-/* momen: termometer tebal berbola di kiri */
-.termo { display: block; margin: 12px 0 16px 12px; }
-.termo-track { position: relative; display: block; height: 24px; border: 2px solid var(--ink); border-left: 0; background: var(--raised); }
-.termo-bola { position: absolute; left: -14px; top: 50%; width: 40px; height: 40px; margin-top: -20px; border-radius: 50%; border: 2px solid var(--ink); background: var(--accent); z-index: 1; }
+.k-atas { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.kecil .k-atas { flex-direction: column; align-items: flex-start; }
+.k-kode { padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--surface); font-size: var(--t-2); font-weight: 600; line-height: 1.2; }
+.kecil .k-kode { font-size: var(--t-1); }
+.k-nama { margin-top: var(--sp-4); font-size: var(--t-4); font-weight: 600; line-height: 1.2; text-wrap: balance; }
+.kecil .k-nama { margin-top: var(--sp-3); font-size: var(--t-3); }
+.k-isi { margin-top: var(--sp-1); font-size: var(--t-2); color: var(--ink-3); text-wrap: pretty; }
+.kecil .k-isi { font-size: var(--t-1); }
+/* tinggi baris angka tetap, jadi "Tidak ada data" tidak menggeser termometer */
+.k-nilai { display: flex; align-items: baseline; height: var(--nilai); margin-top: var(--sp-4); font-size: var(--nilai); font-weight: 600; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; }
+.kecil .k-nilai { margin-top: var(--sp-4); letter-spacing: -0.01em; }
+.u { font-size: var(--t-5); font-weight: 500; color: var(--ink-3); letter-spacing: 0; }
+.kecil .u, .kv .u { font-size: var(--t-3); }
+.kartu[data-status="off"] .k-nilai { align-items: flex-end; font-size: var(--t-3); font-weight: 500; letter-spacing: 0; color: var(--ink-3); }
+
+/* momen: termometer berbola di kiri, zona aman biru es bergaris skala */
+.termo { display: block; margin: var(--sp-4) 0 0 var(--sp-3); }
+.termo-track { position: relative; display: block; height: 24px; border: var(--garis) solid var(--ink); border-left: 0; background: var(--raised); }
+.termo-bola { position: absolute; left: -14px; top: 50%; width: 40px; height: 40px; margin-top: -20px; border-radius: 50%; border: var(--garis) solid var(--ink); background: var(--accent); z-index: 1; }
 .kartu[data-status="crit"] .termo-bola { background: var(--crit); }
 .termo-aman { position: absolute; top: 0; bottom: 0; background: var(--safe); background-image: repeating-linear-gradient(90deg, transparent 0 11px, var(--line-strong) 11px 12px); }
 .termo-titik { position: absolute; top: -8px; bottom: -8px; width: 6px; transform: translateX(-50%); background: var(--accent); box-shadow: 0 0 0 2px var(--surface); }
 .kartu[data-status="crit"] .termo-titik { background: var(--crit); }
-.termo-label { position: relative; display: block; height: 20px; margin-top: 8px; font: 500 14px var(--font-mono); color: var(--ink-2); }
+.termo-label { position: relative; display: block; height: 20px; margin-top: var(--sp-2); font-size: var(--t-1); font-weight: 500; line-height: 20px; color: var(--ink-2); }
 .termo-label span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 
-.rh-bar { position: relative; display: block; height: 16px; border: 2px solid var(--ink); background: var(--raised); margin: 8px 0; }
+.rh-bar { position: relative; display: block; height: 16px; margin-top: var(--sp-3); border: var(--garis) solid var(--ink); background: var(--raised); }
 .rh-isi { position: absolute; inset: 0 auto 0 0; background: var(--s1); }
 .kartu[data-status="warn"] .rh-isi { background: var(--warn); }
 .kartu[data-status="crit"] .rh-isi { background: var(--crit); }
-.rh-batas { position: absolute; left: 50%; top: -8px; bottom: -8px; width: 2px; background: var(--ink); }
+.rh-batas { position: absolute; left: 50%; top: -8px; bottom: -8px; width: var(--garis); background: var(--ink); }
 
-/* tanda tangan: pintu & hitung mundur, selalu menempel di dasar label */
-.kartu > span:last-child { margin-top: auto; }
-.pintu { display: block; font-size: 15px; color: var(--ink-3); }
-.pintu.buka, .pintu.lewat { display: grid; gap: 4px; padding: 12px 16px; margin: 4px -8px 0; font-weight: 500; }
+/* tanda tangan: blok pintu menempel di dasar label, selebar kartu; tinggi sama di semua state */
+.k-pintu { display: block; margin: auto calc(var(--pad) * -1) calc(var(--pad) * -1); padding-top: var(--pad); }
+.pintu { display: grid; align-content: center; gap: var(--sp-1); min-height: 96px; padding: var(--sp-4) var(--pad);
+  background: var(--raised); color: var(--ink-2); border-top: 1px solid var(--line); }
+.p-lbl { font-size: var(--t-2); font-weight: 500; }
+.pintu b { font-size: var(--t-4); font-weight: 500; line-height: 1.2; }
+.pintu.buka, .pintu.lewat { border-top: 0; }
 .pintu.buka { color: var(--warn-ink); background: var(--warn-bg); }
 .pintu.lewat { color: var(--crit-ink); background: var(--crit-bg); }
-.pintu b { font: 600 36px/1.1 var(--font-sans); font-variant-numeric: tabular-nums; }
+.pintu.buka b, .pintu.lewat b { font-size: var(--t-6); font-weight: 600; line-height: 1; letter-spacing: -0.01em; }
+.kecil .pintu { min-height: 72px; padding-block: var(--sp-3); }
+.kecil .p-lbl { font-size: var(--t-1); }
+.kecil .pintu b, .kecil .pintu.buka b, .kecil .pintu.lewat b { font-size: var(--t-3); line-height: 1.2; letter-spacing: 0; }
 
-.duo { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 16px; }
+/* ---------- riwayat & gudang umum */
+.duo { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: var(--sp-5); }
 @media (max-width: 1100px) { .duo { grid-template-columns: minmax(0, 1fr); } }
-.panel { background: var(--surface); border: 2px solid var(--ink); min-width: 0; }
-.panel-h { display: flex; align-items: baseline; gap: 12px; padding: 20px 20px 8px; flex-wrap: wrap; }
-.grafik { padding: 8px 20px 20px; }
-.gudang { padding: 8px 20px 20px; }
-.kv { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 0 0 16px; }
-.kv dt { font-size: 14px; color: var(--ink-2); }
+.panel { background: var(--surface); border: var(--garis) solid var(--ink); min-width: 0; }
+.panel-h { display: flex; align-items: baseline; gap: var(--sp-1) var(--sp-4); flex-wrap: wrap; padding: var(--sp-5) var(--sp-5) var(--sp-2); }
+.panel-h h2 { font-size: var(--t-3); }
+.grafik, .gudang { padding: var(--sp-4) var(--sp-5) var(--sp-5); }
+.kv { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); margin: 0 0 var(--sp-5); }
+.kv dt { font-size: var(--t-2); color: var(--ink-2); }
 .kv dd { margin: 0; }
-.kv dd.num { font-variant-numeric: tabular-nums; font-size: 48px; font-weight: 500; line-height: 1.2; }
-.kv .u { font: 400 15px var(--font-sans); color: var(--ink-3); margin-left: 4px; }
-.memuat, .kosong, .galat { padding: 24px 0; color: var(--ink-2); }
+.kv .kv-nilai { margin-top: var(--sp-1); font-size: var(--t-6); font-weight: 500; line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
+.kv dd.sub { margin-top: var(--sp-2); font-size: var(--t-1); }
+.memuat, .kosong, .galat { padding: var(--sp-5) 0; color: var(--ink-2); max-width: 65ch; }
 .galat { color: var(--crit-ink); }
+.galat .sub { display: block; margin-top: var(--sp-1); font-size: var(--t-1); }
 
-footer.pg { padding: 0 32px 24px; color: var(--ink-3); font-size: 13px; }
+footer.pg { padding: 0 var(--sp-6) var(--sp-5); color: var(--ink-3); font-size: var(--t-1); }
 
 @media (max-width: 760px) {
-  .bar { height: auto; min-height: 64px; padding: 8px 16px; flex-wrap: wrap; }
-  .bar-meta { margin-left: 0; flex-wrap: wrap; gap: 8px; }
-  main { padding: 16px; gap: 24px; }
-  h1 { font-size: 30px; }
-  .temuan { font-size: 17px; }
-  .kartu-grid.besar, .kartu-grid.kecil { grid-template-columns: minmax(0, 1fr); }
-  .kartu-grid.kecil { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .kecil .kartu { padding: 16px; }
-  .kecil .k-nilai { font-size: 32px; }
-  .k-nilai { font-size: 64px; }
-  .panel-h, .grafik, .gudang { padding-inline: 16px; }
-  footer.pg { padding: 0 16px 16px; }
-  :root { --chart-fs: 12px; }
+  :root { --t-4: 17px; --t-5: 24px; --t-6: 32px; --t-7: 64px; --pad-besar: var(--sp-4); --pad-kecil: var(--sp-3); }
+  .bar { height: auto; min-height: 64px; padding: var(--sp-3) var(--sp-4); flex-wrap: wrap; row-gap: var(--sp-2); }
+  .bar-meta { margin-left: 0; flex-wrap: wrap; gap: var(--sp-2); }
+  .pita { padding-inline: var(--sp-4); }
+  main { padding: var(--sp-5) var(--sp-4) var(--sp-6); gap: var(--sp-6); }
+  .kartu-grid.besar { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
+  .kartu-grid.kecil { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
+  .pintu { min-height: 88px; }
+  .duo { gap: var(--sp-4); }
+  .panel-h, .grafik, .gudang { padding-inline: var(--sp-4); }
+  footer.pg { padding: 0 var(--sp-4) var(--sp-4); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

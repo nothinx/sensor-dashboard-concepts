@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Monitor Oven Reflow SMT</title>
-<meta name="description" content="Mockup proyek 02: memantau profil suhu 10 zona oven reflow dua lini SMT terhadap resep, profil termal PCB, O2, dan konveyor.">
+<meta name="description" content="Mockup proyek 02: profil suhu 10 zona oven reflow dua line SMT dibanding resep, profil suhu papan uji, kadar O₂, dan kecepatan konveyor.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../../shared/charts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -19,21 +19,24 @@
     <span class="product">Monitor Oven Reflow SMT</span>
     <span class="np-sub" id="np">10 zona konveksi</span>
   </div>
-  <div class="tabs" role="tablist" aria-label="Pilih lini">
+  <div class="tabs" role="tablist" aria-label="Pilih line">
     <button role="tab" type="button" id="tab-L1" data-line="L1" aria-selected="false">Line 1</button>
     <button role="tab" type="button" id="tab-L2" data-line="L2" aria-selected="true">Line 2</button>
   </div>
-  <div class="meta"><span id="updated" role="status">Memuat</span><span class="sample" data-pratinjau title="Semua angka di layar ini adalah data contoh">Data contoh</span></div>
+  <div class="meta"><span id="updated" role="status">Memuat data</span><span class="sample" data-pratinjau title="Semua angka di layar ini data contoh">Data contoh</span></div>
 </header>
 <div class="banner" id="banner" role="alert" hidden></div>
 <main id="main" aria-busy="true">
+ <div class="col col-main">
   <section class="head"><h1 id="finding">Memuat data oven</h1><p id="finding2"></p></section>
   <dl class="kpis" id="kpis"></dl>
 
   <section class="panel zone-p" aria-labelledby="h-zone">
-    <div class="ph"><h2 id="h-zone">Suhu per zona: aktual dibanding setpoint</h2><span class="sub" id="zone-sub">°C, pembacaan terbaru</span>
-      <div class="legend right"><span><i></i>Aktual</span><span><i class="sp"></i>Setpoint</span><span><i class="band"></i>Toleransi</span></div></div>
-    <div id="zones" class="mm"><p class="skeleton">Memuat kurva zona</p></div>
+    <div class="ph"><h2 id="h-zone">Suhu tiap zona dibanding setpoint</h2><span class="sub" id="zone-sub">Pembacaan terbaru, dalam °C</span></div>
+    <div class="plot">
+      <div class="legend"><span><i></i>Aktual</span><span><i class="sp"></i>Setpoint</span><span><i class="band"></i>Toleransi</span></div>
+      <div id="zones" class="mm"><p class="skeleton">Memuat kurva zona</p></div>
+    </div>
     <div class="table-wrap">
       <table class="zt">
         <caption class="vh" id="table-sub">Tabel zona</caption>
@@ -42,17 +45,19 @@
       </table>
     </div>
   </section>
-
+ </div>
+ <div class="col col-side">
   <aside class="panel focus" aria-labelledby="h-focus">
     <div class="ph"><h2 id="h-focus">Zona dengan selisih terbesar</h2></div>
-    <div id="focus"><p class="skeleton">Memuat</p></div>
+    <div id="focus"><p class="skeleton">Memuat data zona</p></div>
   </aside>
 
   <section class="panel prof-p" aria-labelledby="h-prof">
-    <div class="ph"><h2 id="h-prof">Profil termal PCB terakhir</h2><span class="sub" id="prof-sub">papan uji berprobe</span></div>
+    <div class="ph"><h2 id="h-prof">Profil suhu papan uji terakhir</h2><span class="sub" id="prof-sub"></span></div>
     <div id="profile" class="mm"></div>
     <dl class="dl" id="prof-dl"></dl>
   </section>
+ </div>
 </main>
 <script src="../../shared/charts.js"></script>
 <script src="app.js"></script>

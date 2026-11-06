@@ -9,6 +9,8 @@ const TANPA_API = location.protocol === "file:" || new URLSearchParams(location.
 const pad = (n) => String(n).padStart(2, "0");
 const hhmm = (d) => `${pad(d.getHours())}.${pad(d.getMinutes())}`;
 // angka gaya Indonesia: koma desimal, titik ribuan
+// satuan: persen rapat (EYD), lainnya dipisah spasi
+const satuanTip = (u) => (!u ? "" : u === "%" ? "%" : " " + u);
 const fmt = (v, d = 1, fixed = true) => v.toLocaleString("id-ID", { minimumFractionDigits: fixed ? d : 0, maximumFractionDigits: d });
 
 // PRNG deterministik supaya mockup sama tiap dibuka
@@ -33,14 +35,24 @@ const ICON = {
   crit: '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.6.5h4.8l3.1 3.1v4.8l-3.1 3.1H3.6L.5 8.4V3.6z" fill="currentColor"/><path d="M4 4l4 4M8 4l-4 4" stroke="var(--surface)" stroke-width="1.4"/></svg>',
   off: '<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 9l6-6" stroke="currentColor" stroke-width="1.5"/></svg>',
 };
-const LABEL = { ok: "Normal", warn: "Peringatan", serious: "Tinggi", crit: "Kritis", off: "Offline" };
+const LABEL = { ok: "Normal", warn: "Peringatan", serious: "Tinggi", crit: "Kritis", off: "Terputus" };
 const st = (k, text = LABEL[k]) => `<span class="st ${k}">${ICON[k]}${text}</span>`;
 
 // Grafik garis: satu sumbu Y, garis 2px, ambang batas putus-putus, crosshair + tooltip
 function lineChart(el, { series, x, h = 220, unit = "", min, max, bands = [], fmtX = hhmm, dec = 1, ticks = 4, marks = [] }) {
   const W = el.clientWidth || 600, H = h, L = 44, R = 12, T = 10, B = 24;
   const all = series.flatMap((s) => s.data.filter((v) => v != null)).concat(bands.map((b) => b.y));
-  const lo = min ?? Math.floor(Math.min(...all)), hi = max ?? Math.ceil(Math.max(...all));
+  let lo = min ?? Math.min(...all), hi = max ?? Math.max(...all);
+  if (!(hi > lo)) { lo = Number.isFinite(lo) ? lo - 1 : 0; hi = lo + 2; }
+  // langkah sumbu "bulat" (1/2/2,5/5 × 10^k) supaya label tidak jadi 1,3 / 2,5 / 3,8
+  const raw = (hi - lo) / ticks, mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw * (1 - 1e-9));
+  if (min == null) lo = Math.floor(lo / step + 1e-9) * step;
+  if (max == null) hi = Math.ceil(hi / step - 1e-9) * step;
+  if (min == null || max == null) {
+    ticks = Math.round((hi - lo) / step);
+    dec = Math.max(dec, (String(+step.toFixed(6)).split(".")[1] || "").length);
+  }
   const n = x.length;
   const sx = (i) => L + (i / (n - 1)) * (W - L - R);
   const sy = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
@@ -50,9 +62,21 @@ function lineChart(el, { series, x, h = 220, unit = "", min, max, bands = [], fm
     g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end">${fmt(v, dec, false)}</text>`;
   }
   const xs = W < 480 ? 3 : W < 800 ? 4 : 6; // label waktu tidak berdempet di grafik sempit (HP)
-  for (let k = 0; k < xs; k++) {
-    const i = Math.round((k / (xs - 1)) * (n - 1));
-    g += `<text x="${sx(i)}" y="${H - 6}" text-anchor="${k === 0 ? "start" : k === xs - 1 ? "end" : "middle"}">${fmtX(x[i])}</text>`;
+  // label waktu di jam bulat (15.00, 19.00), bukan jam ganjil (14.47) bila sumbunya Date
+  const t0 = +x[0], t1 = +x[n - 1], span = (t1 - t0) / 3600000;
+  const jam = fmtX === hhmm && x[0] instanceof Date && span >= 2 && [1, 2, 3, 4, 6, 12, 24].find((s) => span / s <= xs);
+  const label = (px, teks) => {
+    const anchor = px - L < 24 ? "start" : W - R - px < 24 ? "end" : "middle";
+    g += `<text x="${px}" y="${H - 6}" text-anchor="${anchor}">${teks}</text>`;
+  };
+  if (jam) {
+    const awal = new Date(t0); awal.setMinutes(0, 0, 0);
+    for (let t = +awal; t <= t1; t += 3600000) {
+      const d = new Date(t);
+      if (t >= t0 && d.getHours() % jam === 0) label(L + ((t - t0) / (t1 - t0)) * (W - L - R), hhmm(d));
+    }
+  } else {
+    for (let k = 0; k < xs; k++) { const i = Math.round((k / (xs - 1)) * (n - 1)); label(sx(i), fmtX(x[i])); }
   }
   for (const b of bands) {
     g += `<line x1="${L}" x2="${W - R}" y1="${sy(b.y)}" y2="${sy(b.y)}" stroke="${b.color}" stroke-width="1.5" stroke-dasharray="5 4"/>
@@ -80,7 +104,7 @@ function lineChart(el, { series, x, h = 220, unit = "", min, max, bands = [], fm
     const px = ((e.clientX - r.left) / r.width) * W;
     const i = Math.max(0, Math.min(n - 1, Math.round(((px - L) / (W - L - R)) * (n - 1))));
     xh.setAttribute("x1", sx(i)); xh.setAttribute("x2", sx(i)); xh.setAttribute("opacity", 1);
-    tip.innerHTML = `${fmtX(x[i])}<br>` + series.map((s) => `${series.length > 1 ? s.name + " " : ""}${s.data[i] == null ? "tidak ada data" : fmt(s.data[i], dec) + " " + unit}`).join("<br>");
+    tip.innerHTML = `${fmtX(x[i])}<br>` + series.map((s) => `${series.length > 1 ? s.name + " " : ""}${s.data[i] == null ? "tidak ada data" : fmt(s.data[i], dec) + satuanTip(unit)}`).join("<br>");
     tip.style.left = (sx(i) / W) * r.width + "px";
     tip.style.top = (T / H) * r.height + 8 + "px";
     tip.style.opacity = 1;
@@ -114,7 +138,7 @@ function barChart(el, { data, x, h = 200, unit = "", color = "var(--s1)", fmtX =
     const r = svg.getBoundingClientRect();
     const i = Math.floor((((e.clientX - r.left) / r.width) * W - L) / bw);
     if (i < 0 || i >= n) return (tip.style.opacity = 0);
-    tip.innerHTML = `${fmtX(x[i])}<br>${fmt(data[i], dec)} ${unit}`;
+    tip.innerHTML = `${fmtX(x[i])}<br>${fmt(data[i], dec)}${satuanTip(unit)}`;
     tip.style.left = ((L + (i + 0.5) * bw) / W) * r.width + "px";
     tip.style.top = (sy(data[i]) / H) * r.height + "px";
     tip.style.opacity = 1;

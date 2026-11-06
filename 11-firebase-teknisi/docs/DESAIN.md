@@ -40,15 +40,20 @@ Data tugas offline ditangani cache IndexedDB Firestore. Ikon masih sementara `[R
 
 | Token | Nilai | Pemakaian |
 | --- | --- | --- |
-| `--bg` / `--surface` / `--raised` | #f7f6f3 / #ffffff / #efede8 | ramp hangat netral (unslop "warm") |
+| `--bg` / `--surface` / `--raised` | #f4f2ec / #fffdf8 / #ebe7dd | ramp hangat netral (unslop "warm"); permukaan putih hangat, bukan #fff murni |
 | `--ink` / `--ink-2` / `--ink-3` | #1f1b16 / #5e554a / #6f665b | teks |
 | `--accent` / `--accent-bg` | #c2410c / #fdeee5 | label kartu aktif, cap waktu, item terpilih, garis tren |
 | `--crit` / `--warn` / `--good` | #dc2626 / #d99000 / #16a34a | status, selalu ikon + teks |
 | `--kartu` / `--kartu-garis` | #f8f1df / #e2d6b8 | stok kartu absen dan garis barisnya |
-| `--meja` / `--meja-ink` / `--meja-terang` | #2a2520 / #d9d1c4 / #fbf8f2 | latar desktop di sekitar bingkai HP |
+| `--meja` / `--meja-ink` / `--meja-terang` | #2a2520 / #d9d1c4 / #fbf8f2 | latar desktop di sekitar bingkai HP; bilah atas ikut gelap di desktop lebar |
+| `--meja-garis` / `--meja-hover` | terang 14% / 8% | garis dan hover di atas meja |
 | `--bingkai` / `--lajur` | #0f0d0b / #f2b705 | bezel HP / garis lajur lantai pabrik |
-| Skala tipe | 13 / 14 / 16 / 17 / 20 / 30 / 52 px | meta / label / isi / temuan / judul kartu / judul / angka sensor aktif |
-| Huruf | Manrope 400/500/600 + JetBrains Mono 400/500 | antarmuka ramah, angka tabular |
+| Skala tipe `--t-*` | 13 / 15 / 17 / 20 / 28 / 40 / 56 px | meta, chip, sumbu / label / isi / judul kartu, angka daftar / judul layar HP / judul panel desktop, angka pemicu / angka sensor aktif |
+| Leading | isi 1,5 / judul 1,2 / angka 1,0 | tracking negatif hanya ≥ 28 px (-0,015em; 56 px -0,02em) |
+| Jarak `--sp-*` | 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48 / 64 px | semua padding, gap, margin |
+| Sudut / garis | `--r-s` 4 px, `--r` 8 px / `--bw` 1 px, `--bw-tinta` 2 px | 2 px hanya untuk tinta cap dan garis kop kartu absen |
+| Huruf | Manrope 400/500/600 + JetBrains Mono 500 | semua teks dan angka Manrope (tabular, lining); mono hanya ID mesin dan jam cap |
+| Grafik bersama | `--chart-font` Manrope, `--chart-fs`/`--tip-fs`/`--st-fs` 13 px | sumbu dan chip tidak lagi mono |
 
 Tombol utama berisi warna tinta (bukan aksen), sesuai anjuran unslop untuk tema terang.
 
@@ -56,7 +61,8 @@ Tombol utama berisi warna tinta (bukan aksen), sesuai anjuran unslop untuk tema 
 
 | Pasangan | Rasio |
 | --- | --- |
-| `--ink-3` di `--surface` / `--bg` / `--raised` | 5,63 / 5,21 / 4,82 : 1 |
+| `--ink-3` di `--surface` / `--bg` / `--raised` | 5,98 / 5,43 / 4,82 : 1 |
+| `--surface` (teks tombol utama) di `--ink` | 16,84 : 1 |
 | `--accent` di `--accent-bg` (cap waktu) | 4,57 : 1 |
 | `--accent` di putih | 5,18 : 1 |
 | chip peringatan / kritis / normal | 7,48 / 7,33 / 8,01 : 1 |
@@ -69,3 +75,18 @@ Tombol utama berisi warna tinta (bukan aksen), sesuai anjuran unslop untuk tema 
 - Tepat satu penanda `data-pratinjau` di bilah atas, hanya tampil di mode data contoh; di pratinjau berbunyi
   "Pratinjau, data contoh". Saat Firebase hidup penanda tersembunyi dan alur masuk tetap berjalan.
 - Rak kartu absen hanya di desktop lebar; klik kartu membuka tugas memakai jalur `data-buka` yang sudah ada.
+
+## Keputusan putaran 3 (keterbacaan, bahasa, kerapian)
+
+| Keputusan | Alasan |
+| --- | --- |
+| Manrope dipertahankan, JetBrains Mono dipangkas ke satu bobot dan dua peran (ID mesin, jam cap) | Manrope ber-x-height lega dan punya `tnum`/`lnum`; rasa tak nyaman datang dari mono di angka besar, sumbu, nama teknisi, dan kop. Font proyek lain sudah dipakai konsep lain, jadi Manrope tetap pembeda konsep ini. |
+| Satu skala tujuh langkah di `:root`, tak ada `font-size` angka di luar `:root` | Ukuran lama (12/13/14/15/16/17/18/24/30/40/52) bercampur per selektor. |
+| Angka = Manrope 500 tabular, satuan 15-20 px warna `--ink-2` dipisah `&thinsp;` | Angka "96,1" mono berkoma lebar terbaca seperti kode. |
+| Garis 1 px di semua kartu, item, tab, tombol; 2 px hanya tinta | Dulu 1,5 / 2 px campur, terasa kasar. Pita prioritas jadi garis 3 px di dalam kartu, bukan sisi tebal. |
+| Bilah atas gelap di desktop lebar | Bilah putih memotong "meja bengkel"; kini satu bidang tenang dengan bingkai HP sebagai titik terang. |
+| Status chip pindah ke bawah judul detail; status rak ditulis "Baru/Dikerjakan/Selesai" | Chip dulu melayang sendirian di pojok kanan; rak menampilkan kunci data mentah huruf kecil. |
+| Baris jam rak satu garis per baris (`span` flex) | Garis label dan jam dulu putus di celah kolom. |
+| `.kolom-daftar` memakai `grid-auto-rows: max-content` | Di bingkai HP tinggi tetap, tab ber-`overflow: hidden` mengerut jadi 0 px dan hilang. |
+| Temuan menyebut tugas yang benar-benar paling lama menunggu | Kode lama mengambil tugas terbaru (urutan desc) tapi menulis "Terlama". |
+| Bahasa: "mnt" → "menit" (nbsp), "Offline" → "Tidak ada sinyal", "belum tersinkron" → "Belum terkirim", "Mulai kerjakan" → "Ambil tugas ini", "Selesai" (tombol) → "Tandai selesai", "-" jam kosong → "belum" | Satu istilah per konsep (ambil, terkirim), tanpa singkatan dan campur Inggris. |

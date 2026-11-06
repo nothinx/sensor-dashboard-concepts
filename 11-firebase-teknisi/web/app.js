@@ -15,8 +15,14 @@ let tugas = [], mesin = {}, tab = "baru", pilih = null, tertunda = false, daring
 const pukul = (d) => (d ? hhmm(d) : "-");
 function sejak(d) {
   const m = Math.max(0, Math.round((Date.now() - d) / 60000));
-  return m < 60 ? `${m} mnt lalu` : `${Math.floor(m / 60)} jam ${m % 60} mnt lalu`;
+  if (m < 1) return "baru saja";
+  // spasi tak putus antara angka dan satuan waktu
+  if (m < 60) return `${m} menit lalu`;
+  return `${Math.floor(m / 60)} jam${m % 60 ? ` ${m % 60} menit` : ""} lalu`;
 }
+// angka + satuan: angka tabular, satuan lebih kecil dan diredam, dipisah spasi tipis
+const nilai = (v, satuan, kelas = "") => `<b class="num ${kelas}">${fmt(v)}</b><span class="satuan">&thinsp;${esc(satuan)}</span>`;
+const LABEL_STATUS = { baru: "Baru", dikerjakan: "Dikerjakan", selesai: "Selesai" };
 const hariIni = (d) => d && d.toDateString() === new Date().toDateString();
 
 // ---------- render ----------
@@ -28,9 +34,9 @@ function renderSemua() {
   for (const k in N) $(`n-${k}`).textContent = N[k].length;
 
   const tinggi = baru.filter((t) => t.prioritas === "tinggi");
-  const t0 = tinggi[0] || baru[0];
+  const t0 = baru.reduce((a, b) => (b.dibuat < a.dibuat ? b : a), baru[0]); // paling lama menunggu
   $("temuan").innerHTML = baru.length
-    ? `<b>${baru.length} tugas baru${tinggi.length ? `, ${tinggi.length} prioritas tinggi` : ""}.</b> Terlama: ${esc(t0.mesinNama)}, ${esc(t0.lokasi)}.`
+    ? `<b>${baru.length} tugas baru${tinggi.length ? `, ${tinggi.length} prioritas tinggi` : ""}.</b> Paling lama menunggu: ${esc(t0.mesinNama)}, dibuat ${sejak(t0.dibuat)}.`
     : kerja.length ? `<b>Tidak ada tugas baru.</b> ${kerja.length} tugas sedang dikerjakan.` : "<b>Semua tugas hari ini sudah selesai.</b>";
 
   renderAktif(kerja.find((t) => t.diambilOleh?.uid === saya?.uid));
@@ -50,9 +56,9 @@ function renderSemua() {
 function renderRak() {
   const urut = { dikerjakan: 0, baru: 1, selesai: 2 };
   const isi = tugas.filter((t) => t.status !== "selesai" || hariIni(t.selesaiPada)).sort((a, b) => urut[a.status] - urut[b.status]);
-  const lubang = (nama, w) => `<span>${nama}</span><b>${w ? pukul(w) : "-"}</b>`;
-  $("rak").innerHTML = `<h3>Rak kartu tugas shift ini</h3><div class="slot-baris">${isi.map((t) => `<button type="button" class="slot s-${t.status}" data-buka="${t.id}" aria-current="${t.id === pilih}">
-      <span class="kop"><span>${esc(t.mesinId)}</span><span>${t.status}</span></span>
+  const lubang = (nama, w) => `<span>${nama}${w ? `<b>${pukul(w)}</b>` : `<b class="kosong-jam">belum</b>`}</span>`;
+  $("rak").innerHTML = `<div class="rak-kepala"><h3>Kartu tugas shift ini</h3><p class="num">${isi.length} kartu, klik untuk membuka</p></div><div class="slot-baris">${isi.map((t) => `<button type="button" class="slot s-${t.status}" data-buka="${t.id}" aria-current="${t.id === pilih}">
+      <span class="kop"><span class="id">${esc(t.mesinId)}</span><span>${LABEL_STATUS[t.status]}</span></span>
       <span class="nm">${esc(t.mesinNama)}</span>
       <span class="lubang">${lubang("Dibuat", t.dibuat)}${lubang("Diambil", t.diambilPada)}${lubang("Selesai", t.selesaiPada)}</span>
     </button>`).join("")}</div>`;
@@ -60,28 +66,31 @@ function renderRak() {
 
 function itemTugas(t) {
   const [k, teks] = PRIO[t.prioritas] || PRIO.sedang;
-  const info = t.status === "baru" ? `dibuat ${sejak(t.dibuat)}` :
-    t.status === "dikerjakan" ? `diambil ${esc(t.diambilOleh?.nama)}, pukul ${pukul(t.diambilPada)}` : `selesai pukul ${pukul(t.selesaiPada)} oleh ${esc(t.diambilOleh?.nama)}`;
+  const info = t.status === "baru" ? `Dibuat ${sejak(t.dibuat)}` :
+    t.status === "dikerjakan" ? `Diambil ${esc(t.diambilOleh?.nama)}, pukul ${pukul(t.diambilPada)}` : `Selesai pukul ${pukul(t.selesaiPada)} oleh ${esc(t.diambilOleh?.nama)}`;
   return `<li><button class="item p-${t.status === "baru" ? t.prioritas : "x"}" type="button" data-id="${t.id}" aria-current="${t.id === pilih}">
     <span class="nama">${esc(t.mesinNama)}</span>
+    <span class="angka">${nilai(t.nilaiPemicu, t.satuan)}</span>
     <span class="lok">${esc(t.lokasi)} · ${esc(t.besaran)}</span>
-    <span class="angka"><b>${fmt(t.nilaiPemicu)}</b><span>${esc(t.satuan)}, ambang ${fmt(t.ambang)}</span></span>
-    <span class="meta">${t.status === "baru" ? st(k, teks) : ""}<span>${info}</span>${t.tertunda ? `<span class="tertunda">belum tersinkron</span>` : ""}</span>
+    <span class="ambang num">ambang ${fmt(t.ambang)}</span>
+    <span class="meta">${t.status === "baru" ? st(k, teks) : ""}<span>${info}</span>${t.tertunda ? `<span class="tertunda">Belum terkirim</span>` : ""}</span>
   </button></li>`;
 }
 
 function capWaktu(t) {
-  return `<span class="cap"><b>Diambil oleh ${esc(t.diambilOleh?.nama)}</b><span>pukul ${pukul(t.diambilPada)}</span></span>`;
+  return `<span class="cap"><span>Diambil oleh ${esc(t.diambilOleh?.nama)}</span><span class="jam-cap">pukul ${pukul(t.diambilPada)}</span></span>`;
 }
 
 async function renderAktif(t) {
   const el = $("aktif");
   if (!t) { el.innerHTML = ""; return; }
   const m = mesin[t.mesinId]?.terakhir;
+  const v = m ? m.nilai : t.nilaiPemicu;
   el.innerHTML = `<div class="kartu-aktif absen">
-    <span class="label">Sedang kamu kerjakan<span>${esc(t.mesinId)}</span></span>
+    <div class="kop"><span>Sedang kamu kerjakan</span><span class="id">${esc(t.mesinId)}</span></div>
     <div><h2>${esc(t.mesinNama)}</h2><p class="muted">${esc(t.lokasi)} · ${esc(t.besaran)}</p></div>
-    <div class="nilai"><b>${fmt(m ? m.nilai : t.nilaiPemicu)}</b><span>${esc(t.satuan)} sekarang · ambang ${fmt(t.ambang)}</span></div>
+    <div class="nilai"><div>${nilai(v, t.satuan, v > t.ambang ? "lewat" : "")}</div>
+      <p class="num">Bacaan terakhir, ${v > t.ambang ? "di atas" : "di bawah"} ambang ${fmt(t.ambang)}&nbsp;${esc(t.satuan)}</p></div>
     <div id="trenAktif" data-label="Tren ${esc(t.mesinNama)} 6 jam"><p class="memuat">Memuat tren…</p></div>
     ${capWaktu(t)}
     <button class="btn primary lebar" type="button" data-buka="${t.id}">Tutup tugas ini</button>
@@ -94,15 +103,15 @@ async function gambarTren(elId, t, jam, h) {
     const rw = await riwayat(t.mesinId, jam);
     const el = $(elId);
     if (!el) return;
-    if (!rw.length) { el.innerHTML = `<p class="kosong">Belum ada bacaan ${jam} jam terakhir.</p>`; return; }
+    if (!rw.length) { el.innerHTML = `<p class="kosong">Belum ada bacaan sensor dalam ${jam} jam terakhir.</p>`; return; }
     lineChart(el, {
       x: rw.map((p) => p.ts), series: [{ name: t.besaran, color: "var(--s1)", data: rw.map((p) => p.nilai) }],
-      unit: t.satuan, h, dec: 1, bands: [{ y: t.ambang, label: `ambang ${fmt(t.ambang)}`, color: "var(--crit)" }],
+      unit: t.satuan, h, dec: 1, bands: [{ y: t.ambang, label: `ambang ${fmt(t.ambang)} ${t.satuan}`, color: "var(--crit)" }],
       min: Math.floor(Math.min(...rw.map((p) => p.nilai), t.ambang) * 0.95), max: Math.ceil(Math.max(...rw.map((p) => p.nilai), t.ambang) * 1.05),
     });
   } catch (e) {
     const el = $(elId);
-    if (el) el.innerHTML = `<p class="kosong">Tren gagal dimuat (${esc(e.message)}). Buka ulang tugas untuk mencoba lagi.</p>`;
+    if (el) el.innerHTML = `<p class="kosong">Grafik tren gagal dimuat (${esc(e.message)}). Buka ulang tugas untuk mencoba lagi.</p>`;
   }
 }
 
@@ -117,20 +126,20 @@ function renderDetail() {
   const [k, teks] = PRIO[t.prioritas] || PRIO.sedang;
   const milikSaya = t.diambilOleh?.uid === saya?.uid;
   let aksi = "";
-  if (t.status === "baru") aksi = `<button class="btn primary lebar" type="button" id="btnAmbil">Mulai kerjakan</button>`;
-  else if (t.status === "dikerjakan" && milikSaya) aksi = `<label>Catatan penanganan<textarea id="catatan" maxlength="500" placeholder="Mis. bearing diganti, getaran turun ke 2,1 mm/s"></textarea></label>
-    <button class="btn primary lebar" type="button" id="btnSelesai">Selesai</button>`;
+  if (t.status === "baru") aksi = `<button class="btn primary lebar" type="button" id="btnAmbil">Ambil tugas ini</button>`;
+  else if (t.status === "dikerjakan" && milikSaya) aksi = `<label>Catatan penanganan<textarea id="catatan" maxlength="500" placeholder="Contoh: bearing diganti, getaran turun ke 2,1 mm/s"></textarea></label>
+    <button class="btn primary lebar" type="button" id="btnSelesai">Tandai selesai</button>`;
   else if (t.status === "dikerjakan") aksi = `<p class="muted">Tugas ini sedang dikerjakan ${esc(t.diambilOleh?.nama)}.</p>`;
   // kartu absen tugas: jam dibuat, diambil, selesai seperti baris kartu mesin jam
-  const baris = (nama, w, ket = "") => `<tr><th scope="row">${nama}</th><td>${w ? `<span class="tinta">${pukul(w)}</span>` : "-"}${ket ? `<span class="sub">${ket}</span>` : ""}</td></tr>`;
+  const baris = (nama, w, ket = "") => `<tr><th scope="row">${nama}</th><td>${w ? `<span class="tinta">${pukul(w)}</span>` : `<span class="kosong-jam">belum</span>`}${ket ? `<span class="sub">${ket}</span>` : ""}</td></tr>`;
   d.innerHTML = `
     <button class="kembali" type="button" id="kembali">Kembali ke daftar</button>
-    <div class="d-kepala"><div><p class="kecil">Tugas terpilih · ${esc(t.besaran)}</p><h2>${esc(t.mesinNama)}</h2><p class="muted">${esc(t.lokasi)}</p></div>
-      <div class="row-st">${t.status === "baru" ? st(k, teks) : t.status === "dikerjakan" ? st("warn", "Dikerjakan") : st("ok", "Selesai")}</div></div>
+    <div class="d-kepala"><p class="kecil">Tugas terpilih</p><h2>${esc(t.mesinNama)}</h2>
+      <p class="d-meta">${t.status === "baru" ? st(k, teks) : t.status === "dikerjakan" ? st("warn", "Dikerjakan") : st("ok", "Selesai")}<span>${esc(t.lokasi)} · sensor ${esc(t.besaran.toLowerCase())}</span></p></div>
     <div class="d-isi">
       <div class="d-kartu absen">
-        <div class="kop"><span>Kartu tugas</span><span>${esc(t.mesinId)}</span></div>
-        <div class="pemicu"><b>${fmt(t.nilaiPemicu)}</b><span>${esc(t.satuan)} saat dipicu · ambang ${fmt(t.ambang)}</span></div>
+        <div class="kop"><span>Kartu tugas</span><span class="id">${esc(t.mesinId)}</span></div>
+        <div class="pemicu"><div>${nilai(t.nilaiPemicu, t.satuan)}</div><p class="num">Bacaan saat tugas dibuat, ambang ${fmt(t.ambang)}&nbsp;${esc(t.satuan)}</p></div>
         <table class="jam"><tbody>
           ${baris("Dibuat", t.dibuat, sejak(t.dibuat))}
           ${baris("Diambil", t.diambilPada, t.diambilOleh ? esc(t.diambilOleh.nama) : "")}
@@ -141,7 +150,7 @@ function renderDetail() {
         ${aksi}
         <p class="galat" id="galatAksi" role="alert" hidden></p>
       </div>
-      <div class="d-tren"><h3>${esc(t.besaran)}, 24 jam</h3><div id="trenDetail" data-label="Tren ${esc(t.mesinNama)} 24 jam"><p class="memuat">Memuat tren…</p></div></div>
+      <div class="d-tren"><h3>${esc(t.besaran)} 24 jam terakhir</h3><div id="trenDetail" data-label="Tren ${esc(t.mesinNama)} 24 jam"><p class="memuat">Memuat tren…</p></div></div>
     </div>`;
   gambarTren("trenDetail", t, 24, matchMedia("(min-width: 1280px)").matches ? 300 : 200);
   $("kembali").onclick = () => { pilih = null; renderSemua(); renderDetail(); };
@@ -152,7 +161,7 @@ function renderDetail() {
 function renderSinkron() {
   const el = $("sinkron");
   el.hidden = daring && !tertunda;
-  el.textContent = !daring ? "Offline. Perubahan disimpan di HP dan akan disinkronkan saat tersambung." : "Menyinkronkan perubahan…";
+  el.textContent = !daring ? "Tidak ada sinyal. Perubahan tersimpan di HP dan terkirim otomatis saat tersambung lagi." : "Mengirim perubahan…";
 }
 
 // ---------- aksi ----------
@@ -167,7 +176,7 @@ async function ubah(t, aksi, catatan = "") {
   // tidak di-await: saat offline promise baru selesai setelah tersinkron, layar sudah berubah dari cache lokal
   updateDoc(doc(fb.db, "tugas", t.id), perubahan).catch((e) => {
     galat.textContent = e.code === "permission-denied"
-      ? "Perubahan ditolak server: tugas mungkin sudah diambil teknisi lain. Muat ulang daftar."
+      ? "Server menolak perubahan. Tugas ini mungkin sudah diambil teknisi lain, jadi muat ulang daftar."
       : `Perubahan gagal disimpan (${e.message}). Coba lagi.`;
     galat.hidden = false;
   });
@@ -223,7 +232,7 @@ async function mulaiFirebase() {
       tertunda = s.metadata.hasPendingWrites;
       renderSinkron();
       renderSemua();
-    }, (e) => tampilBanner(`Daftar tugas gagal dimuat (${esc(e.message)}). Periksa koneksi lalu muat ulang halaman.`)));
+    }, (e) => tampilBanner(`Daftar tugas gagal dimuat (${esc(e.message)}). Periksa sinyal, lalu muat ulang halaman.`)));
   });
 }
 
@@ -280,7 +289,7 @@ function modeContoh() {
   const tanda = document.querySelector("[data-pratinjau]");
   tanda.hidden = false;
   tanda.textContent = PRATINJAU ? "Pratinjau, data contoh" : "Data contoh";
-  tampilBanner(`Mode data contoh: aplikasi dibuka langsung dari berkas, jadi tidak terhubung ke Firebase. Jalankan <code>docker compose -p konsep-11 up -d</code> lalu buka <code>http://localhost:18110</code>.`);
+  tampilBanner(`Ini data contoh: aplikasi dibuka langsung dari berkas, jadi belum terhubung ke Firebase. Untuk data langsung, jalankan <code>docker compose -p konsep-11 up -d</code> lalu buka <code>http://localhost:18110</code>.`);
   renderSemua();
 }
 
@@ -294,7 +303,7 @@ document.addEventListener("click", (e) => {
   if (it) { pilih = it.dataset.id || it.dataset.buka; renderSemua(); renderDetail(); $("detail").scrollIntoView({ block: "nearest" }); }
   const ak = e.target.closest("#akunDemo button");
   if (ak && fb) fb.au.signInWithEmailAndPassword(fb.auth, ak.dataset.email, K.sandiDemo).catch((err) => {
-    $("galatMasuk").textContent = `Gagal masuk (${err.code}). Pastikan simulator sudah selesai menyiapkan akun, lalu coba lagi.`;
+    $("galatMasuk").textContent = `Belum bisa masuk (${err.code}). Tunggu simulator selesai menyiapkan akun, lalu coba lagi.`;
     $("galatMasuk").hidden = false;
   });
 });
@@ -304,6 +313,6 @@ addEventListener("offline", () => { daring = false; renderSinkron(); });
 
 if (TANPA_API || !K.projectId) modeContoh();
 else {
-  mulaiFirebase().catch((e) => { tampilBanner(`Firebase tidak bisa dimuat (${esc(e.message)}). Menampilkan data contoh.`); modeContoh(); });
+  mulaiFirebase().catch((e) => { tampilBanner(`Firebase tidak bisa dimuat (${esc(e.message)}), jadi aplikasi menampilkan data contoh.`); modeContoh(); });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 }

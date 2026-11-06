@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Uji Akhir Lini Kulkas</title>
-<meta name="description" content="Mockup proyek 14: hasil uji akhir setiap unit kulkas (vakum, kebocoran, pendinginan, arus kompresor), first pass yield per jam, dan unit yang menunggu uji ulang. Data di Azure Cosmos DB.">
+<meta name="description" content="Mockup proyek 14: hasil uji akhir tiap unit kulkas (vakum, kebocoran, pendinginan, arus kompresor), FPY per jam, dan unit yang menunggu uji ulang. Data di Azure Cosmos DB.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../../shared/charts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -15,10 +15,10 @@
 <header class="bar">
   <span class="logo">[LOGO KLIEN]</span>
   <span class="product">Uji Akhir Lini Kulkas</span>
-  <span class="where">Stasiun uji akhir, Lini 1 dan Lini 2</span>
+  <span class="where">Stasiun uji akhir Lini 1 dan Lini 2</span>
   <div class="meta">
-    <span id="conn" role="status">Memuat</span>
-    <span class="sample" data-pratinjau title="Semua angka di layar ini adalah data contoh">Data contoh</span>
+    <span id="conn" role="status">Memuat data</span>
+    <span class="sample" data-pratinjau title="Semua angka di layar ini data contoh">Data contoh</span>
   </div>
 </header>
 <div class="banner" id="banner" role="alert" hidden></div>
@@ -38,32 +38,32 @@
     <section class="lini" id="lini-L1" aria-labelledby="h-L1"></section>
 
     <section class="unit" aria-labelledby="h-unit">
-      <div class="ph"><h2 id="h-unit">Unit terakhir diuji</h2><span class="sub" id="unit-sub">pilih stempel di lajur untuk melihat unit lain</span></div>
-      <div id="unit"><p class="memuat">Memuat unit terakhir</p></div>
+      <div class="ph"><h2 id="h-unit">Unit terakhir diuji</h2><span class="sub" id="unit-sub">Pilih stempel di lajur untuk melihat unit lain</span></div>
+      <div id="unit"><p class="memuat">Memuat unit terakhir…</p></div>
     </section>
 
     <section class="lini" id="lini-L2" aria-labelledby="h-L2"></section>
   </div>
 
-  <div class="bawah">
+  <div class="baris-bawah">
     <section class="panel" aria-labelledby="h-fpy">
-      <div class="ph"><h2 id="h-fpy">First pass yield per jam, 24 jam</h2><span class="sub">% unit lulus pada percobaan pertama</span></div>
+      <div class="ph"><h2 id="h-fpy">FPY per jam, 24 jam terakhir</h2><span class="sub">Persentase unit yang lulus pada uji pertama</span></div>
       <div class="legend"><span><i class="l1"></i>Lini 1</span><span><i class="l2"></i>Lini 2</span></div>
-      <div id="fpy" data-label="First pass yield per jam Lini 1 dan Lini 2"></div>
+      <div id="fpy" data-label="FPY per jam Lini 1 dan Lini 2, 24 jam terakhir"></div>
     </section>
     <section class="panel" aria-labelledby="h-alasan">
-      <div class="ph"><h2 id="h-alasan">Alasan gagal terbanyak</h2><span class="sub">percobaan pertama, 24 jam</span></div>
+      <div class="ph"><h2 id="h-alasan">Penyebab gagal terbanyak</h2><span class="sub">Uji pertama, 24 jam terakhir</span></div>
       <div id="alasan"></div>
     </section>
     <section class="panel" id="menunggu" aria-labelledby="h-menunggu">
       <div class="ph"><h2 id="h-menunggu">Menunggu uji ulang</h2><span class="sub" id="menunggu-sub"></span></div>
       <ul class="daftar" id="l-menunggu"></ul>
-      <div class="ph" style="margin-top:16px"><h2 id="h-alarm">Alarm</h2><span class="sub">dari fungsi change feed, 24 jam</span></div>
+      <div class="ph ph-alarm"><h2 id="h-alarm">Alarm</h2><span class="sub">24 jam terakhir</span></div>
       <ul class="daftar" id="l-alarm" aria-labelledby="h-alarm"></ul>
     </section>
   </div>
 </main>
-<footer class="pg">Mockup proyek 14 · semua angka adalah data contoh · data dari Azure Cosmos DB (emulator lokal), ditarik lewat REST + long polling</footer>
+<footer class="pg">Mockup proyek 14. Semua angka data contoh. Sumber data: Azure Cosmos DB (emulator lokal).</footer>
 <script src="../../shared/charts.js"></script>
 <script src="app.js"></script>
 </body>

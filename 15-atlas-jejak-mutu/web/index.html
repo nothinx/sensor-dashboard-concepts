@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jejak Mutu · Nomor Seri</title>
-<meta name="description" content="Mockup proyek 15: melacak perjalanan mutu satu unit TV atau kulkas per nomor seri, dari lini sampai kemas.">
+<title>Jejak Mutu</title>
+<meta name="description" content="Mockup proyek 15: melacak perjalanan mutu satu unit TV atau kulkas per nomor seri, dari lini perakitan sampai kemas.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Red+Hat+Mono:wght@400;500&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Atkinson+Hyperlegible+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="../../shared/charts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -14,7 +15,7 @@
 <header class="top">
   <span class="logo-slot">[LOGO KLIEN]</span>
   <span class="product">Jejak Mutu</span>
-  <span class="muted">per nomor seri</span>
+  <span class="muted">Pelacakan mutu per nomor seri</span>
   <div class="top-meta">
     <span class="sample" data-pratinjau>Data contoh</span>
     <span id="sumber" class="sumber" role="status">Memuat data…</span>
@@ -26,18 +27,18 @@
 <main>
   <section class="cari" aria-labelledby="cari-judul">
     <form id="form-cari" class="cari-form" role="search">
-      <h2 id="cari-judul" class="cari-judul"><label for="q">Lacak nomor seri</label></h2>
+      <h2 id="cari-judul" class="cari-judul"><label for="q">Lacak unit</label></h2>
       <input id="q" name="q" type="search" autocomplete="off" spellcheck="false" minlength="2" maxlength="60"
-             placeholder="Nomor seri, kode cacat, atau isi catatan QC, mis. TV43-2611 atau garis panel">
-      <button class="btn primary" type="submit">Cari</button>
+             placeholder="Nomor seri, kode cacat, catatan QC">
+      <button class="btn" type="submit">Cari</button>
     </form>
     <p class="cari-galat" id="cari-galat" role="alert" hidden></p>
-    <div class="ditahan" id="ditahan" aria-label="Unit yang sedang ditahan"></div>
+    <div class="ditahan" id="ditahan" aria-label="Pintasan unit"></div>
     <ol class="hasil" id="hasil" hidden></ol>
   </section>
 
   <section class="unit" id="unit" aria-live="polite">
-    <p class="memuat">Memuat unit…</p>
+    <p class="memuat">Memuat data unit…</p>
   </section>
 
   <div class="arsip">
@@ -45,17 +46,17 @@
       <div class="panel-h"><h2>Hari ini</h2><span class="sub" id="kpi-waktu"></span></div>
       <div class="kpis" id="kpis"></div>
     </section>
-    <section class="lajur-arsip">
-      <div class="panel-h"><h2>Kode cacat terbanyak, 7 hari</h2></div>
+    <section class="lajur-arsip lebar">
+      <div class="panel-h"><h2>Kode cacat terbanyak</h2><span class="sub">7 hari terakhir</span></div>
       <ol class="cacat" id="cacat"><li class="memuat">Memuat…</li></ol>
     </section>
     <section class="lajur-arsip">
-      <div class="panel-h"><h2>Umpan kejadian</h2><span class="sub">dari change stream koleksi unit</span></div>
+      <div class="panel-h"><h2>Kejadian terbaru</h2><span class="sub">6 terakhir</span></div>
       <ol class="umpan" id="umpan"><li class="memuat">Memuat…</li></ol>
     </section>
   </div>
 </main>
-<footer class="pg">Mockup proyek 15 · semua angka adalah data contoh · data dari MongoDB Atlas (lokal: mongodb-atlas-local)</footer>
+<footer class="pg">Mockup proyek 15. Sumber data: MongoDB Atlas (lokal: mongodb-atlas-local). Dalam pratinjau, semua angka adalah data contoh.</footer>
 
 <script src="../../shared/charts.js"></script>
 <script src="app.js"></script>

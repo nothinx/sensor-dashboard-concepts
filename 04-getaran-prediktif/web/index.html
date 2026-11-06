@@ -7,7 +7,7 @@
 <meta name="description" content="Mockup proyek 04: getaran mesin berputar, zona ISO 10816-1, spektrum frekuensi, dan perintah kerja perawatan.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Text:wght@400;500;600&family=Atkinson+Hyperlegible+Mono:wght@500;600&display=swap">
 <link rel="stylesheet" href="../../shared/charts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -18,7 +18,7 @@
       <span class="logo-slot">[LOGO KLIEN]</span>
       <span class="product">Perawatan Prediktif Getaran</span>
     </div>
-    <div class="side-h"><h2>Urutan periksa</h2><p class="side-ringkas" id="ringkas">Memuat daftar mesin</p></div>
+    <div class="side-h"><div><h2>Urutan pemeriksaan</h2><p class="side-ringkas" id="ringkas">Memuat daftar mesin</p></div><span class="side-sat">RMS, mm/s</span></div>
     <nav>
       <ul class="mesin-list" id="daftar" aria-busy="true"></ul>
     </nav>
@@ -45,26 +45,26 @@
     <section class="kpis" aria-label="Kondisi terkini">
       <div class="kpi"><span class="l">Getaran terkini</span><span class="v besar" id="k-rms">&nbsp;</span><span class="d" id="k-rms-d">&nbsp;</span></div>
       <div class="kpi"><span class="l">Zona ISO 10816-1</span><span class="v" id="k-zona">&nbsp;</span><span class="d" id="k-zona-d">&nbsp;</span></div>
-      <div class="kpi"><span class="l">Perubahan 30 hari</span><span class="v" id="k-ubah">&nbsp;</span><span class="d">rata-rata harian terakhir dibanding 30 hari lalu</span></div>
+      <div class="kpi"><span class="l">Perubahan 30 hari</span><span class="v" id="k-ubah">&nbsp;</span><span class="d">dibanding 30 hari lalu</span></div>
       <div class="kpi"><span class="l">Suhu bearing</span><span class="v" id="k-suhu">&nbsp;</span><span class="d" id="k-suhu-d">&nbsp;</span></div>
       <div class="kpi"><span class="l">Jam operasi</span><span class="v" id="k-jam">&nbsp;</span><span class="d">[REAL DATA: dari CMMS klien]</span></div>
     </section>
 
     <section class="panel momen" aria-labelledby="h-spek">
-      <header class="panel-h"><h2 id="h-spek">Spektrum getaran: di frekuensi mana energinya naik?</h2>
+      <header class="panel-h"><h2 id="h-spek">Spektrum getaran: frekuensi mana yang menguat?</h2>
         <span class="legend" id="spek-legend"></span></header>
       <div class="kertas"><div class="tepi-x" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div><div class="tepi-y" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span></div><div id="spektrum" data-label="Spektrum getaran dengan penanda frekuensi cacat"></div></div>
       <dl class="kop" aria-label="Kop lembar ukur">
         <div><dt>Mesin</dt><dd id="kop-mesin">-</dd></div>
         <div><dt>Titik ukur</dt><dd>bearing sisi penggerak [REAL DATA: titik ukur klien]</dd></div>
-        <div><dt>Satuan</dt><dd id="spek-d">mm/s per garis frekuensi</dd></div>
+        <div><dt>Satuan</dt><dd id="spek-d">mm/s RMS</dd></div>
         <div><dt>Lembar</dt><dd>1 / 1</dd></div>
       </dl>
     </section>
 
     <div class="duo">
       <section class="panel" aria-labelledby="h-tren">
-        <header class="panel-h"><h2 id="h-tren">Tren 30 hari</h2><span class="muted">mm/s RMS, rata-rata harian</span></header>
+        <header class="panel-h"><h2 id="h-tren">Tren 30 hari</h2><span class="muted">rata-rata harian, mm/s RMS</span></header>
         <div id="tren" data-label="Tren getaran 30 hari"></div>
       </section>
       <section class="panel" aria-labelledby="h-pk">
@@ -73,14 +73,13 @@
           <label>Judul<input id="pk-judul" name="judul" required minlength="3" maxlength="120"></label>
           <label>Prioritas<select id="pk-prioritas" name="prioritas"><option value="TINGGI">Tinggi</option><option value="SEDANG" selected>Sedang</option><option value="RENDAH">Rendah</option></select></label>
           <div class="form-aksi"><button class="btn primer" type="submit">Simpan perintah kerja</button><button class="btn" type="button" id="pk-batal">Batal</button></div>
-
         </form>
         <p class="form-pesan" id="pk-pesan" role="status"></p>
         <ul class="pk-list" id="pk-list"></ul>
         <dl class="identitas" id="identitas"></dl>
       </section>
     </div>
-    <footer class="pg">Mockup proyek 04 · data ditarik lewat GraphQL setiap 60 detik</footer>
+    <footer class="pg">Mockup proyek 04. Data diperbarui lewat GraphQL tiap 60 detik.</footer>
   </main>
 </div>
 <script src="../../shared/charts.js"></script>

@@ -13,6 +13,8 @@ const LON = { MDN: 98.7, PLM: 104.8, JKT: 106.8, BKS: 107.0, BDG: 107.6, YOG: 11
 const SUMBU = [97.4, 120.6], UBIN_DERAJAT = 2.2; // rentang sumbu dan lebar satu ubin dalam derajat
 const posX = (lon) => ((lon - SUMBU[0]) / (SUMBU[1] - SUMBU[0])) * 100;
 const fmtBujur = (lon) => `${fmt(lon, 1)}°`;
+// angka + satuan: satuan lebih kecil dan redup, dipisah spasi tipis
+const nu = (v, u) => `${v}<small class="u">&thinsp;${u}</small>`;
 if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
 
 let mode = "api", cabang = [], pilih = null, padam = [], nextPadam = null;
@@ -20,7 +22,7 @@ let mode = "api", cabang = [], pilih = null, padam = [], nextPadam = null;
 const pukul = (iso) => hhmm(new Date(iso));
 function durasi(dari, sampai) {
   const m = Math.max(0, Math.round(((sampai ? Date.parse(sampai) : Date.now()) - Date.parse(dari)) / 60000));
-  return m < 60 ? `${m} mnt` : `${Math.floor(m / 60)} jam ${m % 60} mnt`;
+  return m < 60 ? `${m} menit` : `${Math.floor(m / 60)} jam ${m % 60} menit`;
 }
 
 async function ambil(path) {
@@ -45,8 +47,8 @@ async function semuaCabang() {
 function renderRingkasan(r) {
   $("kpis").innerHTML = [
     ["Cabang kritis", r.kritis, "crit", `dari ${r.total} cabang`],
-    ["Cabang waspada", r.waspada, "", "solar, baterai, atau beban mendekati batas"],
-    ["PLN padam sekarang", r.plnPadam, "", "cabang"],
+    ["Cabang waspada", r.waspada, "", "mendekati batas aman"],
+    ["PLN sedang padam", r.plnPadam, "", "cabang saat ini"],
     ["Genset menyala", r.gensetJalan, "", "menanggung beban cabang"],
   ].map(([l, v, k, d]) => `<div class="kpi"><div class="l">${l}</div><div class="v ${r.kritis && k ? k : ""}">${v}</div><div class="d">${d}</div></div>`).join("");
 }
@@ -59,15 +61,18 @@ function renderTemuan() {
   const g = [palingGawat()].find((c) => c && c.status !== "normal");
   const btn = $("btnGawat");
   if (!g) {
-    $("temuan").innerHTML = "<b>Semua cabang normal.</b> PLN menyala dan cadangan siap di 12 cabang.";
+    $("temuan").innerHTML = `<b>Semua cabang normal.</b> PLN menyala dan cadangan siap di ${cabang.length} cabang.`;
     btn.hidden = true;
     return;
   }
-  const padamTeks = g.pln.ada ? "" : `PLN padam sejak pukul ${pukul(g.pln.padamSejak)}${g.genset.jalan ? "" : " dan genset tidak menyala"}; `;
-  const sisa = !g.pln.ada && !g.genset.jalan ? `UPS tinggal ±${fmt(g.ups.runtime, 0)} menit.` : `${g.alasan.join(", ")}.`;
-  $("temuan").innerHTML = `<b>${esc(g.kota)}: ${esc(padamTeks)}${esc(sisa)}</b> ${cabang.filter((c) => c.status !== "normal").length - 1} cabang lain perlu dipantau.`;
+  const tanpaCadangan = !g.pln.ada && !g.genset.jalan;
+  const keadaan = tanpaCadangan ? `PLN padam sejak pukul ${pukul(g.pln.padamSejak)} dan genset tidak menyala.`
+    : `${g.alasan.join(", ")}.`;
+  const lanjut = tanpaCadangan ? ` UPS hanya bertahan sekitar ${fmt(g.ups.runtime, 0)} menit lagi.` : "";
+  const lain = cabang.filter((c) => c.status !== "normal").length - 1;
+  $("temuan").innerHTML = `<b>${esc(g.kota)}: ${esc(keadaan)}${esc(lanjut)}</b>${lain > 0 ? ` ${lain} cabang lain perlu dipantau.` : ""}`;
   btn.hidden = false;
-  btn.textContent = `Buka ${g.kota}`;
+  btn.textContent = `Lihat Cabang ${g.kota}`;
   btn.onclick = () => pilihCabang(g.kode);
 }
 
@@ -75,13 +80,13 @@ function ubin(c, lajur) {
   const lon = LON[c.kode] ?? 110;
   const bbmK = c.genset.bbm < 20 ? "crit" : c.genset.bbm < 40 ? "warn" : "";
   return `<button class="ubin ${c.pln.ada ? "" : "padam"}" type="button" aria-pressed="${c.kode === pilih}" data-kode="${c.kode}"
-      style="--x:${posX(lon).toFixed(2)};--lajur:${lajur}" aria-label="${esc(c.nama)}, ${ST_TEKS[c.status]}">
-    ${c.pln.ada ? "" : `<span class="padam-sejak">PLN padam sejak ${pukul(c.pln.padamSejak)}</span>`}
+      style="--x:${posX(lon).toFixed(2)};--lajur:${lajur}" aria-label="${esc(c.nama)}, status ${ST_TEKS[c.status].toLowerCase()}${c.pln.ada ? "" : `, PLN padam sejak pukul ${pukul(c.pln.padamSejak)}`}">
+    ${c.pln.ada ? "" : `<span class="padam-sejak"><span class="panjang">PLN padam sejak</span><span class="pendek">Padam</span> ${pukul(c.pln.padamSejak)}</span>`}
     <span class="kota">${esc(c.kota)}<span class="kode">${c.kode}</span></span>
-    <span class="tangki ${bbmK}" style="--isi:${c.genset.bbm}" title="Solar ${fmt(c.genset.bbm)} %"><i></i><span>${fmt(c.genset.bbm, 0)}</span></span>
+    <span class="tangki ${bbmK}" style="--isi:${c.genset.bbm}" title="Sisa solar ${fmt(c.genset.bbm, 0)}%"><i></i><span>${fmt(c.genset.bbm, 0)}</span></span>
     <span class="info">
-      <span class="l">Genset</span><b>${c.genset.jalan ? "menyala" : "siaga"}</b>
-      <span>UPS <b>${fmt(c.ups.baterai, 0)} %</b></span>
+      <span class="r"><span>Genset</span><b>${c.genset.jalan ? "Menyala" : "Siaga"}</b></span>
+      <span class="r"><span>UPS</span><b>${nu(fmt(c.ups.baterai, 0), "%")}</b></span>
       <span class="baterai ${c.ups.baterai < 30 ? "crit" : ""}" style="--isi:${c.ups.baterai}"><i></i></span>
     </span>
     <span class="kaki">${st(ST[c.status], ST_TEKS[c.status])}<span class="bujur">${fmtBujur(lon)}</span></span>
@@ -103,7 +108,7 @@ function renderPeta() {
   for (let d = 98; d <= 120; d += 2) garis += `<span class="meridian" style="--x:${posX(d).toFixed(2)}"><b>${d}°</b></span>`;
   const pin = urut.map((c) => `<i class="pin" style="--x:${posX(LON[c.kode] ?? 110).toFixed(2)}"></i>`).join("");
   $("peta").style.setProperty("--lajur-n", Math.max(1, ujung.length));
-  $("peta").innerHTML = `<div class="garis" aria-hidden="true">${garis}${pin}<span class="arah">barat</span><span class="arah timur">timur</span></div>${html.join("")}`;
+  $("peta").innerHTML = `<div class="garis" aria-hidden="true">${garis}${pin}<span class="arah">Barat</span><span class="arah timur">Timur</span></div>${html.join("")}`;
   $("peta").removeAttribute("aria-busy");
 }
 
@@ -113,18 +118,18 @@ function diagramAts(c) {
   const on = (k) => (sumber === k ? "on" : "");
   const ujung = sumber === "pln" ? [150, 40] : sumber === "genset" ? [150, 110] : [160, 60];
   const teks = { pln: "PLN", genset: "genset", ups: "baterai UPS saja" }[sumber];
-  return `<svg class="ats" viewBox="0 0 420 150" role="img" aria-label="Papan ATS: beban cabang ditanggung ${teks}">
+  return `<svg class="ats" viewBox="0 0 420 156" role="img" aria-label="Papan ATS: beban cabang ditanggung ${teks}">
     <g class="${on("pln")} ${c.pln.ada ? "" : "mati"}"><rect x="1" y="20" width="96" height="40"/><text x="49" y="45">PLN</text><path d="M97 40H146"/></g>
     <g class="${on("genset")}"><rect x="1" y="90" width="96" height="40"/><text x="49" y="115">Genset</text><path d="M97 110H146"/></g>
-    <text class="kecil" x="49" y="78">${c.pln.ada ? "PLN ada" : `padam ${pukul(c.pln.padamSejak)}`}</text>
-    <text class="kecil" x="49" y="146">${c.genset.jalan ? "menyala" : "siaga"}</text>
+    <text class="kecil" x="49" y="78">${c.pln.ada ? "Menyala" : `Padam ${pukul(c.pln.padamSejak)}`}</text>
+    <text class="kecil" x="49" y="148">${c.genset.jalan ? "Menyala" : "Siaga"}</text>
     <g class="kontak"><circle cx="150" cy="40" r="3.5"/><circle cx="150" cy="110" r="3.5"/></g>
     <g class="on"><line class="pisau" x1="196" y1="75" x2="${ujung[0]}" y2="${ujung[1]}"/><circle class="poros" cx="196" cy="75" r="4.5"/></g>
     <text class="kecil" x="196" y="100">ATS</text>
     <g class="${sumber === "ups" ? "" : "on"}"><path d="M200 75H236"/></g>
     <g class="on"><rect x="236" y="55" width="76" height="40"/><text x="274" y="80">UPS</text><path d="M312 75H332"/>
       <rect x="332" y="55" width="86" height="40"/><text x="375" y="80">Beban</text></g>
-    <text class="kecil" x="274" y="116">${fmt(c.ups.baterai, 0)} %</text><text class="kecil" x="375" y="116">${fmt(c.ups.beban, 0)} %</text>
+    <text class="kecil" x="274" y="116">${fmt(c.ups.baterai, 0)}&#8201;%</text><text class="kecil" x="375" y="116">${fmt(c.ups.beban, 0)}&#8201;%</text>
   </svg>`;
 }
 
@@ -135,43 +140,43 @@ async function renderDetail() {
   d.innerHTML = `
     <div class="d-papan">
       <div class="d-judul"><h2>${esc(c.nama)}</h2>${st(ST[c.status], ST_TEKS[c.status])}</div>
-      ${c.alasan.length ? `<ul class="alasan">${c.alasan.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : `<p class="sub">Tidak ada catatan; semua nilai dalam batas.</p>`}
+      ${c.alasan.length ? `<ul class="alasan">${c.alasan.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : `<p class="sub">Semua nilai dalam batas aman.</p>`}
       ${diagramAts(c)}
     </div>
-    <div class="dk">
-      <div><div class="l">Solar genset</div><div class="v">${fmt(c.genset.bbm)}<small>%</small></div></div>
-      <div><div class="l">Tegangan · frekuensi</div><div class="v">${c.genset.jalan ? `${fmt(c.genset.tegangan, 0)}<small>V</small> ${fmt(c.genset.frekuensi)}<small>Hz</small>` : "<small>genset siaga</small>"}</div></div>
-      <div><div class="l">Baterai UPS</div><div class="v">${fmt(c.ups.baterai)}<small>%</small></div></div>
-      <div><div class="l">Runtime UPS</div><div class="v">${fmt(c.ups.runtime, 0)}<small>mnt</small></div></div>
-      <div><div class="l">Beban UPS</div><div class="v">${fmt(c.ups.beban, 0)}<small>%</small></div></div>
-      <div><div class="l">Jam jalan genset</div><div class="v">${fmt(c.genset.jamJalan, 0)}<small>jam</small></div></div>
-    </div>
+    <dl class="dk">
+      <div><dt>Sisa solar genset</dt><dd>${nu(fmt(c.genset.bbm, 0), "%")}</dd></div>
+      <div><dt>Keluaran genset</dt><dd>${c.genset.jalan ? `${nu(fmt(c.genset.tegangan, 0), "V")}&ensp;${nu(fmt(c.genset.frekuensi, 0), "Hz")}` : `<span class="redup">Tidak menyala</span>`}</dd></div>
+      <div><dt>Baterai UPS</dt><dd>${nu(fmt(c.ups.baterai, 0), "%")}</dd></div>
+      <div><dt>Sisa waktu UPS</dt><dd>${nu(fmt(c.ups.runtime, 0), "menit")}</dd></div>
+      <div><dt>Beban UPS</dt><dd>${nu(fmt(c.ups.beban, 0), "%")}</dd></div>
+      <div><dt>Jam operasi genset</dt><dd>${nu(fmt(c.genset.jamJalan, 0), "jam")}</dd></div>
+    </dl>
     <div class="d-tren">
-      <div class="d-judul"><h3>Solar dan baterai UPS, 24 jam</h3>
-        <span class="legend"><span><i style="background:var(--s1)"></i>Solar</span><span><i style="background:var(--s2)"></i>Baterai UPS</span></span></div>
+      <div class="d-judul"><h3>Solar dan baterai UPS, 24 jam terakhir</h3>
+        <span class="legend"><span><i style="background:var(--s1)"></i>Sisa solar</span><span><i style="background:var(--s2)"></i>Baterai UPS</span></span></div>
       <div id="tren" data-label="Solar dan baterai UPS ${esc(c.kota)}, 24 jam"><p class="memuat">Memuat riwayat…</p></div>
-      <p class="sub">Diperbarui pukul ${pukul(c.diperbarui)} · genset ${c.gensetKva} kVA · UPS ${c.upsKva} kVA</p>
+      <p class="sub">Diperbarui pukul ${pukul(c.diperbarui)}. Kapasitas genset ${c.gensetKva}&nbsp;kVA, UPS ${c.upsKva}&nbsp;kVA.</p>
     </div>`;
   try {
     const rw = mode === "api" ? (await ambil(`/cabang/${c.kode}/riwayat?jam=24`)).data : riwayatContoh(c);
     if (!rw.length) { $("tren").innerHTML = `<p class="kosong">Belum ada riwayat untuk cabang ini.</p>`; return; }
     lineChart($("tren"), {
       x: rw.map((p) => new Date(p.ts)), unit: "%", min: 0, max: 100, dec: 0, h: 170,
-      series: [{ name: "Solar", color: "var(--s1)", data: rw.map((p) => p.bbm) }, { name: "Baterai", color: "var(--s2)", data: rw.map((p) => p.baterai) }],
-      bands: [{ y: 20, label: "batas kritis 20 %", color: "var(--crit)" }],
+      series: [{ name: "Sisa solar", color: "var(--s1)", data: rw.map((p) => p.bbm) }, { name: "Baterai", color: "var(--s2)", data: rw.map((p) => p.baterai) }],
+      bands: [{ y: 20, label: "batas kritis 20%", color: "var(--crit)" }],
     });
   } catch (e) {
-    $("tren").innerHTML = `<p class="kosong">Riwayat gagal dimuat (${esc(e.message)}). Pilih cabang lagi untuk mencoba ulang.</p>`;
+    $("tren").innerHTML = `<p class="kosong" title="${esc(e.message)}">Riwayat tidak bisa dimuat. Pilih cabang ini lagi untuk mencoba ulang.</p>`;
   }
 }
 
 function renderPadam() {
   $("padam").innerHTML = padam.length ? padam.map((p) => `<tr>
-      <td>${esc(p.nama)}</td><td class="num">${new Date(p.mulai).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}, ${pukul(p.mulai)}</td>
-      <td>${p.selesai ? `<span class="num">${pukul(p.selesai)}</span>` : st("warn", "Masih padam")}</td>
-      <td class="n num">${durasi(p.mulai, p.selesai)}</td>
+      <td>${esc(p.nama)}</td><td>${new Date(p.mulai).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}, pukul ${pukul(p.mulai)}</td>
+      <td>${p.selesai ? `pukul ${pukul(p.selesai)}` : st("warn", "Masih padam")}</td>
+      <td class="n">${durasi(p.mulai, p.selesai)}</td>
       <td>${p.gensetMenyala ? st("ok", "Menyala") : st("crit", "Tidak menyala")}</td></tr>`).join("")
-    : `<tr><td colspan="5" class="kosong">Tidak ada kejadian PLN padam dalam riwayat.</td></tr>`;
+    : `<tr><td colspan="5" class="kosong">Belum ada catatan PLN padam.</td></tr>`;
   $("btnLagi").hidden = !nextPadam;
 }
 
@@ -189,12 +194,13 @@ async function segarkan(awal) {
     cabang = c;
     if (awal) { const h = await ambil("/padam?limit=6"); padam = h.data; nextPadam = h.next; }
     renderRingkasan(r);
-    $("sumber").textContent = `Tersambung ke API · diperbarui pukul ${hhmm(new Date())}`;
+    $("sumber").textContent = `Terhubung ke API, diperbarui pukul ${hhmm(new Date())}`;
     $("sumber").classList.remove("putus");
     $("banner").hidden = true;
   } catch (e) {
     if (mode === "api" && !awal) { // sempat tersambung: pertahankan data terakhir
-      $("sumber").textContent = `Koneksi API terputus (${e.message}); mencoba lagi tiap 10 detik`;
+      $("sumber").textContent = "Koneksi ke API terputus. Mencoba lagi tiap 10 detik.";
+      $("sumber").title = e.message;
       $("sumber").classList.add("putus");
       return;
     }
@@ -213,7 +219,7 @@ $("btnLagi").addEventListener("click", async () => {
     padam.push(...h.data);
     nextPadam = h.next;
     renderPadam();
-  } catch (e) { $("btnLagi").textContent = `Gagal memuat (${e.message}); coba lagi`; }
+  } catch (e) { $("btnLagi").textContent = "Gagal memuat. Coba lagi"; $("btnLagi").title = e.message; }
 });
 $("peta").addEventListener("click", (e) => { const b = e.target.closest(".ubin"); if (b) pilihCabang(b.dataset.kode); });
 
@@ -230,10 +236,10 @@ function modeContoh(sebab) {
   cabang = [
     dasar("MKS", "Makassar", 11, { status: "kritis", alasan: ["PLN padam, genset tidak menyala"], pln: { ada: false, padamSejak: iso(-14) },
       genset: { jalan: false, bbm: 93, jamJalan: 2707, tegangan: 0, frekuensi: 0 }, ups: { baterai: 44, runtime: 11, beban: 50 } }),
-    dasar("BPN", "Balikpapan", 10, { status: "kritis", alasan: ["Solar 17 %"], genset: { jalan: false, bbm: 17, jamJalan: 2575, tegangan: 0, frekuensi: 0 } }),
-    dasar("PLM", "Palembang", 1, { status: "waspada", alasan: ["Solar 36 %", "PLN padam, beban di genset"], pln: { ada: false, padamSejak: iso(-190) },
+    dasar("BPN", "Balikpapan", 10, { status: "kritis", alasan: ["Sisa solar 17%"], genset: { jalan: false, bbm: 17, jamJalan: 2575, tegangan: 0, frekuensi: 0 } }),
+    dasar("PLM", "Palembang", 1, { status: "waspada", alasan: ["Sisa solar 36%", "PLN padam, beban ditanggung genset"], pln: { ada: false, padamSejak: iso(-190) },
       genset: { jalan: true, bbm: 36, jamJalan: 1340, tegangan: 230, frekuensi: 50 } }),
-    dasar("DPS", "Denpasar", 9, { status: "waspada", alasan: ["Beban UPS 85 %"], ups: { baterai: 100, runtime: 15, beban: 85 } }),
+    dasar("DPS", "Denpasar", 9, { status: "waspada", alasan: ["Beban UPS 85%"], ups: { baterai: 100, runtime: 15, beban: 85 } }),
     ...[["MDN", "Medan", 0], ["JKT", "Jakarta", 2], ["BKS", "Bekasi", 3], ["BDG", "Bandung", 4], ["SMG", "Semarang", 5], ["YOG", "Yogyakarta", 6], ["SBY", "Surabaya", 7], ["MLG", "Malang", 8]]
       .map(([k, n, i]) => dasar(k, n, i)),
   ];
@@ -249,11 +255,11 @@ function modeContoh(sebab) {
   renderRingkasan({ total: 12, kritis: hitung("kritis"), waspada: hitung("waspada"), plnPadam: 2, gensetJalan: 1 });
   // pratinjau: penanda header sudah cukup, status koneksi tidak ditampilkan sebagai galat
   $("sumber").hidden = PRATINJAU;
-  $("sumber").textContent = "API tidak terhubung, memakai data contoh bawaan";
+  $("sumber").textContent = "API tidak terhubung. Menampilkan data contoh.";
   $("sumber").classList.add("putus");
   const b = $("banner");
   b.hidden = false;
-  b.innerHTML = `Mode data contoh: API tidak terhubung (${esc(sebab)}). Jalankan <code>docker compose -p konsep-13 up -d</code> di folder proyek 13, lalu buka <code>http://localhost:18130</code>.`;
+  b.innerHTML = `Menampilkan data contoh karena API tidak terhubung (${esc(sebab)}). Jalankan <code>docker compose -p konsep-13 up -d</code> di folder proyek 13, lalu buka <code>http://localhost:18130</code>.`;
 }
 
 function riwayatContoh(c) {

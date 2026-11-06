@@ -6,7 +6,8 @@
 <title>Portal Mitra Servis</title>
 <meta name="description" content="Mockup proyek 12: portal mitra servis resmi untuk mengelola tiket dan SLA waktu tanggap.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="../../shared/charts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -17,16 +18,16 @@
 <section id="layar-masuk" class="masuk" hidden aria-labelledby="judul-masuk">
   <div class="masuk-kartu">
     <h1 id="judul-masuk">Portal Mitra Servis</h1>
-    <p class="muted">Masuk dengan akun yang diberikan pabrik untuk mitra Anda.</p>
+    <p class="muted">Masuk dengan akun dari pabrik untuk mitra servis Anda.</p>
     <form id="form-masuk" novalidate>
       <label>Email<input name="email" type="email" autocomplete="username" required></label>
-      <label>Sandi<input name="sandi" type="password" autocomplete="current-password" required minlength="8"></label>
+      <label>Kata sandi<input name="sandi" type="password" autocomplete="current-password" required minlength="8"></label>
       <p id="galat-masuk" class="galat" role="alert" hidden></p>
       <button class="btn primary" type="submit">Masuk</button>
     </form>
     <details class="akun-contoh" id="akun-contoh" hidden>
       <summary>Akun contoh untuk emulator lokal</summary>
-      <p>Sandi semua akun: <code>Contoh-Mitra-2026</code></p>
+      <p>Kata sandi semua akun: <code>Contoh-Mitra-2026</code></p>
       <ul>
         <li><button type="button" class="isi-akun" data-email="mitra.smg@contoh.test">mitra.smg@contoh.test</button></li>
         <li><button type="button" class="isi-akun" data-email="mitra.sby@contoh.test">mitra.sby@contoh.test</button></li>
@@ -59,7 +60,7 @@
         <h1 id="papan">Papan SLA</h1>
         <p class="temuan" id="temuan">Memuat tiket…</p>
       </div>
-      <div class="jam-dinding" aria-label="Jam sekarang"><b id="jam" class="mono">--.--</b><span id="tanggal"></span></div>
+      <div class="jam-dinding" aria-label="Jam sekarang"><b id="jam">--.--</b><span id="tanggal"></span></div>
       <div class="akun">
         <span class="sample" data-pratinjau hidden>Pratinjau, data contoh</span>
         <span id="pengguna" class="muted"></span>
@@ -68,12 +69,12 @@
     </header>
 
     <section aria-label="Tiket menunggu tanggapan">
-      <div class="papan" id="papan-sla"><p class="memuat">Memuat…</p></div>
+      <div class="papan" id="papan-sla"><p class="memuat">Memuat tiket yang menunggu tanggapan…</p></div>
     </section>
 
     <div class="dua">
       <section class="panel" aria-labelledby="berjalan">
-        <div class="panel-h"><h2 id="berjalan">Tiket berjalan</h2><span class="sub">sudah ditanggapi, belum selesai</span></div>
+        <div class="panel-h"><h2 id="berjalan">Tiket berjalan</h2><span class="sub">Sudah ditanggapi, belum selesai</span></div>
         <div class="tabel-bungkus">
           <table>
             <thead><tr><th>Tiket</th><th>Unit</th><th>Keluhan</th><th>Status</th><th>Kunjungan</th></tr></thead>
@@ -82,21 +83,21 @@
         </div>
       </section>
       <section class="panel" aria-labelledby="kinerja">
-        <div class="panel-h"><h2 id="kinerja">Kinerja 30 hari</h2><span class="sub">mitra Anda dibanding rata-rata semua mitra</span></div>
+        <div class="panel-h"><h2 id="kinerja">Kinerja 30 hari</h2><span class="sub">Mitra Anda dibanding rata-rata semua mitra</span></div>
         <div class="kinerja" id="kinerja-isi"></div>
       </section>
     </div>
 
     <section class="panel" aria-labelledby="unit">
-      <div class="panel-h"><h2 id="unit">Unit pelanggan bermasalah berulang</h2><span class="sub">2 tiket atau lebih dalam 30 hari</span></div>
+      <div class="panel-h"><h2 id="unit">Unit berulang</h2><span class="sub">Unit dengan 2 tiket atau lebih dalam 30 hari terakhir</span></div>
       <div class="tabel-bungkus">
         <table>
-          <thead><tr><th>Unit</th><th>Model</th><th>Pelanggan</th><th class="n">Tiket 30 hari</th><th>Keluhan terakhir</th></tr></thead>
+          <thead><tr><th>Unit</th><th>Model</th><th>Pelanggan</th><th class="n">Tiket</th><th>Keluhan terakhir</th></tr></thead>
           <tbody id="tbl-unit"></tbody>
         </table>
       </div>
     </section>
-    <footer class="pg">Mockup proyek 12 · data dari Supabase (lokal: Supabase CLI)</footer>
+    <footer class="pg">Mockup proyek 12. Data dari Supabase; di komputer lokal lewat Supabase CLI.</footer>
   </main>
 </div>
 <div id="toast" class="toast" role="status" hidden></div>

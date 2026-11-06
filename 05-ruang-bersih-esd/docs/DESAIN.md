@@ -43,9 +43,22 @@ Di bawah 1100 px semua kolom ditumpuk.
 
 Kontras terukur: `--ink-3` di atas `--bg` 5,49:1, di atas `--epoksi` 5,16:1; aksen di atas putih ≥ 4,5:1.
 
-Huruf: **DM Sans** 400/500/600 untuk antarmuka, **DM Mono** untuk angka, kode titik, dan waktu
-(numeral tabular). Sudut siku di semua permukaan (pin tetap bulat). Spasi kelipatan 4 px.
-Skala: isi 15 px, label 13 sampai 14 px, h1 40 px, nilai detail 36 px, `--chart-fs` 13 px.
+Huruf: **Geist** 400/500/600 untuk antarmuka dan semua angka (`tabular-nums lining-nums`), **Geist Mono** 400
+hanya untuk ID titik, stasiun, dan operator. Sudut siku di semua permukaan; radius kecil `--r-kecil` 4 px hanya
+untuk chip dan tooltip; pin tetap bulat. Garis 1 px (`--line`, `--line-strong`).
+
+| Token tipe | Nilai | Pemakaian |
+|---|---|---|
+| `--fs-1` | 13 px | label, header tabel, chip, sumbu grafik, ID titik |
+| `--fs-2` | 15 px | isi, sel tabel, nama ruang di denah, satuan nilai detail |
+| `--fs-3` | 17 px | judul panel, kalimat temuan |
+| `--fs-4` | 20 px | nama titik terpilih |
+| `--fs-5` | 28 px (HP 24) | nilai di panel detail, line-height 1, -0.01em |
+| `--fs-6` | 40 px (HP 28) | judul halaman, line-height 1.15, -0.02em |
+| `--fs-7` | 56 px (HP 44) | angka lulus uji ESD, line-height 1, -0.02em |
+
+Spasi `--sp-1`…`--sp-7` = 4/8/12/16/24/32/48 px; tepi halaman `--tepi` 32 px (HP 16). Grafik: `--chart-font`
+sans, `--chart-fs`/`--tip-fs`/`--st-fs` = `--fs-1`.
 
 ## Keputusan
 
@@ -63,3 +76,17 @@ Skala: isi 15 px, label 13 sampai 14 px, h1 40 px, nilai detail 36 px, `--chart-
 - Denah sebagai gambar arsitektur: dinding 6 px, lantai epoksi berkisi, pintu berupa celah dinding + daun + busur ayun menghadap koridor, airlock punya pintu kedua ke luar, panah utara dan skala batang (`[REAL DATA: gambar denah klien]`).
 - Ruang bermasalah diberi garis dalam 3 px warna status plus chip ikon + teks di label ruang.
 - Tiap titik sensor berlabel ID mono; label pindah ke kiri bila dekat dinding kanan. Di HP label, nilai ruang, dan pintu disembunyikan; ID tetap ada di panel detail.
+
+## Keputusan putaran 3
+
+- Font DM Sans + DM Mono diganti **Geist + Geist Mono**: x-height lebih lega dan angka tabular Geist rapi tanpa
+  mono, jadi nilai, waktu, dan sumbu grafik pakai sans; mono tersisa untuk ID yang memang dibaca petugas sebagai kode.
+- Satu skala tujuh langkah di `:root`; tak ada ukuran px di selektor lain. Tracking negatif hanya ≥ 28 px.
+- Satuan dipisah spasi tipis, lebih kecil dan lebih ringan dari angka; persen menempel (98,1%); minus tipografis (−35).
+- Kepala halaman memakai kolom yang sama dengan lembar di bawahnya, jadi label ESD tepat di atas panel detail.
+- Satu istilah per status di seluruh situs: Memenuhi syarat, Perlu perhatian, Di luar syarat, Tidak terhubung
+  (menggantikan Normal/Peringatan/Kritis/Offline dari pustaka bersama). Chip status ruang sebaris dengan nama ruang.
+- Di bawah 1600 px label ID di denah hanya muncul untuk titik terpilih, disorot, atau difokus supaya tidak bertabrakan;
+  denah sedikit lebih tinggi (16 : 10,5). Di HP denah 1 : 1,6, tabel bergulir mendatar tanpa memecah sel.
+- Bahasa: "offline" jadi "tidak mengirim data"/"tidak terhubung", "galat" di pita jadi "gangguan", batas grafik
+  "batas atas/bawah", status koneksi pratinjau "Data per pukul 11.38".

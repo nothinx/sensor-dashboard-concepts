@@ -25,12 +25,13 @@ menyebut gateway yang menjadi akar masalah, dan tombol primer langsung menampilk
 | Teks primer / sekunder / redup | `#ededed` / `#a1a1a6` / `#8b8b91` |
 | Aksen (seri grafik, fokus, tautan) | `#8ab4ff` |
 | Status baik / peringatan / kritis | `#4cc38a` / `#e2a336` / `#e5484d` |
-| Huruf UI | Inter Tight 400/500/600 |
-| Huruf data (ID, angka, waktu) | JetBrains Mono 400/500, tabular |
+| Huruf UI dan angka | Hanken Grotesk 400/500/600, `tabular-nums lining-nums` di `body` |
+| Huruf ID dan perintah | JetBrains Mono 400/500, hanya ID sensor/gateway, nama aturan alert, perintah terminal |
 | Rel rak / lubang / sekrup | `#1c1c1f` / `#0a0a0b` / `#34343a` |
 | Panel log terminal / garis / baris | `#0c0d0e` / `#222225` / `#1c1c1f` |
-| Skala tipe (1920) | isi 15, label 13, h2 18, temuan 18, h1 34, angka 32, angka jawaban 48; `--chart-fs` 13 |
-| Radius | kontrol dan pelat 4 |
+| Skala tipe (1920) | `--fs-xs` 13 label/th/chip/sumbu, `--fs-sm` 15 isi, `--fs-md` 17 judul panel, `--fs-lg` 20 temuan, `--fs-xl` 28 angka KPI, `--fs-2xl` 40 judul layar dan angka jawaban. HP: 13/15/17/17/24/32. `--chart-font` sans, `--chart-fs`/`--tip-fs`/`--st-fs` 13 |
+| Jarak | `--sp-1..7` = 4/8/12/16/24/32/48; tepi dalam pelat `--pad` 28 (HP 16) |
+| Radius / garis | `--r` 4 kontrol dan pelat, `--r-sm` 2 kotak port dan batang; satu garis 1 px `--line` |
 | Gerak | satu kurva `cubic-bezier(0.22, 1, 0.36, 1)`; detak 600 ms sekali per data masuk |
 
 Kontras yang diukur (`contrast-check.py`): teks redup pada kartu 5,18:1, aksen pada latar 8,81:1,
@@ -59,8 +60,27 @@ semua chip status di atas 8:1.
 - **Putaran 2, satu penanda pratinjau**: elemen `data-pratinjau` di samping judul berbunyi "Pratinjau, data
   contoh". Di pratinjau, detak sinkron disimulasikan tiap 15 detik dan tidak ada teks "Tidak tersambung".
 
+- **Putaran 3, huruf ganti ke Hanken Grotesk**: Inter Tight terlalu rapat untuk teks 13 sampai 15 px di layar
+  gelap, sehingga kata terasa menempel. Hanken Grotesk punya spasi terbuka, x-height lega, dan angka tabular asli
+  (diukur: lebar "1111" = "0000"; Mona Sans dan Atkinson Hyperlegible Next di Google Fonts tidak). Geist sudah
+  dipakai proyek lain.
+- **Putaran 3, mono dipangkas**: durasi, cap waktu, angka KPI, judul panel log, dan keterangan topologi kini sans
+  tabular. Mono hanya untuk ID (sensor, gateway, aturan alert) dan perintah `curl`, seperti label kabel di rak.
+  Satuan (`%`, "dari 6", "/ 64") lebih kecil atau redup, dipisah spasi tipis.
+- **Putaran 3, satu skala tipe**: enam token di `:root`, tidak ada ukuran px lepas di selektor. Tracking negatif
+  hanya di h1 40 px (-0.02em). Judul panel 17/600, label 13/400, isi 15/400; bobot maksimal 600.
+- **Putaran 3, tata letak**: di 1920 sensor bermasalah (8 kolom) di samping gateway (4), grafik (8) di samping log
+  alert (4). Di 1281 sampai 1600 tabel sensor dan grafik memakai lebar penuh, gateway dan alert berdampingan
+  (`grid-auto-flow: dense`), sehingga tidak ada tabel terpotong. Tabel di HP bergeser di dalam pelatnya.
+- **Putaran 3, grafik**: hanya penurunan yang belum pulih yang diberi anotasi ("Turun 17, belum pulih"); lonjakan
+  sesaat 71 sensor tidak lagi bertumpuk labelnya. Tinggi grafik mengikuti lebar kolom.
+- **Putaran 3, bahasa**: satu istilah "tidak mengirim data" (bukan "offline"), satuan ditulis penuh ("8 jam 20 menit
+  lalu", bukan "8 jam 20 mnt"), "baru saja" di bawah 2 detik, "galat" menjadi "error" untuk CRC, kalimat temuan
+  diawali "Sebanyak" (EYD: kalimat tidak diawali angka), tanpa pemisah "·".
+
 ## Hasil pemeriksaan
 
-- sloplint putaran 2: 0 FAIL, 1 REFLEX (`.tip` milik `shared/charts.css`), 0 WARN. Teks redup pada panel log
-  5,74:1.
-- Render 1920×1080 dan 390×844 `?pratinjau` di Chrome headless: tanpa galat konsol, tanpa geser samping.
+- sloplint putaran 3: 0 FAIL, 0 REFLEX, 0 WARN. Teks redup pada kartu 5,18:1, pada baris grup 4,96:1, pada
+  hover baris 4,63:1, pada panel log 5,74:1.
+- Render 1920×1080, 1440×900, dan 390 px `?pratinjau` di Chrome headless. Chrome headless di Windows tidak bisa
+  lebih sempit dari 500 px, jadi 390 px dirender lewat iframe 390 px; tanpa geser samping halaman.

@@ -6,7 +6,7 @@
 <title>Armada AC Pintar · Purnajual</title>
 <meta name="description" content="Mockup proyek 09: pemantauan armada AC terhubung untuk tim layanan purnajual.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="../../shared/charts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -30,9 +30,7 @@
       <h1>Unit yang perlu servis</h1>
       <p class="finding" id="temuan">Memuat ringkasan armada…</p>
     </div>
-    <div class="head-actions">
-      <button class="btn primary" type="button" id="btnTanpaTiket">Tampilkan unit tanpa tiket</button>
-    </div>
+    <button class="btn primary" type="button" id="btnTanpaTiket">Tampilkan unit tanpa tiket</button>
   </section>
 
   <section class="kpis" id="kpis" aria-label="Ringkasan armada"></section>
@@ -41,7 +39,7 @@
     <section class="panel list" aria-labelledby="judulDaftar">
       <div class="panel-h">
         <h2 id="judulDaftar">Unit bermasalah</h2>
-        <div class="seg" role="group" aria-label="Filter daftar">
+        <div class="seg" role="group" aria-label="Saring daftar">
           <button type="button" data-f="semua" aria-pressed="true">Semua</button>
           <button type="button" data-f="tanpa" aria-pressed="false">Tanpa tiket</button>
         </div>
@@ -50,6 +48,10 @@
     </section>
 
     <section class="panel detail" id="detail" aria-live="polite" aria-labelledby="judulUnit">
+      <div class="unit-h">
+        <h2 id="judulUnit">Pilih unit</h2><span id="unitStatus"></span>
+        <p class="alasan" id="unitAlasan"></p>
+      </div>
       <div class="detail-top">
         <div class="ac-wrap" role="img" aria-label="Unit AC di dinding rumah pelanggan">
           <div class="ac" id="ac" aria-hidden="true">
@@ -59,34 +61,30 @@
           </div>
           <div class="ac-flow" id="acFlow" aria-hidden="true"><span></span><span></span><span></span></div>
         </div>
-        <div class="unit-info">
-          <div class="row"><h2 id="judulUnit">Pilih unit</h2><span id="unitStatus"></span></div>
-          <p class="alasan" id="unitAlasan"></p>
-          <dl class="dl" id="unitDl"></dl>
-        </div>
+        <dl class="fakta" id="unitDl"></dl>
         <article class="tiket" id="tiket" aria-label="Tiket servis"></article>
       </div>
       <div class="chart-h">
-        <h3>Suhu ruang dibanding suhu set, 24 jam</h3>
-        <div class="legend"><span><i class="lg-a"></i>Suhu ruang</span><span><i class="lg-b"></i>Suhu set</span></div>
+        <h3>Suhu ruang dan suhu setelan, 24 jam terakhir</h3>
+        <div class="legend"><span><i class="lg-a"></i>Suhu ruang</span><span><i class="lg-b"></i>Suhu setelan</span></div>
       </div>
-      <div id="grafikSuhu" data-label="Suhu ruang dan suhu set 24 jam"></div>
-      <p class="small muted" id="catatanSuhu" role="status"></p>
+      <div id="grafikSuhu" data-label="Suhu ruang dan suhu setelan, 24 jam terakhir"></div>
+      <p class="note" id="catatanSuhu" role="status"></p>
       <div class="mini">
-        <div><h3>Arus kompresor</h3><div id="grafikArus" data-label="Arus kompresor 24 jam"></div></div>
-        <div><h3>Tekanan hisap (perkiraan)</h3><div id="grafikTekanan" data-label="Tekanan hisap 24 jam"></div></div>
+        <div><h3>Arus kompresor</h3><div id="grafikArus" data-label="Arus kompresor, 24 jam terakhir"></div></div>
+        <div><h3>Tekanan isap (perkiraan)</h3><div id="grafikTekanan" data-label="Tekanan isap, 24 jam terakhir"></div></div>
       </div>
     </section>
 
     <aside class="side">
       <section class="panel">
-        <div class="panel-h"><h2>Per kota</h2><span class="sub">unit bermasalah dari total</span></div>
+        <div class="panel-h"><h2>Per kota</h2><span class="sub">unit bermasalah dari total unit</span></div>
         <div id="kota" class="kota"></div>
       </section>
       <section class="panel">
-        <div class="panel-h"><h2>Kode galat, 24 jam</h2></div>
+        <div class="panel-h"><h2>Kode gangguan, 24 jam terakhir</h2></div>
         <table class="tbl"><thead><tr><th>Kode</th><th>Arti</th><th class="n">Unit</th></tr></thead><tbody id="galat"></tbody></table>
-        <p class="note">Kode galat di atas generik untuk mockup. [REAL DATA: tabel kode galat resmi]</p>
+        <p class="note">Kode di atas contoh umum untuk mockup. [REAL DATA: tabel kode gangguan resmi]</p>
       </section>
     </aside>
   </div>

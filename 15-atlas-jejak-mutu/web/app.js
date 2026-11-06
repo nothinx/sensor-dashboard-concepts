@@ -10,6 +10,10 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const jam = (s) => hhmm(new Date(s));
 const tanggal = (s) => new Date(s).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+const kapan = (s) => `${tanggal(s)}, pukul ${jam(s)}`;
+// angka + satuan: satuan lebih kecil dan redup, dipisah spasi tipis
+const besaran = (v, satuan) => `${fmt(v, 2, false)}${satuan ? `&thinsp;<span class="satuan">${satuan}</span>` : ""}`;
+const titikAkhir = (s) => (/[.!?]$/.test(s) ? s : `${s}.`);
 
 let mode = "api", CONTOH = null, aktif = null;
 if (PRATINJAU) document.querySelector("[data-pratinjau]").textContent = "Pratinjau, data contoh";
@@ -46,11 +50,11 @@ async function cari(q) {
     if (hasil.length === 1) { ol.hidden = true; return buka(hasil[0].serial); }
     ol.innerHTML = hasil.length ? hasil.map((h) => `<li><button type="button" data-serial="${esc(h.serial)}">
         <span class="serial">${esc(h.serial)}</span>
-        <span><span>${esc(h.model)}</span><br><span class="cuplikan">${esc(h.cuplikan || `Stasiun terakhir: ${NAMA_ST[h.stasiun_terakhir]}`)}</span></span>
+        <span><span>${esc(h.model)}</span><span class="cuplikan">${esc(h.cuplikan || `Stasiun terakhir: ${NAMA_ST[h.stasiun_terakhir]}`)}</span></span>
         ${st(...STATUS[h.status])}</button></li>`).join("")
-      : `<li class="kosong">Tidak ada unit yang cocok dengan "${esc(q)}". Periksa nomor seri atau coba kata lain dari catatan QC.</li>`;
+      : `<li class="kosong">Tidak ada unit yang cocok dengan “${esc(q)}”. Periksa nomor seri atau coba kata lain dari catatan QC.</li>`;
   } catch (e) {
-    ol.innerHTML = `<li class="kosong">Pencarian gagal: ${esc(e.message)} Coba lagi beberapa detik lagi.</li>`;
+    ol.innerHTML = `<li class="kosong">Pencarian gagal (${esc(e.message)}). Coba lagi dalam beberapa detik.</li>`;
   }
 }
 
@@ -58,11 +62,13 @@ async function cari(q) {
 async function buka(serial) {
   aktif = serial;
   const el = $("unit");
-  el.innerHTML = `<p class="memuat">Memuat ${esc(serial)}…</p>`;
+  el.innerHTML = `<p class="memuat">Memuat unit <span class="mono">${esc(serial)}</span>…</p>`;
   try {
     tampilUnit(await api(`/unit/${encodeURIComponent(serial)}`));
   } catch (e) {
-    el.innerHTML = `<p class="kosong">${e.status === 404 ? `Nomor seri ${esc(serial)} tidak ditemukan. Periksa label pada unit.` : `Unit tidak bisa dimuat: ${esc(e.message)}`}</p>`;
+    el.innerHTML = `<p class="kosong">${e.status === 404
+      ? `Nomor seri <span class="mono">${esc(serial)}</span> tidak ditemukan. Cocokkan dengan label pada bodi unit, lalu cari lagi.`
+      : `Data unit gagal dimuat (${esc(e.message)}). Pilih unit itu lagi dalam beberapa detik.`}</p>`;
   }
   document.querySelectorAll("#hasil button").forEach((b) => b.setAttribute("aria-current", String(b.dataset.serial === serial)));
 }
@@ -71,41 +77,41 @@ function temuan(u) {
   const gagal = u.langkah.find((l) => l.status === "gagal");
   if (gagal) {
     const p = gagal.percobaan[gagal.percobaan.length - 1];
-    return `<b>Ditahan di ${NAMA_ST[gagal.stasiun].toLowerCase()} sejak pukul ${jam(gagal.waktu)}: ${esc(p.kode_cacat)}.</b> ${esc(p.catatan)}`;
+    return `<b>Ditahan di ${NAMA_ST[gagal.stasiun].toLowerCase()} sejak pukul ${jam(gagal.waktu)}, kode cacat <span class="mono">${esc(p.kode_cacat)}</span>.</b> ${esc(titikAkhir(p.catatan))}`;
   }
   const ulang = u.langkah.filter((l) => l.percobaan && l.percobaan.length > 1);
   if (u.status === "dikemas") return ulang.length
-    ? `<b>Lulus semua stasiun dan sudah dikemas,</b> setelah perbaikan di ${ulang.map((l) => NAMA_ST[l.stasiun].toLowerCase()).join(" dan ")}.`
-    : "<b>Lulus semua stasiun pada percobaan pertama dan sudah dikemas.</b>";
+    ? `<b>Lulus di semua stasiun dan sudah dikemas.</b> Sempat gagal di ${ulang.map((l) => NAMA_ST[l.stasiun].toLowerCase()).join(" dan ")}, lalu lulus setelah diperbaiki.`
+    : "<b>Lulus di semua stasiun pada percobaan pertama dan sudah dikemas.</b>";
   const berikut = u.langkah.find((l) => l.status === "belum");
-  return `<b>Masih di lini, berikutnya ${NAMA_ST[berikut.stasiun].toLowerCase()}.</b> Belum ada cacat tercatat.`;
+  return `<b>Masih di lini, menuju ${NAMA_ST[berikut.stasiun].toLowerCase()}.</b> Belum ada cacat yang tercatat.`;
 }
 
 function tampilUnit(u) {
   const langkah = u.langkah.map((l, i) => {
-    if (l.status === "belum") return `<li class="langkah belum"><span class="titik">${i + 1}</span><h3>${NAMA_ST[l.stasiun]}</h3><p class="waktu">Belum sampai</p><span class="slot">tempat stiker QC</span></li>`;
+    if (l.status === "belum") return `<li class="langkah belum"><span class="titik">${i + 1}</span><h3>${NAMA_ST[l.stasiun]}</h3><p class="waktu">Belum sampai</p><span class="slot">Belum ada stiker QC</span></li>`;
     const akhir = l.percobaan[l.percobaan.length - 1];
-    const nilai = Object.entries(l.nilai || {}).map(([k, v]) => `<dt>${NAMA_NILAI[k]?.[0] ?? esc(k)}</dt><dd>${fmt(v, 2, false)} ${NAMA_NILAI[k]?.[1] ?? ""}</dd>`).join("");
+    const nilai = Object.entries(l.nilai || {}).map(([k, v]) => `<dt>${NAMA_NILAI[k]?.[0] ?? esc(k)}</dt><dd>${besaran(v, NAMA_NILAI[k]?.[1])}</dd>`).join("");
     const stiker = l.status === "lulus"
       ? `<span class="stiker lulus" style="--r:${(i % 2 ? 2 : -2)}deg"><b>QC lulus</b>${l.stasiun} · ${esc(l.operator)}</span>`
       : `<span class="stiker gagal" style="--r:${(i % 2 ? 2 : -2)}deg"><b>Ditahan</b>${l.stasiun} · ${esc(akhir.kode_cacat)}</span>`;
-    const riwayat = l.percobaan.length > 1 ? `<div class="percobaan">${l.percobaan.map((p) =>
-      `<p>${jam(p.waktu)} ${p.hasil === "gagal" ? `gagal, ${esc(p.kode_cacat)}` : "lulus"}</p>`).join("")}</div>` : "";
+    const riwayat = l.percobaan.length > 1 ? `<div class="percobaan"><h4>Riwayat percobaan</h4>${l.percobaan.map((p) =>
+      `<p>Pukul ${jam(p.waktu)}, ${p.hasil === "gagal" ? `gagal (<span class="mono">${esc(p.kode_cacat)}</span>)` : "lulus"}</p>`).join("")}</div>` : "";
     return `<li class="langkah ${l.status}"><span class="titik">${i + 1}</span><h3>${NAMA_ST[l.stasiun]}</h3>
-      <p class="waktu">${tanggal(l.waktu)}, pukul ${jam(l.waktu)}</p>
-      ${nilai ? `<dl><dt>Operator</dt><dd>${esc(l.operator)}</dd>${nilai}</dl>` : `<dl><dt>Operator</dt><dd>${esc(l.operator)}</dd></dl>`}
+      <p class="waktu">${kapan(l.waktu)}</p>
+      <dl><dt>Operator</dt><dd class="mono">${esc(l.operator)}</dd>${nilai}</dl>
       ${stiker}${riwayat}</li>`;
   }).join("");
   const catatan = u.catatan_qc.length ? `<section class="catatan"><h2>Catatan QC</h2><ol>${u.catatan_qc.map((c) =>
-    `<li><span class="mono">${tanggal(c.waktu)}, ${jam(c.waktu)}</span><span>${NAMA_ST[c.stasiun]}</span><span>${esc(c.teks)}</span></li>`).join("")}</ol></section>` : "";
+    `<li><span class="kapan">${NAMA_ST[c.stasiun]}, ${kapan(c.waktu)}</span><span class="teks">${esc(titikAkhir(c.teks))}</span></li>`).join("")}</ol></section>` : "";
   const sampai = u.langkah.filter((l) => l.status !== "belum").length;
   // label nomor seri bergaya stiker di bodi unit: kode batang, perforasi, potongan status di kanan
   $("unit").innerHTML = `<div class="unit-h">
       <div class="label-seri ${u.status === "ditahan" ? "tahan" : ""}">
         <div class="label-isi"><span class="label-model">${esc(u.model)} · ${esc(u.lini)}</span>
           <h1 class="serial">${esc(u.serial)}</h1>${kodeBatang(u.serial)}
-          <span class="label-kaki">S/N · mulai dirakit ${tanggal(u.dibuat_pada)}, pukul ${jam(u.dibuat_pada)}</span></div>
-        <div class="label-sobek">${st(...STATUS[u.status])}<span class="mono">${sampai} dari ${u.langkah.length} stasiun</span></div>
+          <span class="label-kaki">Mulai dirakit ${kapan(u.dibuat_pada)}</span></div>
+        <div class="label-sobek">${st(...STATUS[u.status])}<span>Stasiun ${sampai} dari ${u.langkah.length}</span></div>
       </div>
       <p class="temuan">${temuan(u)}</p>
     </div>
@@ -116,9 +122,9 @@ function tampilUnit(u) {
 async function segarkan() {
   try {
     const [r, c, k] = await Promise.all([api("/ringkasan"), api("/cacat?hari=7"), api("/kejadian")]);
-    $("kpi-waktu").textContent = `pukul ${jam(r.diperbarui)}`;
-    $("kpis").innerHTML = [["Unit ditahan", r.ditahan, r.ditahan ? "jawab" : ""], ["Dikemas hari ini", r.dikemas_hari_ini, ""],
-      ["Uji hari ini", r.uji_hari_ini, ""], ["Gagal hari ini", r.gagal_hari_ini, ""]]
+    $("kpi-waktu").textContent = `per pukul ${jam(r.diperbarui)}`;
+    $("kpis").innerHTML = [["Unit ditahan", r.ditahan, r.ditahan ? "jawab" : ""], ["Unit dikemas", r.dikemas_hari_ini, ""],
+      ["Uji dijalankan", r.uji_hari_ini, ""], ["Uji gagal", r.gagal_hari_ini, ""]]
       .map(([l, v, cls]) => `<div class="kpi"><div class="l">${l}</div><div class="v ${cls}">${fmt(v, 0)}</div></div>`).join("");
     const maks = Math.max(1, ...c.cacat.map((x) => x.jumlah));
     $("cacat").innerHTML = c.cacat.length ? c.cacat.slice(0, 5).map((x) => `<li><span class="kode">${esc(x.kode)}</span>
@@ -127,18 +133,18 @@ async function segarkan() {
       : `<li class="kosong">Tidak ada uji gagal dalam 7 hari terakhir.</li>`;
     $("umpan").innerHTML = k.kejadian.length ? k.kejadian.slice(0, 6).map((e) => `<li><time datetime="${esc(e.waktu)}">${jam(e.waktu)}</time>
       <span><button type="button" data-serial="${esc(e.serial)}">${esc(e.serial)}</button>
-      <span class="ket">${e.status === "ditahan" ? `ditahan di ${NAMA_ST[e.stasiun].toLowerCase()}, ${esc(e.kode_cacat)}`
-        : e.status === "dikemas" ? "dikemas" : `lulus ${NAMA_ST[e.stasiun].toLowerCase()}`}</span></span></li>`).join("")
-      : `<li class="kosong">Belum ada kejadian sejak API berjalan.</li>`;
+      <span class="ket">${e.status === "ditahan" ? `Ditahan di ${NAMA_ST[e.stasiun].toLowerCase()}, ${esc(e.kode_cacat)}`
+        : e.status === "dikemas" ? "Dikemas" : `Lulus ${NAMA_ST[e.stasiun].toLowerCase()}`}</span></span></li>`).join("")
+      : `<li class="kosong">Belum ada kejadian sejak API dinyalakan.</li>`;
     const tahan = r.sorotan.filter((s) => s.ditahan), lain = r.sorotan.filter((s) => !s.ditahan);
     const chip = (s) => `<button class="chip-unit" type="button" data-serial="${esc(s.serial)}">${esc(s.serial)}</button>`;
-    $("ditahan").innerHTML = (tahan.length ? `<span>Sedang ditahan:</span>${tahan.map(chip).join("")}` : "")
-      + (lain.length ? `<span>Cacat terbaru, sudah diperbaiki:</span>${lain.map(chip).join("")}` : "");
-    if (mode === "api") { $("sumber").className = "sumber live"; $("sumber").textContent = `Terhubung · pukul ${jam(r.diperbarui)}`; }
+    $("ditahan").innerHTML = (tahan.length ? `<span class="grup"><span>Sedang ditahan</span>${tahan.map(chip).join("")}</span>` : "")
+      + (lain.length ? `<span class="grup"><span>Baru diperbaiki</span>${lain.map(chip).join("")}</span>` : "");
+    if (mode === "api") { $("sumber").className = "sumber live"; $("sumber").textContent = `Terhubung, diperbarui pukul ${jam(r.diperbarui)}`; }
     return r;
   } catch (e) {
     $("sumber").className = "sumber";
-    $("sumber").textContent = `Gagal memperbarui: ${e.message}`;
+    $("sumber").textContent = `Gagal memperbarui (${e.message}). Dicoba lagi tiap 5 detik.`;
   }
 }
 
@@ -235,14 +241,14 @@ async function mulai() {
     mode = "contoh";
     CONTOH = contoh();
     $("banner").hidden = false;
-    $("banner").textContent = `Mode data contoh: API tidak terhubung (${e.message}). Jalankan "docker compose -p konsep-15 up -d" di folder 15-atlas-jejak-mutu lalu buka http://localhost:18150.`;
-    $("sumber").textContent = "API tidak terhubung, memakai data contoh bawaan";
+    $("banner").textContent = `Layar ini memakai data contoh karena API tidak terhubung (${e.message}). Untuk data asli, jalankan “docker compose -p konsep-15 up -d” di folder 15-atlas-jejak-mutu, lalu buka http://localhost:18150.`;
+    $("sumber").textContent = "API tidak terhubung, memakai data contoh";
     $("sumber").hidden = PRATINJAU; // pratinjau: cukup penanda di header
   }
   const r = await segarkan();
   const awal = r?.sorotan[0]?.serial;
   if (awal) buka(awal);
-  else $("unit").innerHTML = `<p class="kosong">Ketik nomor seri di kolom cari untuk melihat perjalanan unit.</p>`;
+  else $("unit").innerHTML = `<p class="kosong">Belum ada unit yang dipilih. Ketik nomor seri di kolom cari untuk melihat perjalanan unit.</p>`;
   if (mode === "api") setInterval(segarkan, 5000);
 }
 mulai();

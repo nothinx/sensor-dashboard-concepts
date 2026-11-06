@@ -20,25 +20,31 @@ label nomor seri dan garis waktu unit, bukan kolom cari; cari menjadi satu baris
 
 ## Tata letak
 
-- Header tinta gelap; di bawahnya baris cari (label, kolom mono 18 px, tombol Cari, pintasan unit ditahan).
-- Pita putih penuh lebar (tanpa kolom tengah): label nomor seri bergaya stiker di kiri (model, nomor seri mono
-  44 px, kode batang, potongan sobek berperforasi berisi status), kalimat temuan 22 px di kanan, lalu garis waktu
-  empat stasiun selebar layar dengan rel tebal yang terisi sampai stasiun terakhir yang dicapai, lalu catatan QC.
-- Di bawah pita: lembar arsip tiga lajur dipisah garis (Hari ini, kode cacat 7 hari, umpan kejadian), bukan kartu.
-- Di bawah 1200 px lembar arsip dua lajur; di bawah 900 px semua satu kolom dan label menumpuk potongannya.
+- Header tinta gelap; di bawahnya baris cari (label, kolom mono 17 px setinggi tombol Cari 44 px, dua kelompok
+  pintasan: "Sedang ditahan" dan "Baru diperbaiki").
+- Satu kisi empat lajur (celah 32 px) untuk seluruh halaman: label nomor seri di lajur 1-2, kalimat temuan 20 px
+  mulai lajur 3 (maks 52ch), garis waktu empat stasiun satu per lajur, catatan QC (stasiun dan waktu di lajur 1,
+  teks mulai lajur 2), lembar arsip (Hari ini lajur 1, Kode cacat terbanyak lajur 2-3, Kejadian terbaru lajur 4).
+- Pita putih penuh lebar (tanpa kolom tengah); lembar arsip bergaris di bawahnya, garis pemisah lajur di tengah celah.
+- Di bawah 1200 px label dan temuan menumpuk, lembar arsip dua lajur; di bawah 900 px semua satu kolom, label
+  menumpuk potongannya, pintasan per kelompok.
 
 ## Token
 
 | Token | Nilai | Pakai |
 |---|---|---|
-| `--bg` / `--surface` / `--raised` / `--sheet` | `#e9ebef` / `#ffffff` / `#eceff4` / `#f7f8fa` | latar abu bodi unit, pita putih, lembar arsip |
+| `--bg` / `--surface` / `--raised` / `--sheet` | `#e9ebef` / `#fcfcfd` / `#eceff4` / `#f7f8fa` | latar abu bodi unit, pita putih, lembar arsip |
 | `--ink` / `--ink-2` / `--ink-3` | `#111827` / `#4b5565` / `#5a6372` | tiga peran teks; redup 5,08:1 pada latar, 5,71:1 pada lembar |
 | `--on-ink-2` / `--on-ink-line` | `#c9ced8` / putih 45 % | teks redup dan garis di header tinta (11,24:1) |
-| `--chart-fs` / `--tepi` | 13 px / 40 px | teks grafik / tepi kiri-kanan halaman |
+| `--fs-1`..`--fs-6` | 13 / 15 / 17 / 20 / 28 / 40 px (HP: 20→18, 28→24, 40→28) | label & chip / isi / judul bagian & kolom cari / stasiun & temuan / angka hari ini / nomor seri |
+| `--lh-isi` / `--lh-judul` / `--lh-angka` | 1,5 / 1,2 / 1 | isi / judul / angka besar |
+| `--sp-1`..`--sp-7` | 4 / 8 / 12 / 16 / 24 / 32 / 48 px | semua jarak |
+| `--tepi` / `--celah` / `--kontrol` | 40 px (HP 16) / 32 px / 44 px | tepi halaman / celah kisi / tinggi kolom cari dan tombol |
+| `--chart-fs` `--st-fs` `--tip-fs` / `--chart-font` | `--fs-1` / sans | teks chip status dan grafik bersama |
 | `--accent` | `#2347c5` kobalt | tombol Cari, fokus, batang kode cacat, tautan umpan |
 | status | hijau `#14532d` pada `#e7f5ec`, merah `#8f1717` pada `#fbe9e9` | stiker dan chip; kontras ≥ 7,5:1 |
-| huruf | Public Sans 400/500/600, Red Hat Mono 400/500 | antarmuka; nomor seri, kode, angka |
-| radius | 0 kecuali 6 / 8 px | permukaan dan kontrol siku; radius hanya di label nomor seri, stiker, dan slot stiker |
+| huruf | Golos Text 400/500/600, Atkinson Hyperlegible Mono 400/500 | antarmuka dan semua angka; mono hanya nomor seri, kode cacat, kode operator/stasiun |
+| `--r-label` / `--garis-label` | 8 px / 1,5 px | satu radius dan satu tebal tepi, hanya benda bergaya stiker (label, stiker, slot); permukaan dan kontrol siku, garis struktur 1 px |
 
 Kontras diukur dengan `contrast-check.py`: teks redup pada latar 5,08:1, pada lembar 5,71:1; teks tombol pada
 kobalt 7,37:1.
@@ -57,3 +63,15 @@ kobalt 7,37:1.
   simbologi yang bisa dipindai; nomor seri tetap tercetak sebagai teks.
 - Putaran 2: stasiun yang belum dicapai menampilkan slot stiker kosong bergaris putus, supaya kolom tidak kosong.
 - Putaran 2: tepat satu penanda `data-pratinjau` di header; di mode pratinjau status koneksi disembunyikan.
+- Putaran 3 (keterbacaan): Public Sans + Red Hat Mono diganti Golos Text + Atkinson Hyperlegible Mono. Golos Text
+  dibuat untuk antarmuka layanan publik (garis keturunan yang sama dengan Public Sans), x-height 0,53 em, punya
+  `tnum`; Atkinson Hyperlegible Mono membedakan 0/O dan 1/I/l, penting untuk nomor seri yang dibaca per karakter.
+- Putaran 3: satu skala tipe enam langkah di `:root`; tak ada ukuran px di selektor lain. Letter-spacing negatif
+  hanya di angka 28 px (-0,01em). Angka (waktu, KPI, besaran uji, jumlah cacat) memakai sans tabular, bukan mono;
+  satuan lebih kecil dan redup, dipisah spasi tipis (`71,4 W`).
+- Putaran 3: catatan QC dan lembar arsip ikut kisi empat lajur garis waktu, sehingga tepi kiri semua blok sejajar.
+- Putaran 3 (bahasa): "Umpan kejadian, dari change stream koleksi unit" menjadi "Kejadian terbaru"; label KPI
+  tanpa "hari ini" berulang; "2 dari 4 stasiun" menjadi "Stasiun 2 dari 4"; kalimat temuan menyebut "kode cacat";
+  pesan galat memuat sebab dan langkah berikut.
+- Putaran 3: render tiruan HP dibuat lewat iframe 390 px, karena jendela Chrome headless di Windows tidak bisa
+  lebih sempit dari sekitar 500 px.

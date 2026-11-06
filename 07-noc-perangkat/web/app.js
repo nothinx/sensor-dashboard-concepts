@@ -13,13 +13,17 @@ const jam = (epoch) => hhmm(new Date(epoch * 1000));
 
 function durasi(sec) {
   sec = Math.max(0, Math.round(sec));
-  if (sec < 60) return `${sec} dtk`;
+  if (sec < 60) return `${sec} detik`;
   const m = Math.floor(sec / 60);
-  if (m < 60) return `${m} mnt`;
+  if (m < 60) return `${m} menit`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} jam ${m % 60} mnt`;
-  return `${Math.floor(h / 24)} hari ${h % 24} jam`;
+  if (h < 24) return m % 60 ? `${h} jam ${m % 60} menit` : `${h} jam`;
+  return h % 24 ? `${Math.floor(h / 24)} hari ${h % 24} jam` : `${Math.floor(h / 24)} hari`;
 }
+const lalu = (sec) => (sec < 2 ? "baru saja" : `${durasi(sec)} lalu`);
+const persen = (v) => `${fmt(v, 0)}<span class="u">&thinsp;%</span>`;
+const idf = (s) => `<span class="mono">${esc(s)}</span>`;
+const nw = (s) => `<span class="nw">${esc(s)}</span>`;
 
 async function ambil(url) {
   const r = await fetch(url, { headers: { Accept: "application/json" } });
@@ -87,7 +91,7 @@ function contoh() {
   const alerts = [
     { labels: { alertname: "GatewayPutus", severity: "kritis", gateway: "GW-GD" }, annotations: { ringkasan: "Gateway GW-GD tidak terhubung ke kolektor" }, state: "firing", activeAt: sejak(29880) },
     { labels: { alertname: "SensorTidakMengirim", severity: "kritis", sensor: "VB-CV-TV" }, annotations: { ringkasan: "Sensor VB-CV-TV tidak mengirim data lebih dari 5 menit" }, state: "firing", activeAt: sejak(6840) },
-    { labels: { alertname: "GalatCRCBeruntun", severity: "peringatan", sensor: "VB-CV-TV" }, annotations: { ringkasan: "Galat CRC Modbus beruntun pada VB-CV-TV" }, state: "firing", activeAt: sejak(6900) },
+    { labels: { alertname: "GalatCRCBeruntun", severity: "peringatan", sensor: "VB-CV-TV" }, annotations: { ringkasan: "Error CRC Modbus beruntun pada VB-CV-TV" }, state: "firing", activeAt: sejak(6900) },
     { labels: { alertname: "SensorTidakMengirim", severity: "kritis", sensor: "TH-PK-14" }, annotations: { ringkasan: "Sensor TH-PK-14 tidak mengirim data lebih dari 5 menit" }, state: "firing", activeAt: sejak(2340) },
   ];
   return {
@@ -97,15 +101,15 @@ function contoh() {
 }
 
 function penyebab(s, gw) {
-  if (gw && !gw.up) return `Gateway ${s.gw} putus jaringan`;
-  if (s.crc > 0) return "Kabel RS485 bermasalah: galat CRC beruntun";
-  if (s.baterai != null && s.baterai < 5) return `Baterai habis (${fmt(s.baterai, 0)} %)`;
-  return "Belum diketahui; periksa sensor di lokasi";
+  if (gw && !gw.up) return `Gateway ${idf(s.gw)} putus dari jaringan`;
+  if (s.crc > 0) return "Kabel RS485 bermasalah, error CRC beruntun";
+  if (s.baterai != null && s.baterai < 5) return `Baterai habis (${fmt(s.baterai, 0)}&thinsp;%)`;
+  return "Belum diketahui. Periksa sensor di lokasi.";
 }
 
 function sel(age, t) {
   const sejak = t - age;
-  return `<span class="beat dead" aria-hidden="true"></span><span class="age" data-sejak="${sejak}">${durasi(age)} lalu</span> <span class="muted mono small">pukul ${jam(sejak)}</span>`;
+  return `<span class="beat dead" aria-hidden="true"></span><span class="age" data-sejak="${sejak}">${lalu(age)}</span><span class="when">pukul ${jam(sejak)}</span>`;
 }
 
 function render(m) {
@@ -121,37 +125,40 @@ function render(m) {
   const gDown = down.map((g) => ({ g, n: off.filter((s) => s.gw === g.id), sejak: m.t - Math.max(...off.filter((s) => s.gw === g.id).map((s) => s.age), 0) }));
   const utama = gDown.sort((a, b) => b.n.length - a.n.length)[0];
   if (!off.length) {
-    $("temuan").innerHTML = `<b>Semua ${m.sensors.length} sensor mengirim data.</b> Tidak ada tindakan pemulihan yang diperlukan.`;
+    $("temuan").innerHTML = `<b>Semua ${m.sensors.length} sensor mengirim data.</b> Tidak ada yang perlu dipulihkan.`;
   } else {
-    let t = `<b>Ada ${off.length} sensor yang tidak mengirim data.</b>`;
+    let t = `<b>Sebanyak ${off.length} sensor tidak mengirim data.</b>`;
     if (utama && utama.n.length) {
-      t += ` ${utama.n.length === off.length ? "Semuanya" : `Sebanyak ${utama.n.length} di antaranya`} berada di belakang ${utama.g.id} yang putus sejak pukul ${jam(utama.sejak)}; pulihkan gateway itu lebih dulu.`;
+      const g = utama.g.id;
+      t += utama.n.length === off.length
+        ? ` Semuanya terhubung lewat ${nw(g)}, yang putus sejak pukul ${jam(utama.sejak)}. Pulihkan ${nw(g)} lebih dulu.`
+        : ` ${nw(g)} putus sejak pukul ${jam(utama.sejak)} dan ${utama.n.length} di antaranya terhubung lewat gateway itu. Pulihkan ${nw(g)} lebih dulu.`;
     }
     $("temuan").innerHTML = t;
   }
   const fokus = $("fokus");
   fokus.disabled = !off.length;
-  fokus.textContent = utama && utama.n.length ? `Tampilkan ${utama.n.length} sensor ${utama.g.id}` : "Tampilkan sensor offline";
+  fokus.textContent = utama && utama.n.length ? `Lihat ${utama.n.length} sensor di ${utama.g.id}` : "Lihat daftar sensor";
 
   // KPI
   $("k-off").textContent = off.length;
   $("k-off-d").textContent = `dari ${m.sensors.length} sensor`;
   $("k-gw").innerHTML = `${m.gateways.length - down.length}<span class="u">dari ${m.gateways.length}</span>`;
-  $("k-gw-d").textContent = down.length ? `${down.map((g) => g.id).join(", ")} putus` : "semua terhubung";
+  $("k-gw-d").textContent = down.length ? `${down.map((g) => g.id).join(", ")} putus` : "Semua terhubung";
   $("k-bat").textContent = low.length;
   $("k-fw").textContent = usang.length;
-  $("k-fw-d").textContent = `versi terbaru ${m.latest}`;
+  $("k-fw-d").textContent = `Versi terbaru ${m.latest}`;
   $("nav-off").textContent = off.length || "";
 
   topologi(m, gwM);
 
-  // tabel offline: sensor di belakang gateway putus dijadikan satu grup
+  // tabel sensor tidak mengirim data: sensor di belakang gateway putus dijadikan satu grup
   let rows = "";
   for (const { g, n, sejak } of gDown) {
     if (!n.length) continue;
-    rows += `<tr class="group"><td colspan="4"><b>${n.length} sensor di belakang ${g.id}</b> <span class="muted">${esc(g.area)}</span>
+    rows += `<tr class="group"><td colspan="4"><b>${n.length} sensor lewat ${idf(g.id)}</b> <span class="muted">${esc(g.area)}</span>
       <button class="btn link" type="button" data-toggle aria-expanded="${tampilSemua}">${tampilSemua ? "Sembunyikan" : "Tampilkan"}</button></td>
-      <td>${sel(m.t - sejak, m.t)}</td><td>Gateway ${g.id} putus jaringan</td></tr>`;
+      <td>${sel(m.t - sejak, m.t)}</td><td>Gateway ${idf(g.id)} putus dari jaringan</td></tr>`;
     rows += n.map((s) => baris(s, gwM, m.t, !tampilSemua)).join("");
   }
   rows += off.filter((s) => gwM[s.gw]?.up).map((s) => baris(s, gwM, m.t, false)).join("");
@@ -161,22 +168,25 @@ function render(m) {
   $("t-gw").innerHTML = m.gateways.map((g) => {
     const ss = m.sensors.filter((s) => s.gw === g.id), on = ss.filter((s) => s.age < STALE).length;
     const sejak = m.t - Math.max(...ss.map((s) => s.age));
-    return `<tr><td class="id">${g.id}<div class="muted small">${esc(g.proto)}</div></td><td class="n">${on}/${ss.length}</td>
-      <td class="n">${g.up ? durasi(g.uptime) : "-"}</td><td>${g.up ? st("ok", "Terhubung") : st("crit", `Putus sejak ${jam(sejak)}`)}</td></tr>`;
+    return `<tr><td class="id">${idf(g.id)}<span class="sub">${esc(g.proto)}</span></td><td class="n">${on}<span class="u">&thinsp;/&thinsp;${ss.length}</span></td>
+      <td class="n">${g.up ? durasi(g.uptime) : `<span class="muted">Putus</span>`}</td><td>${g.up ? st("ok", "Terhubung") : st("crit", `Putus sejak ${jam(sejak)}`)}</td></tr>`;
   }).join("");
 
   // riwayat
   const { x, y } = m.hist;
+  $("riwayat-sub").textContent = `Jumlah per 5 menit, dari ${m.sensors.length} sensor`;
   if (y.length > 1) {
     const lo = Math.floor((Math.min(...y) - 20) / 40) * 40;
-    const turun = y.map((v, i) => ({ i, d: i ? y[i - 1] - v : 0 })).filter((o) => o.d >= 10).sort((a, b) => b.d - a.d).slice(0, 2);
+    // tandai hanya penurunan yang belum pulih: itulah yang masih perlu ditangani
+    const akhir = y[y.length - 1];
+    const turun = y.map((v, i) => ({ i, v, d: i ? y[i - 1] - v : 0 })).filter((o) => o.d >= 10 && akhir <= o.v).sort((a, b) => b.d - a.d).slice(0, 1);
     lineChart($("c-online"), {
-      x, series: [{ name: "Online", color: "var(--s1)", data: y }], unit: "sensor", dec: 0, h: 360,
+      x, series: [{ name: "Mengirim data", color: "var(--s1)", data: y }], unit: "sensor", dec: 0, h: (w => w < 600 ? 260 : w < 1000 ? 400 : 320)($("c-online").clientWidth),
       min: lo, max: lo + Math.ceil((Math.max(...y) + 40 - lo) / 160) * 160, // 4 langkah kelipatan 40
-      marks: $("c-online").clientWidth > 600 ? turun.map((o) => ({ i: o.i, label: `turun ${o.d}` })) : [],
+      marks: $("c-online").clientWidth > 600 ? turun.map((o) => ({ i: o.i, label: `Turun ${o.d}, belum pulih` })) : [],
     });
   } else {
-    $("c-online").innerHTML = `<p class="empty">Riwayat belum tersedia. Prometheus baru menyala; grafik terisi setelah beberapa menit.</p>`;
+    $("c-online").innerHTML = `<p class="empty">Riwayat belum tersedia karena Prometheus baru menyala. Grafik terisi setelah beberapa menit.</p>`;
   }
 
   // alert
@@ -186,69 +196,69 @@ function render(m) {
       <span class="ts">${hhmm(new Date(a.activeAt))}</span>
       <div>${st(a.labels.severity === "kritis" ? "crit" : "warn", a.labels.severity === "kritis" ? "Kritis" : "Peringatan")}</div>
       <div class="msg">${esc(a.annotations.ringkasan || a.labels.alertname)}</div>
-      <div class="meta">${a.state === "firing" ? "aktif" : "menunggu"} · ${esc(a.labels.alertname)}</div></li>`).join("")}</ul>
-      ${al.length > 6 ? `<p class="muted small" style="margin-top:12px">Ada ${al.length - 6} alert lain; lihat di UI Prometheus.</p>` : ""}`
+      <div class="meta">${a.state === "firing" ? "Aktif" : "Menunggu"}, aturan <span class="mono">${esc(a.labels.alertname)}</span></div></li>`).join("")}</ul>
+      ${al.length > 6 ? `<p class="more">Masih ada ${al.length - 6} alert lain. Buka Prometheus untuk melihat semuanya.</p>` : ""}`
     : `<p class="empty">Tidak ada alert aktif.</p>`;
 
   // baterai
   const bat = [...lora].sort((a, b) => a.baterai - b.baterai).slice(0, 9);
-  $("bat-sub").textContent = `9 terendah dari ${lora.length} sensor nirkabel`;
-  $("l-bat").innerHTML = bat.map((s) => `<div class="hbar"><span class="mono">${s.id}</span>
+  $("bat-sub").textContent = `${bat.length} terendah dari ${lora.length} sensor nirkabel`;
+  $("l-bat").innerHTML = bat.length ? bat.map((s) => `<div class="hbar">${idf(s.id)}
     <div class="track"><div class="fill" style="width:${Math.max(2, s.baterai)}%;background:${s.baterai < 10 ? "var(--crit)" : s.baterai < 20 ? "var(--warn)" : "var(--s1)"}"></div></div>
-    <span class="val mono">${fmt(s.baterai, 0)} %</span></div>`).join("");
+    <span class="val">${persen(s.baterai)}</span></div>`).join("") : `<p class="empty">Tidak ada sensor nirkabel yang melaporkan baterai.</p>`;
 
   // firmware
-  $("fw-sub").textContent = `versi terbaru ${m.latest}`;
+  $("fw-sub").textContent = `Versi terbaru ${m.latest}`;
   $("l-fw").innerHTML = usang.length
     ? `<table><thead><tr><th>Sensor</th><th>Versi terpasang</th><th>Gateway</th><th>Lokasi</th></tr></thead><tbody>
-      ${usang.map((s) => `<tr><td class="id">${s.id}</td><td class="mono">${esc(s.fw)}</td><td class="mono">${s.gw}</td><td>${esc(s.lokasi)}</td></tr>`).join("")}</tbody></table>`
+      ${usang.map((s) => `<tr><td class="id">${idf(s.id)}</td><td>${esc(s.fw)}</td><td>${idf(s.gw)}</td><td>${esc(s.lokasi)}</td></tr>`).join("")}</tbody></table>`
     : `<p class="empty">Semua ${m.sensors.length} sensor sudah memakai firmware ${m.latest}.</p>`;
 }
 
 function baris(s, gwM, t, hidden) {
-  return `<tr class="${hidden ? "hidden" : ""}" data-gw="${s.gw}"><td class="id">${s.id}</td><td>${esc(s.jenis)}</td><td>${esc(s.lokasi)}</td>
-    <td class="mono">${s.gw}</td><td>${sel(s.age, t)}</td><td>${penyebab(s, gwM[s.gw])}</td></tr>`;
+  return `<tr class="${hidden ? "hidden" : ""}" data-gw="${s.gw}"><td class="id">${idf(s.id)}</td><td>${esc(s.jenis)}</td><td>${esc(s.lokasi)}</td>
+    <td>${idf(s.gw)}</td><td>${sel(s.age, t)}</td><td>${penyebab(s, gwM[s.gw])}</td></tr>`;
 }
 
 function topologi(m, gwM) {
   const el = $("topo"), W = el.clientWidth || 1200, sempit = W < 900;
   const colW = sempit ? 0 : 140, gwX = sempit ? 0 : 196, gwW = sempit ? Math.min(W, 220) : 220;
-  const ageW = sempit ? 0 : 236, sx0 = sempit ? 0 : gwX + gwW + 36, sxEnd = W - ageW - (sempit ? 0 : 28);
+  const ageW = sempit ? 0 : 200, sx0 = sempit ? 0 : gwX + gwW + 36, sxEnd = W - ageW - (sempit ? 0 : 28);
   // ukuran port mengikuti lebar: gateway terbesar paling banyak tiga baris
   const maxN = Math.max(...m.gateways.map((g) => m.sensors.filter((s) => s.gw === g.id).length));
-  const step = Math.max(9, Math.min(20, Math.floor((sxEnd - sx0) / Math.ceil(maxN / 3)))), SQ = step - 4;
+  const step = Math.max(12, Math.min(20, Math.floor((sxEnd - sx0) / Math.ceil(maxN / 3)))), SQ = step - 4;
   const perRow = Math.max(8, Math.floor((sxEnd - sx0 + 4) / step));
   let y = 0;
   const rows = m.gateways.map((g) => {
     const ss = m.sensors.filter((s) => s.gw === g.id), nRow = Math.ceil(ss.length / perRow);
-    const h = sempit ? 60 + nRow * step + 8 : Math.max(60, nRow * step + 20);
+    const h = sempit ? 60 + nRow * step + 8 : Math.max(64, nRow * step + 20);
     const row = { g, ss, y, h, nRow };
     y += h + 12;
     return row;
   });
   const H = y - 12, cy = H / 2;
   let svg = sempit ? "" : `<rect class="node" x="0" y="${cy - 40}" width="${colW}" height="80" rx="4"/>
-    <text class="gw-id" x="14" y="${cy - 12}">Kolektor</text><text x="14" y="${cy + 8}">Prometheus</text><text x="14" y="${cy + 26}">scrape 15 dtk</text>
+    <text class="gw-id" x="16" y="${cy - 10}" style="font-family:var(--font-sans);font-weight:600">Kolektor</text><text x="16" y="${cy + 10}">Prometheus</text><text x="16" y="${cy + 28}">tiap 15 detik</text>
     <line class="gutter" x1="${sxEnd + 14}" x2="${sxEnd + 14}" y1="0" y2="${H}"/>`;
   for (const r of rows) {
     const gy = sempit ? r.y + 30 : r.y + r.h / 2, down = !r.g.up, ss = r.ss, on = ss.filter((s) => s.age < STALE).length;
     const segar = down ? Math.max(...ss.map((s) => s.age)) : Math.min(...ss.map((s) => s.age));
-    const nodeH = sempit ? 52 : r.h;
+    const nodeH = sempit ? 52 : r.h, ty = sempit ? r.y + 26 : gy;
     svg += `${sempit ? "" : `<path class="link${down ? " down" : ""}" d="M${colW},${cy} C${colW + 40},${cy} ${gwX - 40},${gy} ${gwX},${gy}"/>`}
       <rect class="node${down ? " down" : ""}" x="${gwX}" y="${r.y}" width="${gwW}" height="${nodeH}" rx="4"/>
-      <circle class="${down ? "led-down" : "led-ok"}" cx="${gwX + 18}" cy="${(sempit ? r.y + 26 : gy) - 9}" r="4"><title>Lampu link ${r.g.id}: ${down ? "mati" : "menyala"}</title></circle>
-      <text class="gw-id" x="${gwX + 30}" y="${(sempit ? r.y + 26 : gy) - 4}">${r.g.id}</text><text x="${gwX + 14}" y="${(sempit ? r.y + 26 : gy) + 16}">${esc(r.g.proto)}</text>
-      <text x="${gwX + gwW - 14}" y="${(sempit ? r.y + 26 : gy) - 4}" text-anchor="end"${down ? ' style="fill:var(--crit-ink)"' : ""}>${on}/${ss.length}</text>
-      ${down ? `<text x="${gwX + gwW - 14}" y="${(sempit ? r.y + 26 : gy) + 16}" text-anchor="end" style="fill:var(--crit-ink)">putus</text>` : ""}
+      <circle class="${down ? "led-down" : "led-ok"}" cx="${gwX + 20}" cy="${ty - 9}" r="4"><title>Lampu link ${r.g.id}: ${down ? "mati" : "menyala"}</title></circle>
+      <text class="gw-id" x="${gwX + 32}" y="${ty - 4}">${r.g.id}</text><text x="${gwX + 16}" y="${ty + 16}">${esc(r.g.proto)}</text>
+      <text class="num${down ? " bad" : ""}" x="${gwX + gwW - 16}" y="${ty - 4}" text-anchor="end">${on} / ${ss.length}</text>
+      ${down ? `<text class="bad" x="${gwX + gwW - 16}" y="${ty + 16}" text-anchor="end">Putus</text>` : ""}
       ${sempit ? "" : `<path class="link${down ? " down" : ""}" d="M${gwX + gwW},${gy} H${sx0 - 8}"/>
-      <text class="age ${down ? "age-down" : "age-ok"}" x="${sxEnd + 30}" y="${gy - 2}" data-sejak="${m.t - segar}">${durasi(segar)} lalu</text>
-      <text x="${sxEnd + 30}" y="${gy + 17}">${down ? "data terakhir sebelum putus" : "data terakhir masuk"}</text>`}`;
+      <text class="age ${down ? "age-down" : "age-ok"}" x="${sxEnd + 32}" y="${gy - 2}" data-sejak="${m.t - segar}">${lalu(segar)}</text>
+      <text x="${sxEnd + 32}" y="${gy + 17}">${down ? "data terakhir sebelum putus" : "data terakhir masuk"}</text>`}`;
     const top = sempit ? r.y + 60 : gy - (r.nRow * step - 4) / 2;
     ss.forEach((s, i) => {
       const x = sx0 + (i % perRow) * step, yy = top + Math.floor(i / perRow) * step;
       const cls = s.age >= STALE ? "s-off" : s.baterai != null && s.baterai < 20 ? "s-low" : "s-on", o = cls === "s-low" ? 0.75 : 0;
-      const ket = s.age >= STALE ? `tidak mengirim data sejak ${durasi(s.age)} lalu` : `data ${durasi(s.age)} lalu`;
-      svg += `<rect class="${cls}" x="${x + o}" y="${yy + o}" width="${SQ - 2 * o}" height="${SQ - 2 * o}" rx="2"><title>${s.id} · ${esc(s.jenis)} · ${esc(s.lokasi)} · ${ket}${s.baterai != null ? ` · baterai ${fmt(s.baterai, 0)} %` : ""}</title></rect>`;
+      const ket = s.age >= STALE ? `tidak mengirim data selama ${durasi(s.age)}` : `data terakhir ${lalu(s.age)}`;
+      svg += `<rect class="${cls}" x="${x + o}" y="${yy + o}" width="${SQ - 2 * o}" height="${SQ - 2 * o}" rx="2"><title>${s.id}, ${esc(s.jenis)}, ${esc(s.lokasi)}: ${ket}${s.baterai != null ? `, baterai ${fmt(s.baterai, 0)}%` : ""}</title></rect>`;
     });
   }
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Topologi ${m.gateways.length} gateway dan ${m.sensors.length} sensor">${svg}</svg>`;
@@ -277,22 +287,23 @@ async function muat() {
   } else if (TANPA_API) {
     model = contoh();
     tanda.hidden = false;
-    banner(`Mode data contoh: halaman dibuka sebagai file sehingga API tidak terhubung. Jalankan <code>docker compose -p konsep-07 up -d</code> lalu buka <code>http://localhost:18070</code>.`);
+    banner(`Halaman dibuka sebagai file, jadi dasbor memakai data contoh. Untuk data nyata, jalankan <code>docker compose -p konsep-07 up -d</code> lalu buka <code>http://localhost:18070</code>.`);
     $("sumber").textContent = "Data contoh bawaan";
-    $("sinkron").textContent = "Tidak tersambung ke Prometheus";
+    $("sinkron").textContent = "Belum tersambung ke Prometheus";
     detak(false);
   } else {
     try {
       model = await muatProm();
       banner("");
       tanda.hidden = true;
-      $("sinkron").textContent = `Sinkron pukul ${hhmm(new Date())}.${pad(new Date().getSeconds())}`;
+      $("sinkron").textContent = `Diperbarui pukul ${hhmm(new Date())}.${pad(new Date().getSeconds())}`;
       detak(true);
     } catch (e) {
+      const isi = model ? "data terakhir yang berhasil dimuat" : "data contoh";
       if (!model) model = contoh();
-      tanda.hidden = false;
-      banner(`Mode data contoh: Prometheus tidak menjawab (${esc(e.message)}). Periksa <code>docker compose -p konsep-07 ps</code>; dasbor mencoba lagi tiap 15 detik.`);
-      $("sinkron").textContent = "Gagal sinkron, mencoba lagi";
+      tanda.hidden = isi !== "data contoh";
+      banner(`Prometheus tidak menjawab (${esc(e.message)}), jadi dasbor menampilkan ${isi}. Periksa <code>docker compose -p konsep-07 ps</code>. Dasbor mencoba lagi tiap 15 detik.`);
+      $("sinkron").textContent = "Gagal memperbarui, mencoba lagi";
       detak(false);
     }
   }
@@ -312,7 +323,7 @@ document.addEventListener("click", (e) => {
 // jam "terakhir mengirim data" berjalan tiap detik tanpa menunggu scrape berikutnya
 setInterval(() => {
   const now = Date.now() / 1000;
-  document.querySelectorAll(".age[data-sejak]").forEach((el) => { el.textContent = `${durasi(now - +el.dataset.sejak)} lalu`; });
+  document.querySelectorAll(".age[data-sejak]").forEach((el) => { el.textContent = lalu(now - +el.dataset.sejak); });
 }, 1000);
 muat();
 if (!TANPA_API) setInterval(muat, REFRESH);

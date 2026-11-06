@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pusat Pemantauan Pabrik</title>
-<meta name="description" content="Mockup proyek 01: layar dinding ruang kontrol untuk supervisor shift, memantau status 10 area pabrik, alarm aktif, beban listrik, dan suhu ruang.">
+<meta name="description" content="Mockup proyek 01: layar dinding ruang kontrol untuk supervisor shift. Menampilkan status 10 area pabrik, alarm aktif, beban listrik, dan suhu ruang produksi.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@82..100,400..600&display=swap">
 <link rel="stylesheet" href="../../shared/charts.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -16,41 +16,41 @@
   <span class="logo">[LOGO KLIEN]</span>
   <span class="product">Pusat Pemantauan Pabrik</span>
   <span class="sample" data-pratinjau title="Semua angka di layar ini adalah data contoh">Data contoh</span>
-  <div class="conn" role="status"><span class="dot" id="dot" aria-hidden="true"></span><span id="conn">Menghubungkan</span></div>
-  <span class="clock num" id="clock">--.--.--</span>
+  <div class="conn" role="status"><span class="dot" id="dot" aria-hidden="true"></span><span id="conn">Menghubungkan ke server</span></div>
+  <span class="clock" id="clock" aria-label="Jam sekarang">--.--.--</span>
 </header>
 <div class="banner" id="banner" role="alert" hidden></div>
 <main>
-  <section class="top" aria-labelledby="finding">
+  <section class="top" id="top" aria-labelledby="finding">
     <div class="finding"><h1 id="finding">Memuat status pabrik</h1><p id="finding2"></p></div>
     <dl class="kpis" id="kpis" aria-busy="true"></dl>
   </section>
 
   <section class="panel strips-p" aria-labelledby="h-strip">
-    <div class="ph"><h2 id="h-strip">Status area, 24 jam terakhir</h2><span class="sub">tiap kotak 15 menit, abu-abu berarti normal, garis tegak pergantian shift</span><div class="legend" id="legend"></div></div>
+    <div class="ph"><h2 id="h-strip">Status area per 15 menit, 24 jam terakhir</h2><div class="legend" id="legend"></div></div>
     <div class="axis" aria-hidden="true"><span></span><div class="t" id="axis"></div><span></span></div>
     <div class="strips" id="strips" aria-busy="true"></div>
   </section>
 
   <aside class="panel alarms-p" aria-labelledby="h-alarm">
-    <div class="ph"><h2 id="h-alarm">Alarm aktif</h2><span class="sub">kritis dulu, lalu yang terlama</span></div>
+    <div class="ph"><h2 id="h-alarm">Alarm aktif</h2><span class="sub">Kritis di atas, lalu yang terlama</span></div>
     <ol class="alarm-list" id="alarms" aria-live="polite"></ol>
     <!-- tanda tangan: jam shift -->
     <div class="shiftbox" aria-labelledby="shiftname">
       <div class="sh-top"><b id="shiftname">Shift</b><span id="shift">Memuat jadwal shift</span></div>
       <div class="sh-bar" aria-hidden="true"><i id="shiftbar"></i></div>
-      <div class="sh-left"><span>Sisa shift</span><b class="num" id="shiftleft">--</b></div>
+      <div class="sh-left"><span>Sisa shift</span><b id="shiftleft">--</b></div>
     </div>
   </aside>
 
   <!-- tag instrumen gaya ISA-5.1 (JI = daya, TI = suhu). [REAL DATA: tag dari P&ID klien] -->
   <section class="panel power-p" aria-labelledby="h-power">
-    <div class="ph"><span class="tag">JI-100</span><h2 id="h-power">Beban listrik, 24 jam</h2><span class="sub">kW, rata-rata 15 menit</span></div>
-    <div id="power" data-label="Beban listrik pabrik 24 jam"></div>
+    <div class="ph"><span class="tag">JI-100</span><h2 id="h-power">Beban listrik</h2><span class="sub">kW, rata-rata 15 menit</span></div>
+    <div id="power" data-label="Beban listrik pabrik, 24 jam terakhir"></div>
   </section>
   <section class="panel temp-p" aria-labelledby="h-temp">
-    <div class="ph"><span class="tag">TI-200</span><h2 id="h-temp">Suhu ruang produksi, 24 jam</h2><span class="sub">°C, rata-rata 5 ruang</span></div>
-    <div id="temp" data-label="Suhu ruang produksi 24 jam"></div>
+    <div class="ph"><span class="tag">TI-200</span><h2 id="h-temp">Suhu ruang produksi</h2><span class="sub">°C, rata-rata 5 ruang</span></div>
+    <div id="temp" data-label="Suhu ruang produksi, 24 jam terakhir"></div>
   </section>
 </main>
 <script src="../../shared/charts.js"></script>

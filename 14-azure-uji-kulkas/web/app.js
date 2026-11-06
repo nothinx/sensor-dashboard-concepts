@@ -3,9 +3,13 @@
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const NAMA = { L1: "Lini 1", L2: "Lini 2" };
-const ALASAN = { vakum: "Vakum tidak tercapai", bocor: "Bocor melebihi batas", dingin: "Pendinginan kurang", arus: "Arus kompresor di luar batas" };
+const ALASAN = { vakum: "Vakum tidak tercapai", bocor: "Bocor melebihi batas", dingin: "Evaporator kurang dingin", arus: "Arus kompresor di luar batas" };
 const pukul = (iso) => hhmm(new Date(iso));
-const persen = (v) => (v == null ? "-" : `${fmt(v, 0)} %`);
+const persen = (v) => (v == null ? "-" : `${fmt(v, 0)}%`); // EYD: lambang persen serangkai dengan angka
+const minus = (s) => String(s).replace(/^-/, "−");
+// angka besar + satuan diredam (lebih kecil, lebih ringan)
+const nilai = (v, u) => `${v}<span class="u${u === "%" ? " rapat" : ""}">${u}</span>`;
+const pct = (v) => (v == null ? "-" : nilai(fmt(v, 0), "%"));
 
 let data = null, pilihan = null, modeContoh = false, ikuti = true; // ikuti = panel unit mengikuti unit terbaru
 const cacheUnit = new Map(); // unit → daftar percobaan (dengan kurva)
@@ -17,22 +21,22 @@ function render(d) {
   const L = d.lini, terburuk = ["L1", "L2"].sort((a, b) => (L[a].fpy_20_terakhir ?? 100) - (L[b].fpy_20_terakhir ?? 100))[0];
   const f20 = L[terburuk].fpy_20_terakhir, utama = d.alasan_gagal[0];
   if (f20 != null && f20 < d.fpy_min) {
-    $("judul").textContent = `${NAMA[terburuk]} di bawah target: FPY 20 unit terakhir ${persen(f20)}`;
-    $("temuan").innerHTML = `<b>Penyebab gagal terbanyak 24 jam: ${esc(utama.label.toLowerCase())} (${utama.jumlah} unit).</b> Periksa stasiun uji ${NAMA[terburuk]} sebelum unit berikutnya masuk; target FPY ${fmt(d.fpy_min, 0)} %.`;
+    $("judul").textContent = `${NAMA[terburuk]} di bawah target: FPY ${persen(f20)} pada 20 unit terakhir`;
+    $("temuan").innerHTML = `<b>Penyebab gagal terbanyak dalam 24 jam: ${esc(utama.label.toLowerCase())} (${utama.jumlah} unit).</b> Periksa stasiun uji ${NAMA[terburuk]} sebelum unit berikutnya masuk. Target FPY ${persen(d.fpy_min)}.`;
   } else {
-    $("judul").textContent = `Kedua lini memenuhi target FPY ${fmt(d.fpy_min, 0)} %`;
-    $("temuan").innerHTML = `<b>${d.jumlah_menunggu} unit menunggu uji ulang.</b> ${utama ? `Penyebab gagal terbanyak 24 jam: ${esc(utama.label.toLowerCase())}.` : ""}`;
+    $("judul").textContent = `Kedua lini memenuhi target FPY ${persen(d.fpy_min)}`;
+    $("temuan").innerHTML = `<b>${d.jumlah_menunggu} unit menunggu uji ulang.</b> ${utama ? `Penyebab gagal terbanyak dalam 24 jam: ${esc(utama.label.toLowerCase())}.` : ""}`;
   }
   const unit24 = L.L1.unit_24j + L.L2.unit_24j;
-  // merah hanya untuk unit gagal; angka ringkasan tetap netral, FPY di bawah target diberi tanda peringatan
+  // merah hanya untuk unit gagal; angka ringkasan tetap netral, FPY di bawah target diberi chip peringatan
   const kpi = [
-    ["FPY Lini 1, 24 jam", persen(L.L1.fpy_24j), L.L1.fpy_24j < d.fpy_min],
-    ["FPY Lini 2, 24 jam", persen(L.L2.fpy_24j), L.L2.fpy_24j < d.fpy_min],
-    ["Unit diuji, 24 jam", `${fmt(unit24, 0)}<small>unit</small>`],
-    ["Menunggu uji ulang", `${d.jumlah_menunggu}<small>unit</small>`],
+    ["FPY Lini 1, 24 jam", pct(L.L1.fpy_24j), L.L1.fpy_24j < d.fpy_min],
+    ["FPY Lini 2, 24 jam", pct(L.L2.fpy_24j), L.L2.fpy_24j < d.fpy_min],
+    ["Unit diuji, 24 jam", nilai(fmt(unit24, 0), "unit")],
+    ["Menunggu uji ulang", nilai(d.jumlah_menunggu, "unit")],
     ["Alarm, 24 jam", `${d.alarm.length}`],
   ];
-  $("kpis").innerHTML = kpi.map(([l, v, bawah]) => `<div><dt>${l}</dt><dd>${v}${bawah ? `<small class="bawah">di bawah ${fmt(d.fpy_min, 0)} %</small>` : ""}</dd></div>`).join("");
+  $("kpis").innerHTML = kpi.map(([l, v, bawah]) => `<div><dt>${l}</dt><dd><span class="v">${v}</span>${bawah ? st("warn", `Di bawah ${persen(d.fpy_min)}`) : ""}</dd></div>`).join("");
   for (const l of ["L1", "L2"]) {
     $(`lini-${l}`).innerHTML = kartuLini(l, L[l], d.fpy_min);
     $(`lini-${l}`).classList.toggle("bawah", L[l].fpy_20_terakhir != null && L[l].fpy_20_terakhir < d.fpy_min);
@@ -46,14 +50,14 @@ function render(d) {
   const maks = Math.max(1, ...d.alasan_gagal.map((a) => a.jumlah));
   $("alasan").innerHTML = d.alasan_gagal.length ? d.alasan_gagal.map((a) => `<div class="hbar"><span class="lbl">${esc(a.label)}</span>
     <div class="trk"><div class="fill" style="width:${(a.jumlah / maks) * 100}%"></div></div><span class="n">${a.jumlah}</span></div>`).join("")
-    : `<p class="memuat">Tidak ada unit gagal dalam 24 jam.</p>`;
+    : `<p class="memuat">Tidak ada unit gagal dalam 24 jam terakhir.</p>`;
   $("menunggu-sub").textContent = `${d.jumlah_menunggu} unit, terbaru di atas`;
   $("l-menunggu").innerHTML = d.menunggu_ulang.length ? d.menunggu_ulang.slice(0, 5).map((u) => `<li><span class="id">${esc(u.unit)}</span>
-    <span class="mono small">${pukul(u.waktu)}</span><span class="ket">${u.alasan.map((a) => ALASAN[a]).join(", ")}</span></li>`).join("")
+    <span class="jam">pukul ${pukul(u.waktu)}</span><span class="ket">${u.alasan.map((a) => ALASAN[a]).join(", ")}</span></li>`).join("")
     : `<li><span class="kosong">Tidak ada unit yang menunggu uji ulang.</span></li>`;
-  $("l-alarm").innerHTML = d.alarm.length ? d.alarm.slice(0, 4).map((a) => `<li>${st(a.tingkat === "kritis" ? "crit" : "warn")}
-    <span class="mono small">${pukul(a.waktu)}</span><span class="ket">${esc(a.pesan)}</span></li>`).join("")
-    : `<li><span class="kosong">Tidak ada alarm dalam 24 jam.</span></li>`;
+  $("l-alarm").innerHTML = d.alarm.length ? d.alarm.slice(0, 4).map((a) => `<li><span>${st(a.tingkat === "kritis" ? "crit" : "warn")}</span>
+    <span class="jam">pukul ${pukul(a.waktu)}</span><span class="ket">${esc(a.pesan)}</span></li>`).join("")
+    : `<li><span class="kosong">Tidak ada alarm dalam 24 jam terakhir.</span></li>`;
   $("main").setAttribute("aria-busy", "false");
 }
 
@@ -62,24 +66,24 @@ function kartuLini(l, x, fpyMin) {
   const t = x.terakhir, bawah = x.fpy_20_terakhir != null && x.fpy_20_terakhir < fpyMin;
   return `<div class="pelat">
       <div class="nama"><h2 id="h-${l}">${NAMA[l]}</h2><span class="model">${esc(t?.model ?? "")}</span></div>
-      <div class="fpy"><span>FPY 20 unit terakhir</span><b>${persen(x.fpy_20_terakhir)}</b></div>
-      ${bawah ? st("warn", `Di bawah target ${fmt(fpyMin, 0)} %`) : st("ok", `Memenuhi target ${fmt(fpyMin, 0)} %`)}
+      <div class="fpy"><span>FPY 20 unit terakhir</span><b>${pct(x.fpy_20_terakhir)}</b></div>
+      ${bawah ? st("warn", `Di bawah target ${persen(fpyMin)}`) : st("ok", `Memenuhi target ${persen(fpyMin)}`)}
     </div>
     <div class="jalur">
-      <h3>10 percobaan terakhir, terbaru di kanan</h3>
-      <div class="sabuk">${[...x.riwayat].reverse().map((u) => stempel(u)).join("")}<span class="bilik">bilik uji</span></div>
-      <dl class="rinci"><div><dt>Unit 24 jam</dt><dd>${fmt(x.unit_24j, 0)}</dd></div><div><dt>Unit jam berjalan</dt><dd>${x.fpy_per_jam[23].unit}</dd></div>
-        <div><dt>Gagal percobaan pertama</dt><dd>${x.gagal_24j}</dd></div><div><dt>Menunggu uji ulang</dt><dd>${x.menunggu}</dd></div><div><dt>FPY 24 jam</dt><dd>${persen(x.fpy_24j)}</dd></div></dl>
+      <h3>10 uji terakhir, terbaru di kanan. Lingkar putus-putus: uji ulang.</h3>
+      <div class="sabuk">${[...x.riwayat].reverse().map((u) => stempel(u)).join("")}<span class="bilik">Bilik uji</span></div>
+      <dl class="rinci"><div><dt>Unit diuji, 24 jam</dt><dd>${fmt(x.unit_24j, 0)}</dd></div><div><dt>Unit jam ini</dt><dd>${x.fpy_per_jam[23].unit}</dd></div>
+        <div><dt>Gagal uji pertama</dt><dd>${x.gagal_24j}</dd></div><div><dt>Menunggu uji ulang</dt><dd>${x.menunggu}</dd></div></dl>
     </div>`;
 }
 
 function stempel(u, besar = false) {
   const t = u.hasil === "lulus" ? "LULUS" : "GAGAL", seq = u.unit.slice(-4);
-  const label = `${u.unit}, percobaan ${u.percobaan}, ${u.hasil}, pukul ${pukul(u.waktu)}`;
-  if (besar) return `<div class="stempel besar ${u.hasil}" role="img" aria-label="Hasil: ${t}"><span class="t">${t}</span><span class="s">P${u.percobaan}</span></div>`;
+  const label = `${u.unit}, uji ke-${u.percobaan}, ${u.hasil}, pukul ${pukul(u.waktu)}`;
+  if (besar) return `<div class="stempel besar ${u.hasil}" role="img" aria-label="Hasil: ${u.hasil}, uji ke-${u.percobaan}"><span><span class="t">${t}</span><span class="s">Uji ke-${u.percobaan}</span></span></div>`;
   const miring = ((parseInt(seq, 10) || 0) % 5) * 2 - 4; // cap tangan tidak pernah lurus sempurna
-  return `<button type="button" class="stempel ${u.hasil}" style="--r:${miring}deg" data-unit="${esc(u.unit)}" aria-pressed="${u.unit === pilihan}" aria-label="${esc(label)}" title="${esc(label)}">
-    <span><span class="t">${t}</span><br><span class="s">${seq}${u.percobaan > 1 ? "·2" : ""}</span></span></button>`;
+  return `<button type="button" class="stempel ${u.hasil}${u.percobaan > 1 ? " ulang" : ""}" style="--r:${miring}deg" data-unit="${esc(u.unit)}" aria-pressed="${u.unit === pilihan}" aria-label="${esc(label)}" title="${esc(label)}">
+    <span><span class="t">${t}</span><span class="s">${seq}</span></span></button>`;
 }
 
 async function pilihUnit(unit) {
@@ -87,9 +91,9 @@ async function pilihUnit(unit) {
   ikuti = unit === terbaruUnit();
   document.querySelectorAll(".stempel[data-unit]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.unit === unit));
   if (!cacheUnit.has(unit) || !cacheUnit.get(unit).some((p) => p.vakum_kurva)) {
-    $("unit").innerHTML = `<p class="memuat">Memuat ${esc(unit)}</p>`;
+    $("unit").innerHTML = `<p class="memuat">Memuat ${esc(unit)}…</p>`;
     try { cacheUnit.set(unit, await ambil(`/api/unit/${encodeURIComponent(unit)}`)); }
-    catch (e) { $("unit").innerHTML = `<p class="memuat">Detail ${esc(unit)} tidak bisa dimuat: ${esc(e.message)}. Pilih unit lain atau muat ulang halaman.</p>`; return; }
+    catch (e) { $("unit").innerHTML = `<p class="memuat">Detail ${esc(unit)} tidak bisa dimuat (${esc(e.message)}). Pilih unit lain atau muat ulang halaman.</p>`; return; }
   }
   tampilUnit(unit);
 }
@@ -99,15 +103,15 @@ function tampilUnit(unit) {
   const u = daftar[daftar.length - 1], b = data.batas;
   $("h-unit").textContent = unit === terbaruUnit() ? "Unit terakhir diuji" : "Unit terpilih";
   const ukur = [
-    ["Vakum ke 100 Pa", u.vakum_capai_s == null ? "tidak tercapai" : `${u.vakum_capai_s} dtk`, `batas ${b.vakum_waktu_maks_s} dtk`, u.alasan.includes("vakum")],
-    ["Laju bocor", `${fmt(u.bocor_g_tahun, 2)} g/thn`, `batas ${fmt(b.bocor_maks_g_tahun)} g/thn`, u.alasan.includes("bocor")],
-    [`Evaporator, ${b.dingin_menit} menit`, `${fmt(u.evap_c)} °C`, `batas ${fmt(b.dingin_evap_maks_c)} °C`, u.alasan.includes("dingin")],
-    ["Arus kompresor", `${fmt(u.arus_a, 2)} A`, `${fmt(b.arus_min_a)} sampai ${fmt(b.arus_maks_a)} A`, u.alasan.includes("arus")],
+    ["Vakum sampai 100 Pa", u.vakum_capai_s == null ? `<span class="teks">Tidak tercapai</span>` : nilai(u.vakum_capai_s, "detik"), `Batas ${b.vakum_waktu_maks_s}&nbsp;detik`, u.alasan.includes("vakum")],
+    ["Laju bocor", nilai(fmt(u.bocor_g_tahun, 2), "g/tahun"), `Batas ${fmt(b.bocor_maks_g_tahun)}&nbsp;g/tahun`, u.alasan.includes("bocor")],
+    ["Suhu evaporator", nilai(minus(fmt(u.evap_c)), "°C"), `Batas ${minus(fmt(b.dingin_evap_maks_c))}&nbsp;°C setelah ${b.dingin_menit}&nbsp;menit`, u.alasan.includes("dingin")],
+    ["Arus kompresor", nilai(fmt(u.arus_a, 2), "A"), `${fmt(b.arus_min_a)} sampai ${fmt(b.arus_maks_a)}&nbsp;A`, u.alasan.includes("arus")],
   ];
   $("unit").innerHTML = `<div class="unit-kepala">${stempel(u, true)}
       <div><div class="id">${esc(u.unit)}</div>
-      <p>${NAMA[u.lini]} · model ${esc(u.model)} · percobaan ke-${u.percobaan} · pukul ${pukul(u.waktu)}</p>
-      <p>${u.hasil === "lulus" ? "Lulus semua uji; boleh lanjut ke pengemasan." : `Gagal: ${u.alasan.map((a) => ALASAN[a].toLowerCase()).join(", ")}. Kirim ke perbaikan lalu uji ulang.`}</p></div></div>
+      <p class="meta-u">${NAMA[u.lini]} · model ${esc(u.model)} · uji ke-${u.percobaan} · pukul ${pukul(u.waktu)}</p>
+      <p class="vonis">${u.hasil === "lulus" ? "Lulus semua uji. Boleh lanjut ke pengemasan." : `Gagal: ${u.alasan.map((a) => ALASAN[a].toLowerCase()).join(", ")}. Kirim ke perbaikan, lalu uji ulang.`}</p></div></div>
     <div class="vakum chart" id="vakum"></div>
     <div class="ukur">${ukur.map(([l, v, k, g]) => `<div><span>${l}</span><b class="${g ? "gagal" : ""}">${v}</b><small>${k}</small></div>`).join("")}</div>`;
   grafikVakum($("vakum"), u, b);
@@ -117,25 +121,25 @@ const terbaruUnit = () => [data.lini.L1.terakhir, data.lini.L2.terakhir].filter(
 
 // Momen: kurva penurunan tekanan (skala log) dengan jendela target
 function grafikVakum(el, u, b) {
-  const W = el.clientWidth || 700, H = 220, L = 64, R = 16, T = 12, B = 28;
+  const W = el.clientWidth || 700, H = 240, L = 64, R = 16, T = 12, B = 28;
   const lo = 1, hi = Math.log10(200000);
   const sx = (t) => L + (t / 300) * (W - L - R);
   const sy = (p) => T + (1 - (Math.log10(Math.max(p, 10)) - lo) / (hi - lo)) * (H - T - B);
   let g = `<rect x="${sx(0)}" y="${sy(b.vakum_target_pa)}" width="${sx(b.vakum_waktu_maks_s) - sx(0)}" height="${sy(10) - sy(b.vakum_target_pa)}"
       fill="var(--target)" stroke="var(--lulus)" stroke-dasharray="4 3"/>
-    <text x="${sx(4)}" y="${sy(b.vakum_target_pa) + 18}" style="fill:var(--lulus)">jendela target: ≤ ${b.vakum_target_pa} Pa dalam ${b.vakum_waktu_maks_s} dtk</text>`;
+    <text x="${sx(0) + 8}" y="${sy(10) - 8}" style="fill:var(--lulus)">Target ≤ ${b.vakum_target_pa} Pa dalam ${b.vakum_waktu_maks_s} detik</text>`;
   for (const [p, lbl] of [[100, "100 Pa"], [1000, "1 kPa"], [10000, "10 kPa"], [100000, "100 kPa"]])
-    g += `<line x1="${L}" x2="${W - R}" y1="${sy(p)}" y2="${sy(p)}" stroke="var(--grid)"/><text x="${L - 6}" y="${sy(p) + 4}" text-anchor="end">${lbl}</text>`;
-  for (let t = 0; t <= 300; t += W < 500 ? 100 : 60) g += `<text x="${sx(t)}" y="${H - 8}" text-anchor="${t === 0 ? "start" : t === 300 ? "end" : "middle"}">${t} dtk</text>`;
+    g += `<line x1="${L}" x2="${W - R}" y1="${sy(p)}" y2="${sy(p)}" stroke="var(--grid)"/><text x="${L - 8}" y="${sy(p) + 4}" text-anchor="end">${lbl}</text>`;
+  for (let t = 0; t <= 300; t += W < 500 ? 100 : 60) g += `<text x="${sx(t)}" y="${H - 8}" text-anchor="${t === 0 ? "start" : t === 300 ? "end" : "middle"}">${t === 300 ? "300 detik" : t}</text>`;
   const k = u.vakum_kurva;
   g += `<path d="${k.map(([t, p], i) => `${i ? "L" : "M"}${sx(t).toFixed(1)},${sy(p).toFixed(1)}`).join("")}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round"/>`;
   if (u.vakum_capai_s != null) {
     const x = sx(u.vakum_capai_s), y = sy(b.vakum_target_pa);
     g += `<circle cx="${x}" cy="${y}" r="5" fill="var(--lulus)" stroke="var(--surface)" stroke-width="2"/>
-      <text x="${x > W * 0.7 ? x - 8 : x + 8}" y="${y - 8}" text-anchor="${x > W * 0.7 ? "end" : "start"}" style="fill:${u.alasan.includes("vakum") ? "var(--gagal)" : "var(--ink)"};font-weight:500">tercapai ${u.vakum_capai_s} dtk${u.alasan.includes("vakum") ? ", terlambat" : ""}</text>`;
+      <text x="${x > W * 0.7 ? x - 10 : x + 10}" y="${y + 16}" text-anchor="${x > W * 0.7 ? "end" : "start"}" style="fill:${u.alasan.includes("vakum") ? "var(--gagal)" : "var(--ink)"};font-weight:500">Tercapai pada detik ${u.vakum_capai_s}${u.alasan.includes("vakum") ? ", terlambat" : ""}</text>`;
   } else {
     const [t, p] = k[k.length - 1];
-    g += `<text x="${sx(t)}" y="${sy(p) - 10}" text-anchor="end" style="fill:var(--gagal);font-weight:500">tertahan di ${fmt(p, 0)} Pa</text>`;
+    g += `<text x="${sx(t)}" y="${sy(p) - 10}" text-anchor="end" style="fill:var(--gagal);font-weight:500">Tertahan di ${fmt(p, 0)} Pa</text>`;
   }
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Kurva vakum ${esc(u.unit)}">${g}
     <line class="xh" y1="${T}" y2="${H - B}" stroke="var(--ink-2)" opacity="0"/></svg><div class="tip"></div>`;
@@ -144,7 +148,7 @@ function grafikVakum(el, u, b) {
     const r = svg.getBoundingClientRect(), t = (((e.clientX - r.left) / r.width) * W - L) / (W - L - R) * 300;
     const i = Math.max(0, Math.min(k.length - 1, Math.round(t / 12)));
     xh.setAttribute("x1", sx(k[i][0])); xh.setAttribute("x2", sx(k[i][0])); xh.setAttribute("opacity", 1);
-    tip.innerHTML = `${k[i][0]} dtk<br>${fmt(k[i][1], 0)} Pa`;
+    tip.innerHTML = `Detik ${k[i][0]}<br>${fmt(k[i][1], 0)} Pa`;
     tip.style.left = (sx(k[i][0]) / W) * r.width + "px"; tip.style.top = (sy(k[i][1]) / H) * r.height + "px"; tip.style.opacity = 1;
   });
   svg.addEventListener("mouseleave", () => { tip.style.opacity = 0; xh.setAttribute("opacity", 0); });
@@ -156,7 +160,7 @@ function grafikFpy(d) {
     x, h: 230, unit: "%", min: 50, max: 100, dec: 0, ticks: 5,
     series: [{ name: "Lini 1", color: "var(--s1)", data: d.lini.L1.fpy_per_jam.map((h) => h.fpy) },
              { name: "Lini 2", color: "var(--s2)", data: d.lini.L2.fpy_per_jam.map((h) => h.fpy) }],
-    bands: [{ y: d.fpy_min, label: `target ${fmt(d.fpy_min, 0)} %`, color: "var(--ink-2)" }],
+    bands: [{ y: d.fpy_min, label: `Target ${persen(d.fpy_min)}`, color: "var(--ink-2)" }],
   });
 }
 
@@ -176,10 +180,10 @@ async function dengar() {
       const r = await ambil(`/api/perubahan?sejak=${data.ts}`);
       if (r.ada_baru) render(await ambil("/api/ringkasan"));
       banner("");
-      sambung(`Tersambung · diperbarui pukul ${hhmm(new Date())}`);
+      sambung(`Tersambung, diperbarui pukul ${hhmm(new Date())}`);
     } catch (e) {
       sambung("Koneksi terputus");
-      banner(`Koneksi ke API terputus (${esc(e.message)}). Data di layar dari pukul ${pukul(data.sekarang)}; mencoba lagi tiap 5 detik. Periksa <code>docker compose -p konsep-14 ps</code>.`);
+      banner(`Koneksi ke server terputus (${esc(e.message)}). Data di layar dari pukul ${pukul(data.sekarang)}. Dasbor mencoba lagi tiap 5 detik. Teknisi: periksa <code>docker compose -p konsep-14 ps</code>.`);
       await new Promise((r) => setTimeout(r, 5000));
     }
   }
@@ -249,9 +253,9 @@ function contoh() {
   const hit = {};
   dok.filter((d) => d.percobaan === 1).forEach((d) => d.alasan.forEach((a) => { hit[a] = (hit[a] || 0) + 1; }));
   const alarm = dok.filter((d) => d.percobaan > 1 && d.hasil === "gagal").map((d) => ({ tingkat: "kritis", waktu: d.waktu,
-    pesan: `${d.unit} gagal lagi pada percobaan ke-2. Tarik dari lini untuk analisis.` }));
+    pesan: `${d.unit} gagal lagi pada uji ke-2. Tarik dari lini untuk dianalisis.` }));
   if (lini.L2.fpy_20_terakhir < 90) alarm.push({ tingkat: "peringatan", waktu: lini.L2.terakhir.waktu,
-    pesan: `FPY ${fmt(lini.L2.fpy_20_terakhir, 0)} % pada 20 unit terakhir, di bawah 90 %. Penyebab terbanyak: vakum tidak tercapai.` });
+    pesan: `FPY Lini 2 ${persen(lini.L2.fpy_20_terakhir)} pada 20 unit terakhir, di bawah target 90%. Penyebab terbanyak: vakum tidak tercapai.` });
   alarm.sort((a, b) => b.waktu.localeCompare(a.waktu));
   return { sekarang: sekarang.toISOString(), batas, fpy_min: 90, lini, menunggu_ulang: menunggu.slice(0, 12), jumlah_menunggu: menunggu.length,
     alasan_gagal: Object.entries(hit).sort((a, b) => b[1] - a[1]).map(([kode, jumlah]) => ({ kode, label: ALASAN[kode], jumlah })), alarm: alarm.slice(0, 8), ts: 0 };
@@ -260,18 +264,18 @@ function contoh() {
 function pakaiContoh(sebab) {
   modeContoh = true;
   render(contoh());
-  sambung("API tidak terhubung, memakai data contoh bawaan");
+  sambung("Server tidak terhubung, menampilkan data contoh");
   $("conn").hidden = PRATINJAU; // pratinjau: cukup penanda di header
-  banner(`Mode data contoh: ${esc(sebab)}. Jalankan <code>docker compose -p konsep-14 up -d</code> di folder proyek 14 lalu buka <code>http://localhost:18140</code>.`);
+  banner(`Menampilkan data contoh karena ${esc(sebab)}. Untuk data asli, jalankan <code>docker compose -p konsep-14 up -d</code> di folder proyek 14, lalu buka <code>http://localhost:18140</code>.`);
 }
 
 (async function mulai() {
-  if (TANPA_API) return pakaiContoh("API tidak terhubung karena dasbor dibuka langsung dari berkas");
+  if (TANPA_API) return pakaiContoh("dasbor dibuka langsung dari berkas, tanpa server");
   try {
     render(await ambil("/api/ringkasan"));
-    sambung(`Tersambung · diperbarui pukul ${hhmm(new Date())}`);
+    sambung(`Tersambung, diperbarui pukul ${hhmm(new Date())}`);
     dengar();
   } catch (e) {
-    pakaiContoh(`API tidak menjawab (${e.message})`);
+    pakaiContoh(`server tidak menjawab (${e.message})`);
   }
 })();

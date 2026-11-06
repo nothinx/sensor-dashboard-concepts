@@ -1,6 +1,6 @@
 // Service worker minimal: kerangka aplikasi tetap terbuka tanpa sinyal.
 // Data tugas offline ditangani cache IndexedDB Firestore, bukan berkas ini.
-const CACHE = "tugas-teknisi-v1";
+const CACHE = "tugas-teknisi-v2";
 const KERANGKA = ["./", "index.html", "style.css", "app.js", "konfigurasi.js", "manifest.webmanifest", "ikon.svg", "shared/charts.js", "shared/charts.css"];
 
 self.addEventListener("install", (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(KERANGKA)).then(() => self.skipWaiting())));
